@@ -1,0 +1,7 @@
+# Build/Debug Files
+*.o
+*.img
+*.bin
+
+# Log Files
+*.log
