@@ -67,11 +67,11 @@ _start:
 	.fdc_read:
 		mov cx, [bios.parameter_block.reserved_count]
 		dec cx
-		mov bx, 0x7e00
+		mov bx, 0x8000
 		mov ax, 1
 		call _read_sectors
 	.start_stage2:
-		jmp 0x0:0x7e00
+		jmp 0x0:0x8000
 
 ; Read the specified number of sectors from disk.
 _read_sectors:

@@ -29,7 +29,8 @@ fat12: build/fat12.img
 	@echo
 
 .PHONY: fat12-bochs
-fat12-bochs: fat12
+fat12-bochs: clean fat12
+	-mkdir -p debug
 	bochs -q "boot:a" "floppya: 1_44=build/fat12.img, status=inserted" \
 			 "debug: action=ignore, floppy=report" \
 			 "magic_break: enabled=1" \
@@ -38,13 +39,8 @@ fat12-bochs: fat12
 
 
 # FAT12 Boot Sector
-build/fat12.img: build/core.loader.bin
+build/fat12.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
-	imgtool -s support/imgtool/fat12.imgscript
-
-
-# CoreLoader
-build/core.loader.bin:
-	-mkdir -p build
 	make -C boot core-loader
+	imgtool -s support/imgtool/fat12.imgscript
