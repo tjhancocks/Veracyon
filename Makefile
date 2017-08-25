@@ -25,7 +25,7 @@ clean:
 
 # FAT12
 .PHONY: fat12
-fat12: build/fat12.img
+fat12: clean build/fat12.img
 	@echo
 
 .PHONY: fat12-bochs

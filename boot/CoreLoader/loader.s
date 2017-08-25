@@ -18,4 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
+	[org	0x8000]
+
 	%include "CoreLoader/phase1.s"
+	%include "CoreLoader/phase2.s"

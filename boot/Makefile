@@ -26,5 +26,5 @@ fat12-bootsector:
 # CoreLoader
 .PHONY: core-loader
 core-loader:
-	nasm -fbin -o ../build/core.loader.bin CoreLoader/phase1.s
+	nasm -fbin -o ../build/core.loader.bin CoreLoader/loader.s
 

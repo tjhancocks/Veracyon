@@ -18,34 +18,4 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits	16]
-
-_start:
-	.basic_setup:
-		call _init_serial
-	.handshake:
-		mov si, strings.welcome_serial
-		call _send_serial_bytes
-	.prepare_pmode:
-		mov si, strings.preparing_pmode
-		call _send_serial_bytes
-	.stack_guard:
-		cli
-		hlt
-		jmp $
-
-;;
-;; The following are a collection of strings used by CoreLoader phase 1.
-;;
-strings:
-	.welcome_serial:
-		db "CORELOADER VERSION 0.2", 0xA
-		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
-	.preparing_pmode:
-		db "Preparing to setup and configure protected mode on primary CPU", 0xA
-		db 0x0
-
-;;
-;; Include various external source files with required functionality.
-;;
-	%include "CoreLoader/phase1/serial.s"
+	[bits	32]
