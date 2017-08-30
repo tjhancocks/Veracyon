@@ -19,3 +19,10 @@
 ; SOFTWARE.
 
 	[bits	32]
+
+_phase2_start:
+	.main:
+		xchg bx, bx
+		cli
+		hlt
+		jmp $

@@ -20,15 +20,36 @@
 
 	[bits	16]
 
-_start:
+start:
 	.basic_setup:
-		call _init_serial
+		cli
+		call init_serial
 	.handshake:
 		mov si, strings.welcome_serial
-		call _send_serial_bytes
+		call send_serial_bytes
 	.prepare_pmode:
 		mov si, strings.preparing_pmode
-		call _send_serial_bytes
+		call send_serial_bytes
+		call gdt_install
+	.enable_a20:
+		in al, 0x92
+        or al, 2
+        out 0x92, al
+    .enable_32bit:
+    	mov eax, cr0
+        or al, 1
+        mov cr0, eax
+	.enter_phase2:
+		mov ax, 0x10					; Kernel Data Segment
+		mov ds, ax
+		mov es, ax
+		mov fs, ax
+		mov gs, ax
+		mov eax, 0x10800				; GDT Pointer linear address
+		lgdt [eax]	
+		mov ax, 0x10					; Kernel Data Segment
+		mov ss, ax	
+		jmp 0x08:_phase2_start
 	.stack_guard:
 		cli
 		hlt
@@ -42,10 +63,11 @@ strings:
 		db "CORELOADER VERSION 0.2", 0xA
 		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
 	.preparing_pmode:
-		db "Preparing to setup and configure protected mode on primary CPU", 0xA
-		db 0x0
+		db "Preparing to setup and configure protected mode on primary CPU... ",
+		db 0x0 
 
 ;;
 ;; Include various external source files with required functionality.
 ;;
 	%include "CoreLoader/phase1/serial.s"
+	%include "CoreLoader/phase1/gdt.s"

@@ -23,7 +23,7 @@
 ;;
 ;; Initialize the COM1 Serial Port. This is useful for debugging purposes.
 ;;
-_init_serial:
+init_serial:
 	.configure:
 		mov al, 0x00
 		mov dx, 0x03f9
@@ -55,7 +55,7 @@ _init_serial:
 ;;
 ;;	IN => AL - The byte to send.
 ;;
-_send_serial_byte:
+send_serial_byte:
 	.prepare:
 		pusha
 		push ax
@@ -79,14 +79,14 @@ _send_serial_byte:
 ;;
 ;; 	IN => DS:SI - The memory location of the first byte to send.
 ;;
-_send_serial_bytes:
+send_serial_bytes:
 	.prepare:
 		pusha
 	.next:
 		lodsb
 		or al, al
 		jz .finish
-		call _send_serial_byte
+		call send_serial_byte
 		jmp .next
 	.finish:
 		popa
