@@ -25,10 +25,10 @@ start:
 		cli
 		call init_serial
 	.handshake:
-		mov si, strings.welcome_serial
+		mov si, strings16.welcome_serial
 		call send_serial_bytes
 	.prepare_pmode:
-		mov si, strings.preparing_pmode
+		mov si, strings16.preparing_pmode
 		call send_serial_bytes
 		call gdt_install
 	.enable_a20:
@@ -58,7 +58,7 @@ start:
 ;;
 ;; The following are a collection of strings used by CoreLoader phase 1.
 ;;
-strings:
+strings16:
 	.welcome_serial:
 		db "CORELOADER VERSION 0.2", 0xA
 		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
