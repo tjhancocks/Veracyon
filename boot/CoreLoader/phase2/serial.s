@@ -20,62 +20,56 @@
 
 	[bits	32]
 
-_phase2_start:
-	.confirm_pmode:
-		push strings.done
-		call _send_serial_bytes
-		add esp, 4
-	.setup_interrupts:
-		push strings.preparing_interrupts
-		call _send_serial_bytes
-		add esp, 4
-		call _prepare_idt
-	.setup_cpu_exception_handlers:
-		; Todo
-	.setup_hardware_handlers:
-		; Todo
-	.setup_pic:
-		; Todo
-	.complete_interrupts:
-		; Todo
-	.setup_pit:
-		; Todo
-	.setup_basic_paging:
-		; Todo
-	.detect_boot_media:
-		; Todo
-	.load_boot_media_driver:
-		; Todo
-	.detect_boot_filesystem:
-		; Todo
-	.load_filesystem_driver:
-		; Todo
-	.build_system_configuration_structure:
-		; Todo
-	.load_kernel:
-		; Todo
-	.main:
-		cli
-		hlt
-		jmp $
+;;
+;;
+;; Write a single specified character to the COM1 Serial Port.
+;; This will not clobber registers.
+;;
+;;	void send_serial_byte(unsigned char value)
+;;
+_send_serial_byte:
+	.prepare:
+		push ebp
+		mov ebp, esp
+		pusha
+	.test_can_transmit:
+		mov dx, 0x03fd
+		in al, dx
+		and al, 0x20
+		jz .test_can_transmit
+	.transmit:
+		mov eax, [ebp + 8]
+		mov dx, 0x03f8
+		out dx, al
+	.finish:
+		popa
+		mov esp, ebp
+		pop ebp
+		ret
 
 ;;
-;; The following are a collection of strings used by CoreLoader phase 2.
+;; Keep sending bytes over the COM1 serial port, starting from the specified
+;; memory address, until a NULL byte is encountered.
+;; This will not clobber registers.
 ;;
-strings:
-	.done:
-		db "done!", 0xA, 0x0
-	.preparing_interrupts:
-		db "Preparing CPU interrupt handlers:", 0xA, 0x0
-	.exceptions:
-		db "    Exception handlers... ", 0x0
-	.hardware:
-		db "    Hardware handlers... ", 0x0
-	.configuring_pic:
-		db "    Configuring PIC... ", 0x0
-
+;;  void send_serial_bytes(unsigned char *bytes)
 ;;
-;; Include various external source files with required functionality.
-;;
-	%include "CoreLoader/phase2/serial.s"
-	%include "CoreLoader/phase2/idt.s"
+_send_serial_bytes:
+	.prepare:
+		push ebp
+		mov ebp, esp
+		pusha
+		mov esi, [ebp + 8]
+	.next:
+		lodsb
+		or al, al
+		jz .finish
+		push eax
+		call _send_serial_byte
+		add esp, 4
+		jmp .next
+	.finish:
+		popa
+		mov esp, ebp
+		pop ebp
+		ret
