@@ -22,5 +22,5 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x10800 - 0x10805		Global Descriptor Table Pointer (6B)
 	- 0x11000 - 0x117ff		Interrupt Descriptor Table (2KiB)
 	- 0x11800 - 0x11805		Interrupt Descriptor Table Pointer
-
-
+	- 0x11806 - 0x1180A     Panic function pointer `void panic(registers_t reg)`
+	- 0x11900 - 0x11D00		Custom Interrupt Handlers (1KiB)
