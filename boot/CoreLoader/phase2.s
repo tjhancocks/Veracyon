@@ -39,7 +39,13 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 	.setup_hardware_handlers:
-		; Todo
+		push strings.hardware
+		call _send_serial_bytes
+		add esp, 4
+		call _install_hardware_interrupts
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
 	.setup_pic:
 		; Todo
 	.complete_interrupts:
@@ -61,6 +67,9 @@ _phase2_start:
 	.load_kernel:
 		; Todo
 	.main:
+		mov eax, 10
+		mov ebx, 0
+		div ebx
 		cli
 		hlt
 		jmp $
@@ -86,3 +95,4 @@ strings:
 	%include "CoreLoader/phase2/serial.s"
 	%include "CoreLoader/phase2/idt.s"
 	%include "CoreLoader/phase2/exceptions.s"
+	%include "CoreLoader/phase2/hardware.s"
