@@ -31,7 +31,13 @@ _phase2_start:
 		add esp, 4
 		call _prepare_idt
 	.setup_cpu_exception_handlers:
-		; Todo
+		push strings.exceptions
+		call _send_serial_bytes
+		add esp, 4
+		call _install_cpu_exceptions
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
 	.setup_hardware_handlers:
 		; Todo
 	.setup_pic:
@@ -79,3 +85,4 @@ strings:
 ;;
 	%include "CoreLoader/phase2/serial.s"
 	%include "CoreLoader/phase2/idt.s"
+	%include "CoreLoader/phase2/exceptions.s"
