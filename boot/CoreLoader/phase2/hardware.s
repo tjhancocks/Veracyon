@@ -24,7 +24,7 @@
 ;; Install each of the CPU Hardware Interrupts (IRQs) into the Interrupt
 ;; Descriptor Table, at offsets 0x20 - 0x2F.
 ;;
-;;	void _install_hardware_interrupts(void)
+;;	void install_hardware_interrupts(void)
 ;;
 _install_hardware_interrupts:
 	.prologue:

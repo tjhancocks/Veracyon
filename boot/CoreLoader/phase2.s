@@ -47,7 +47,13 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 	.setup_pic:
-		; Todo
+		push strings.configuring_pic
+		call _send_serial_bytes
+		add esp, 4
+		call _prepare_pic
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
 	.complete_interrupts:
 		; Todo
 	.setup_pit:
@@ -67,9 +73,6 @@ _phase2_start:
 	.load_kernel:
 		; Todo
 	.main:
-		mov eax, 10
-		mov ebx, 0
-		div ebx
 		cli
 		hlt
 		jmp $
@@ -96,3 +99,4 @@ strings:
 	%include "CoreLoader/phase2/idt.s"
 	%include "CoreLoader/phase2/exceptions.s"
 	%include "CoreLoader/phase2/hardware.s"
+	%include "CoreLoader/phase2/pic.s"
