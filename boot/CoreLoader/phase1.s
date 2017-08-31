@@ -42,13 +42,14 @@ start:
 	.enter_phase2:
 		mov ax, 0x10					; Kernel Data Segment
 		mov ds, ax
-		mov es, ax
-		mov fs, ax
-		mov gs, ax
 		mov eax, 0x10800				; GDT Pointer linear address
 		lgdt [eax]	
 		mov ax, 0x10					; Kernel Data Segment
 		mov ss, ax	
+		mov ds, ax
+		mov es, ax
+		mov fs, ax
+		mov gs, ax
 		jmp 0x08:_phase2_start
 	.stack_guard:
 		cli
