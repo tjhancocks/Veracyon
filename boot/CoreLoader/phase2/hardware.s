@@ -57,7 +57,53 @@ _install_hardware_interrupts:
 ;; function and should not be called directly.
 ;;
 _handle_hardware_interrupt:
+		xchg bx, bx
 		pushad
+		movzx ebx, byte[esp + 32]
+		mov eax, ebx
+	.handle_spurious_irq7:
+		cmp bl, 0x07
+		jne .handle_irq
+		mov al, 0x08
+		out 0x20, al
+		in al, 0x20
+		and al, 0x80
+		jnz .handle_irq
+		jmp .finish
+	.handle_irq:
+		cmp bl, 0x01
+		je .handle_keyboard_irq
+		jmp .find_irq_handler
+	.handle_keyboard_irq:
+		in al, 0x64
+		and al, 0x02
+		jz .finish_keyboard_irq
+		nop
+		jmp .handle_keyboard_irq
+	.finish_keyboard_irq:
+		in al, 0x60
+		jmp .acknowledge_irq
+	.find_irq_handler:
+		movzx eax, byte[esp + 32]
+		mov ebx, 4
+		mul ebx
+		add eax, (0x20 * 4)
+		add eax, 0x11900
+		mov esi, eax
+		mov eax, [esi]
+	.check_handler:
+		or eax, eax
+		jz .acknowledge_irq
+		call eax
+	.acknowledge_irq:
+		movzx ebx, byte[esp + 32]
+		cmp bl, 0x80
+		jl .acknowledge_master_irq
+		mov al, 0x20
+		out 0xa0, al
+	.acknowledge_master_irq:
+		mov al, 0x20
+		out 0x20, al
 	.finish:
 		popad
 		add esp, 4

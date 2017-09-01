@@ -21,6 +21,7 @@
 	[bits	32]
 
 _phase2_start:
+		cli
 	.confirm_pmode:
 		push strings.done
 		call _send_serial_bytes
@@ -55,7 +56,10 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 	.complete_interrupts:
-		; Todo
+		push strings.enabling_interrupts
+		call _send_serial_bytes
+		add esp, 4
+		sti
 	.setup_pit:
 		; Todo
 	.setup_basic_paging:
@@ -73,7 +77,6 @@ _phase2_start:
 	.load_kernel:
 		; Todo
 	.main:
-		cli
 		hlt
 		jmp $
 
@@ -91,6 +94,8 @@ strings:
 		db "    Hardware handlers... ", 0x0
 	.configuring_pic:
 		db "    Configuring PIC... ", 0x0
+	.enabling_interrupts:
+		db "Enabling interrupts.", 0xA, 0x0
 
 ;;
 ;; Include various external source files with required functionality.
