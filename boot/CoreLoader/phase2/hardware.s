@@ -57,7 +57,6 @@ _install_hardware_interrupts:
 ;; function and should not be called directly.
 ;;
 _handle_hardware_interrupt:
-		xchg bx, bx
 		pushad
 		movzx ebx, byte[esp + 32]
 		mov eax, ebx

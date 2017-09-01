@@ -61,7 +61,16 @@ _phase2_start:
 		add esp, 4
 		sti
 	.setup_pit:
-		; Todo
+		push strings.configuring_pit
+		call _send_serial_bytes
+		add esp, 4
+		call _configure_pit
+		push 1000
+		call _sleep
+		add esp, 4
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
 	.setup_basic_paging:
 		; Todo
 	.detect_boot_media:
@@ -96,6 +105,8 @@ strings:
 		db "    Configuring PIC... ", 0x0
 	.enabling_interrupts:
 		db "Enabling interrupts.", 0xA, 0x0
+	.configuring_pit:
+		db "Configuring Programmable Interrupt Timer... ", 0x0
 
 ;;
 ;; Include various external source files with required functionality.
@@ -105,3 +116,4 @@ strings:
 	%include "CoreLoader/phase2/exceptions.s"
 	%include "CoreLoader/phase2/hardware.s"
 	%include "CoreLoader/phase2/pic.s"
+	%include "CoreLoader/phase2/pit.s"
