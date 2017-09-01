@@ -110,6 +110,28 @@ _handle_hardware_interrupt:
 		iret
 
 ;;
+;; Register a hardware interrupt handler for the specified IRQ.
+;;
+;;	void register_hardware_interrupt_handler(int irq, void *fn)
+;;
+_register_hardware_interrupt_handler:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.main:
+		cli
+	.calculate_offset:
+		mov edi, 0x11900				; Base of the interrupt handlers.
+		mov eax, [ebp + 8]				; Fetch the IRQ number
+		mov ebx, [ebp + 12]				; Fetch the function pointer.
+		mov [edi + (eax * 4)], ebx		; Save the function pointer to the table
+	.epilogue:
+		sti
+		mov esp, ebp
+		pop ebp
+		ret
+
+;;
 ;; The following section contains each of the CPU Hardware Interrupt Handlers.
 ;;
 _hdw_int_0:
