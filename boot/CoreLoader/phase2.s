@@ -65,14 +65,44 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 		call _configure_pit
-		push 1000
+		push 500						; Basic half second wait for visual test
 		call _sleep
 		add esp, 4
 		push strings.done
 		call _send_serial_bytes
 		add esp, 4
 	.setup_basic_paging:
-		; Todo
+		push strings.preparing_paging
+		call _send_serial_bytes
+		add esp, 4
+		call _prepare_paging
+		push strings.identity_mapping
+		call _send_serial_bytes
+		add esp, 4
+		call _configure_lower_identity_mapping
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
+		push strings.kernel_page_tables
+		call _send_serial_bytes
+		add esp, 4
+		push strings.skipped
+		call _send_serial_bytes
+		add esp, 4
+		push strings.linear_frame_buffer
+		call _send_serial_bytes
+		add esp, 4
+		push strings.unrequired
+		call _send_serial_bytes
+		add esp, 4
+		push strings.enabling_paging
+		call _send_serial_bytes
+		add esp, 4
+		call _enable_paging
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
+		; todo
 	.detect_boot_media:
 		; Todo
 	.load_boot_media_driver:
@@ -107,6 +137,20 @@ strings:
 		db "Enabling interrupts.", 0xA, 0x0
 	.configuring_pit:
 		db "Configuring Programmable Interrupt Timer... ", 0x0
+	.preparing_paging:
+		db "Preparing paging functionality:", 0xA, 0x0
+	.identity_mapping:
+		db "    Lower 1MiB Identity Mapping... ", 0x0
+	.kernel_page_tables:
+		db "    Mapping Kernel page tables... ", 0x0
+	.linear_frame_buffer:
+		db "    Mapping VESA Linear Frame Buffer... ", 0x0
+	.unrequired:
+		db "unrequired.", 0xA, 0x0
+	.skipped:
+		db "skipped.", 0xA, 0x0
+	.enabling_paging:
+		db "    Enabling paging... ", 0x0
 
 ;;
 ;; Include various external source files with required functionality.
@@ -117,3 +161,4 @@ strings:
 	%include "CoreLoader/phase2/hardware.s"
 	%include "CoreLoader/phase2/pic.s"
 	%include "CoreLoader/phase2/pit.s"
+	%include "CoreLoader/phase2/paging.s"

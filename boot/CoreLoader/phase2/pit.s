@@ -109,7 +109,6 @@ _sleep:
 	.prologue:
 		push ebp
 		mov ebp, esp
-		xchg bx, bx
 		pushad
 	.early_exit_test:
 		mov eax, [$PIT.installed]
@@ -126,7 +125,6 @@ _sleep:
 		or eax, eax
 		jnz .L0
 	.epilogue:
-		xchg bx, bx
 		popad
 		mov esp, ebp
 		pop ebp
