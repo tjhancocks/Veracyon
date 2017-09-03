@@ -24,3 +24,12 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x11800 - 0x11805		Interrupt Descriptor Table Pointer
 	- 0x11806 - 0x1180A     Panic function pointer `void panic(registers_t reg)`
 	- 0x11900 - 0x11D00		Custom Interrupt Handlers (1KiB)
+	- 0x12000 - 0x12FFF		Root Page Directory (4KiB)
+	- 0x13000 - 0x13FFF		Lower 4MiB Identity Mapping Page Table (4KiB/4MiB)
+	- 0x14000 - 0x14FFF		Kernel Address Mapping Page Table (4KiB/4MiB)
+	- 0x15000 - 0x15FFF		Reserved
+	- 0x16000 - 0x16FFF		Reserved
+	- 0x17000 - 0x17FFF		VESA Linear Frame Buffer Page Table (4KiB/4MiB)
+	- 0x18000 - 0x18FFF		Reserved
+	- 0x19000 - 0x19FFF		Reserved
+	- 0x1A000 - 0x1AFFF		Reserved
