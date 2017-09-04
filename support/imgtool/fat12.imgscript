@@ -24,6 +24,12 @@ attach build/fat12.img
 init -b512 -c2880
 format fat12 build/core.fat12.bin build/core.loader.bin
 
+# Install the FAT12 Boot Configuration file
+mount
+import kernel/boot/fat12.boot.config
+write boot.cli
+
 # Clean up
+unmount
 detach
 exit

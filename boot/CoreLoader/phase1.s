@@ -35,8 +35,7 @@ start:
 		call send_serial_bytes
 		mov si, strings16.reading_boot_configuration
 		call send_serial_bytes
-		mov si, strings16.skipped
-		call send_serial_bytes
+		call load_boot_configuration_fat12
 	.prepare_pmode:
 		mov si, strings16.preparing_pmode
 		call send_serial_bytes
@@ -81,6 +80,8 @@ strings16:
 		db "done.", 0xA, 0x0
 	.skipped:
 		db "skipped.", 0xA, 0x0
+	.missing:
+		db "missing.", 0xA, 0x0
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
 		db 0x0 
@@ -92,3 +93,4 @@ strings16:
 	%include "CoreLoader/phase1/gdt.s"
 	%include "CoreLoader/phase1/config.s"
 	%include "CoreLoader/phase1/disk.s"
+	%include "CoreLoader/phase1/fat12.s"

@@ -38,13 +38,17 @@ prepare_boot_configuration_defaults:
 	.fill:
 		mov di, 0xFE00
 		mov byte[di], 0x00				; VGA Text Mode
-		mov byte[di + 0x01], 'v'		; Kernel Name
-		mov byte[di + 0x02], 'k'
-		mov byte[di + 0x03], 'e'
-		mov byte[di + 0x04], 'r'
-		mov byte[di + 0x05], 'n'
-		mov byte[di + 0x06], 'e'
-		mov byte[di + 0x07], 'l'
+		mov byte[di + 0x01], 'V'		; Kernel Name
+		mov byte[di + 0x02], 'K'
+		mov byte[di + 0x03], 'E'
+		mov byte[di + 0x04], 'R'
+		mov byte[di + 0x05], 'N'
+		mov byte[di + 0x06], 'E'
+		mov byte[di + 0x07], 'L'
+		mov byte[di + 0x08], ' '
+		mov byte[di + 0x09], ' '
+		mov byte[di + 0x0A], ' '
+		mov byte[di + 0x0B], ' '
 		mov dword[di + 0x20], 0x100000	; Kernel Address (1MiB)
 		mov word[di + 0x24], 80			; Resolution Width
 		mov word[di + 0x26], 25			; Resolution Height
@@ -56,4 +60,21 @@ prepare_boot_configuration_defaults:
 		mov sp, bp
 		pop bp
 		ret
-		
+
+;;
+;; Load the boot configuration file from a FAT12 boot disk.
+;;
+load_boot_configuration_fat12:
+	.prologue:
+		push bp
+		mov bp, sp
+	.main:
+		mov si, .config_name
+		call fat12_read_file
+		xchg bx, bx
+	.epilogue:
+		mov sp, bp
+		pop bp
+		ret
+	.config_name:
+		db "BOOT    CLI"
