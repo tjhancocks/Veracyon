@@ -1,3 +1,4 @@
+
 # CoreLoader Specification
 ## Memory Layout 
 ### Introduction
@@ -34,6 +35,8 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x18000 - 0x18FFF		Reserved
 	- 0x19000 - 0x19FFF		Reserved
 	- 0x1A000 - 0x1AFFF		Reserved
+	- 0x20000 - 0x2FFFF		Assigned DMA Buffer (64KiB)
+	- 0x30000 - 0x3FFFF		File Buffer (64KiB)
 
 ### Boot Configuration
 

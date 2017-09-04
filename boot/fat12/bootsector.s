@@ -60,7 +60,7 @@ _start:
 		mov fs, ax
 		mov gs, ax
 		mov ss, ax
-		mov sp, 0xFFFF
+		mov sp, 0xFDFF
 	.fdc_reset:
 		xor dx, dx
 		int 0x13
