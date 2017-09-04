@@ -44,8 +44,8 @@ disk_read_sectors:
 		push bp
 		mov bp, sp
 		push gs
-		xor ax, ax
-		mov gs, ax
+		push 0
+		pop gs
 	.next_sector:
 		mov di, 5						; Make 5 attempts to read the sector
 	.L0:
@@ -94,10 +94,8 @@ lba_to_chs:
 		push bp
 		mov bp, sp
 		push gs
-		push ax
-		xor ax, ax
-		mov gs, ax
-		pop ax
+		push 0
+		pop gs
 	.main:
 		mov si, 0x7c00					; Bootsector
 		xor dx, dx
@@ -126,10 +124,8 @@ cluster_to_lba:
 		push bp
 		mov bp, sp
 		push gs
-		push ax
-		xor ax, ax
-		mov gs, ax
-		pop ax
+		push 0
+		pop gs
 	.main:
 		mov si, 0x7c00
 		sub ax, 2						; Zero based cluster number
