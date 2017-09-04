@@ -91,3 +91,4 @@ strings16:
 	%include "CoreLoader/phase1/serial.s"
 	%include "CoreLoader/phase1/gdt.s"
 	%include "CoreLoader/phase1/config.s"
+	%include "CoreLoader/phase1/disk.s"
