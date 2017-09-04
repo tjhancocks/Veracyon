@@ -16,11 +16,12 @@ It is *generally* standard for BIOS to load the bootsector to the memory address
 
 This document assumes the above to be true. If this is not the case on a given system, then the contents of this document should be considered to be *undefined behaviour*.
 
-	- 0x07c00 - 0x07dff		Bootsector
-	- 0x08000 - 0x0ffff		CoreLoader Binary (32KiB)
-	- 0x10000 - 0x107ff		Global Descriptor Table (2KiB)
+	- 0x07C00 - 0x07DDD		Bootsector
+	- 0x08000 - 0x0FDFF		CoreLoader Binary (31KiB)
+	- 0x0FE00 - 0x0FFFF		Boot Configuration (512B)		
+	- 0x10000 - 0x107FF		Global Descriptor Table (2KiB)
 	- 0x10800 - 0x10805		Global Descriptor Table Pointer (6B)
-	- 0x11000 - 0x117ff		Interrupt Descriptor Table (2KiB)
+	- 0x11000 - 0x117FF		Interrupt Descriptor Table (2KiB)
 	- 0x11800 - 0x11805		Interrupt Descriptor Table Pointer
 	- 0x11806 - 0x1180A     Panic function pointer `void panic(registers_t reg)`
 	- 0x11900 - 0x11D00		Custom Interrupt Handlers (1KiB)
@@ -33,3 +34,18 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x18000 - 0x18FFF		Reserved
 	- 0x19000 - 0x19FFF		Reserved
 	- 0x1A000 - 0x1AFFF		Reserved
+
+### Boot Configuration
+
+The Boot Configuration contains information about how the system should be configured,
+or has been configured. This intended as a private, internally store to the Boot Loader,
+but maybe accessed by the Kernel. This is not recommended however! The following describes what this structure contains.
+
+	- 0xFE00 [Byte]		0 - VGA Text Mode (80x25), 1 - VESA Linear Frame Buffer
+	- 0xFE01 [STR:31]	Kernel Name
+	- 0xFE20 [DWord]	Kernel Address
+	- 0xFE24 [Word]		Resolution Width
+	- 0xFE26 [Word]		Resolution Height
+	- 0xFE28 [Byte]		Resolution Depth
+	- 0xFE2A [DWord]	Linear Frame Buffer	
+

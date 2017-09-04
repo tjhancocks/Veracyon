@@ -97,3 +97,48 @@ _configure_lower_identity_mapping:
 		pop ebp
 		ret
 
+;;
+;; Setup the Kernel Page Tables.
+;;
+;; 	void prepare_kernel_page_tables(void)
+;;
+_prepare_kernel_page_tables:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.skipped:
+		push strings.skipped
+		call _send_serial_bytes
+		add esp, 4
+		jmp .epilogue
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
+
+;;
+;; Setup the Linear Frame Buffer Page Tables.
+;;
+;; 	void prepare_lfb_page_tables(void)
+;;
+_prepare_lfb_page_tables:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.required_test:
+		mov esi, 0xFE00
+		cmp byte[esi], 0
+		jz .unrequired
+		xchg bx, bx
+		cli
+		hlt
+		jmp $
+	.unrequired:
+		push strings.unrequired
+		call _send_serial_bytes
+		add esp, 4
+		jmp .epilogue
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret

@@ -27,6 +27,16 @@ start:
 	.handshake:
 		mov si, strings16.welcome_serial
 		call send_serial_bytes
+	.boot_config:
+		mov si, strings16.building_boot_configuration
+		call send_serial_bytes
+		call prepare_boot_configuration_defaults
+		mov si, strings16.done
+		call send_serial_bytes
+		mov si, strings16.reading_boot_configuration
+		call send_serial_bytes
+		mov si, strings16.skipped
+		call send_serial_bytes
 	.prepare_pmode:
 		mov si, strings16.preparing_pmode
 		call send_serial_bytes
@@ -63,6 +73,14 @@ strings16:
 	.welcome_serial:
 		db "CORELOADER VERSION 0.2", 0xA
 		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
+	.building_boot_configuration:
+		db "Building default boot configuration	... ", 0x0
+	.reading_boot_configuration:
+		db "Reading boot configuration file... ", 0x0
+	.done:
+		db "done.", 0xA, 0x0
+	.skipped:
+		db "skipped.", 0xA, 0x0
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
 		db 0x0 
@@ -72,3 +90,4 @@ strings16:
 ;;
 	%include "CoreLoader/phase1/serial.s"
 	%include "CoreLoader/phase1/gdt.s"
+	%include "CoreLoader/phase1/config.s"

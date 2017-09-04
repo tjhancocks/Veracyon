@@ -86,15 +86,11 @@ _phase2_start:
 		push strings.kernel_page_tables
 		call _send_serial_bytes
 		add esp, 4
-		push strings.skipped
-		call _send_serial_bytes
-		add esp, 4
+		call _prepare_kernel_page_tables
 		push strings.linear_frame_buffer
 		call _send_serial_bytes
 		add esp, 4
-		push strings.unrequired
-		call _send_serial_bytes
-		add esp, 4
+		call _prepare_lfb_page_tables
 		push strings.enabling_paging
 		call _send_serial_bytes
 		add esp, 4
