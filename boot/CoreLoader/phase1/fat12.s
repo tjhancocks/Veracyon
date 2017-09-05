@@ -122,8 +122,6 @@ fat12_read_file:
 		push 0x3000
 		pop es
 		xor bx, bx
-		mov si, strings16.done
-		call send_serial_bytes
 	.epilogue:
 		mov sp, bp
 		pop bp

@@ -38,17 +38,11 @@ prepare_boot_configuration_defaults:
 	.fill:
 		mov di, 0xFE00
 		mov byte[di], 0x00				; VGA Text Mode
-		mov byte[di + 0x01], 'V'		; Kernel Name
-		mov byte[di + 0x02], 'K'
-		mov byte[di + 0x03], 'E'
-		mov byte[di + 0x04], 'R'
-		mov byte[di + 0x05], 'N'
-		mov byte[di + 0x06], 'E'
-		mov byte[di + 0x07], 'L'
-		mov byte[di + 0x08], ' '
-		mov byte[di + 0x09], ' '
-		mov byte[di + 0x0A], ' '
-		mov byte[di + 0x0B], ' '
+		mov di, 0xFE01
+		mov si, .fat_kernel_name
+		mov cx, 11
+		rep movsb						; Write the kernel name (assume FAT)
+		mov di, 0xFE00
 		mov dword[di + 0x20], 0x100000	; Kernel Address (1MiB)
 		mov word[di + 0x24], 80			; Resolution Width
 		mov word[di + 0x26], 25			; Resolution Height
@@ -60,6 +54,8 @@ prepare_boot_configuration_defaults:
 		mov sp, bp
 		pop bp
 		ret
+	.fat_kernel_name:
+		db "VKERNEL    "
 
 ;;
 ;; Load the boot configuration file from a FAT12 boot disk.
@@ -68,13 +64,155 @@ load_boot_configuration_fat12:
 	.prologue:
 		push bp
 		mov bp, sp
-	.main:
+	.read_file:
 		mov si, .config_name
 		call fat12_read_file
-		xchg bx, bx
+	.check_for_error:
+		jc .epilogue
+		call parse_boot_config
+		jc .epilogue
+		mov si, strings16.done
+		call send_serial_bytes
 	.epilogue:
+		clc
 		mov sp, bp
 		pop bp
 		ret
 	.config_name:
 		db "BOOT    CLI"
+
+;;
+;; Parse the current file buffer as a boot configuration file.
+;;
+parse_boot_config:
+	.prologue:
+		push bp
+		mov bp, sp
+		push ds
+		push 0x3000
+		pop ds
+		push 0x0000
+		pop es
+	.main:
+		xor si, si						; Start at the beginning of the file.
+	.next_line:
+		cmp byte[si], '#'				; Do a check for a comment
+		je .L0							; Consume the comment
+		cmp byte[si], 0xA				; Is the character a carriage return?
+		jne .null_check_1
+		inc si
+		jmp .next_line
+	.null_check_1:
+		cmp byte[si], 0x0				; Is the character a NULL character?
+		je .eof1
+		jmp .read_key
+	.L0:
+		cmp byte[si], 0xA				; Is the character a carriage return?
+		jne .null_check_2
+		inc si
+		jmp .next_line
+	.null_check_2:
+		cmp byte[si], 0x0				; Is this a null character?
+		je .eof1
+		inc si
+		jmp .L0							; Check the next character!
+	.eof1:
+		jmp .epilogue
+	.read_key:
+		mov di, .key_buffer				; We're going to be writing to the key
+		push si							; Save the location in file
+		push ds							; Save the DS segment
+		push 0x0000
+		pop ds							; Reset DS to normal
+		mov si, di						; Switch to position in key buffer
+		xor ax, ax
+		mov cx, 16
+		rep stosb						; Clear the key buffer
+		pop ds							; Restore DS
+		pop si							; Restore location in file
+		mov di, .key_buffer				; We're going to be writing to the key
+	.next_key_char:
+		cmp byte[si], ':'				; Is this the key value delimiter?
+		je .read_value
+		movsb 							; Copy char from the file to key buffer
+		jmp .next_key_char				; Next key char
+	.read_value:
+		mov di, .value_buffer			; We're going to be writing to the value
+		push si							; Save the location in file
+		push ds							; Save the DS segment
+		push 0x0000
+		pop ds							; Reset DS to normal
+		mov si, di						; Switch to position in value buffer
+		xor ax, ax
+		mov cx, 257
+		rep stosb						; Clear the value buffer
+		pop ds							; Restore DS
+		pop si							; Restore location in file
+		inc si							; Skip over the ':'
+		mov di, .value_buffer			; We're going to be writing to the value
+	.next_value_char:
+		cmp byte[si], 0xA				; End of the value by new line
+		je .handle_key_value
+		cmp byte[si], 0x0				; End of the value by null character
+		je .handle_key_value
+		movsb 							; Copy char from file to value buffer
+		jmp .next_value_char
+	.handle_key_value:
+		pop ds
+		push si
+		mov si, .key_buffer
+	.check_message:
+		mov di, .message
+		mov cx, 16
+		rep cmpsb
+		jne .finished_key_value
+		mov si, .value_buffer
+		call dbg_put_string
+		mov si, .bios_newline
+		call dbg_put_string
+	.finished_key_value:
+		xchg bx, bx
+		pop si
+		inc si
+		push ds
+		push 0x3000
+		pop ds
+		push 0x0000
+		pop es
+		jmp .next_line
+	.epilogue:
+		pop ds
+		mov sp, bp
+		pop bp
+		ret
+	.bad_conf:
+		db "bad configuration file.", 0xA, 0x0
+	.key_buffer:
+		times 16 db 0
+	.value_buffer:
+		times 257 db 0
+	.message:
+		db "message", 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.bios_newline:
+		db 0xD, 0xA, 0x0
+
+;;
+;; Simple debug function to write a string to the screen. This is used for 
+;; debugging purposes to ensure the boot configuration is working correctly.
+;;
+dbg_put_string:
+	.prologue:
+		push bp
+		mov bp, sp
+	.main:
+		mov ah, 0xE
+	.next_char:
+		lodsb
+		or al, al
+		jz .epilogue
+		int 0x10
+		jmp .next_char
+	.epilogue:
+		mov sp, bp
+		pop bp
+		ret
