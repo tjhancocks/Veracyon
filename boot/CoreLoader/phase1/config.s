@@ -160,18 +160,36 @@ parse_boot_config:
 	.handle_key_value:
 		pop ds
 		push si
-		mov si, .key_buffer
 	.check_message:
+		mov si, .key_buffer
 		mov di, .message
 		mov cx, 16
 		rep cmpsb
-		jne .finished_key_value
+		jne .check_vga_text
 		mov si, .value_buffer
 		call dbg_put_string
 		mov si, .bios_newline
 		call dbg_put_string
+		jmp .finished_key_value
+	.check_vga_text:
+		mov si, .key_buffer
+		mov di, .vga_text
+		mov cx, 16
+		rep cmpsb
+		jne .finished_key_value
+		mov si, .value_buffer
+		mov di, .enabled
+		mov cx, 7
+		rep cmpsb
+		jne .enable_vesa
+		mov di, 0xFE00
+		mov byte[di], 0 
+		jmp .finished_key_value
+	.enable_vesa:
+		mov di, 0xFE00
+		mov byte[di], 1
+		jmp .finished_key_value
 	.finished_key_value:
-		xchg bx, bx
 		pop si
 		inc si
 		push ds
@@ -193,6 +211,10 @@ parse_boot_config:
 		times 257 db 0
 	.message:
 		db "message", 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.vga_text:
+		db "vga-text", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	.enabled:
+		db "enabled"
 	.bios_newline:
 		db 0xD, 0xA, 0x0
 
