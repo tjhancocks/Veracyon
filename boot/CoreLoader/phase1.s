@@ -36,6 +36,10 @@ start:
 		mov si, strings16.reading_boot_configuration
 		call send_serial_bytes
 		call load_boot_configuration_fat12
+	.vesa:
+		mov si, strings16.preparing_vesa
+		call send_serial_bytes
+		call prepare_vesa
 	.prepare_pmode:
 		mov si, strings16.preparing_pmode
 		call send_serial_bytes
@@ -76,12 +80,16 @@ strings16:
 		db "Building default boot configuration	... ", 0x0
 	.reading_boot_configuration:
 		db "Reading boot configuration file... ", 0x0
+	.preparing_vesa:
+		db "Preparing VESA screen mode... ", 0x0
 	.done:
 		db "done.", 0xA, 0x0
 	.skipped:
 		db "skipped.", 0xA, 0x0
 	.missing:
 		db "missing.", 0xA, 0x0
+	.unavailable:
+		db "unavailable.", 0xA, 0x0
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
 		db 0x0 
@@ -94,3 +102,4 @@ strings16:
 	%include "CoreLoader/phase1/config.s"
 	%include "CoreLoader/phase1/disk.s"
 	%include "CoreLoader/phase1/fat12.s"
+	%include "CoreLoader/phase1/vesa.s"

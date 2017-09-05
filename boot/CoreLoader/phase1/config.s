@@ -37,16 +37,16 @@ prepare_boot_configuration_defaults:
 		rep stosb
 	.fill:
 		mov di, 0xFE00
-		mov byte[di], 0x00				; VGA Text Mode
+		mov byte[di], 0x01				; VESA Mode
 		mov di, 0xFE01
 		mov si, .fat_kernel_name
 		mov cx, 11
 		rep movsb						; Write the kernel name (assume FAT)
 		mov di, 0xFE00
 		mov dword[di + 0x20], 0x100000	; Kernel Address (1MiB)
-		mov word[di + 0x24], 80			; Resolution Width
-		mov word[di + 0x26], 25			; Resolution Height
-		mov word[di + 0x28], 4			; Resolution Depth
+		mov word[di + 0x24], 800		; Resolution Width
+		mov word[di + 0x26], 600		; Resolution Height
+		mov word[di + 0x28], 32			; Resolution Depth
 		mov dword[di + 0x2A], 0xB8000	; Linear Frame Buffer / VGA Buffer
 	.epilogue:
 		pop es

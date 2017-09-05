@@ -18,7 +18,11 @@ It is *generally* standard for BIOS to load the bootsector to the memory address
 This document assumes the above to be true. If this is not the case on a given system, then the contents of this document should be considered to be *undefined behaviour*.
 
 	- 0x07C00 - 0x07DDD		Bootsector
-	- 0x08000 - 0x0FDFF		CoreLoader Binary (31KiB)
+	- 0x08000 - 0x0EFFF		CoreLoader Binary (28KiB)
+	- 0x0F000 - 0x0F1FF		VESA VBE Info (512B)
+	- 0x0F200 - 0x0F3FF		VBE Mode Info (512B)
+	- 0x0F400 - 0x0F5FF		VBE EDID Info (512B)
+	- 0x0F600 - 0x0F7FF		Screen Configuration Information (512B)
 	- 0x0FE00 - 0x0FFFF		Boot Configuration (512B)		
 	- 0x10000 - 0x107FF		Global Descriptor Table (2KiB)
 	- 0x10800 - 0x10805		Global Descriptor Table Pointer (6B)
