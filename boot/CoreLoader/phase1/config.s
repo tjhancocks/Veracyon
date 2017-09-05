@@ -21,6 +21,19 @@
 	[bits	16]
 
 ;;
+;; The following defines the layout of the Boot Configuration structure.
+;;
+STRUC BootConf
+	.vesa_mode			resb 1
+	.kernel_name		resb 31
+	.kernel_base		resd 1
+	.width				resw 1
+	.height				resw 1
+	.depth				resb 1
+	.lfb				resd 1
+ENDSTRUC
+
+;;
 ;; Produce the default boot configuration structure in memory. This may be
 ;; overridden by user specified information later.
 ;;
@@ -47,7 +60,7 @@ prepare_boot_configuration_defaults:
 		mov word[di + 0x24], 800		; Resolution Width
 		mov word[di + 0x26], 600		; Resolution Height
 		mov word[di + 0x28], 32			; Resolution Depth
-		mov dword[di + 0x2A], 0xB8000	; Linear Frame Buffer / VGA Buffer
+		mov dword[di + 0x2A], 0x00000	; Linear Frame Buffer / VGA Buffer
 	.epilogue:
 		pop es
 		popa
@@ -160,34 +173,25 @@ parse_boot_config:
 	.handle_key_value:
 		pop ds
 		push si
-	.check_message:
-		mov si, .key_buffer
-		mov di, .message
-		mov cx, 16
-		rep cmpsb
-		jne .check_vga_text
-		mov si, .value_buffer
-		call dbg_put_string
-		mov si, .bios_newline
-		call dbg_put_string
+	.message:
+		call check_debug_message
+		jc .vga_text
+		nop
 		jmp .finished_key_value
-	.check_vga_text:
-		mov si, .key_buffer
-		mov di, .vga_text
-		mov cx, 16
-		rep cmpsb
-		jne .finished_key_value
-		mov si, .value_buffer
-		mov di, .enabled
-		mov cx, 7
-		rep cmpsb
-		jne .enable_vesa
-		mov di, 0xFE00
-		mov byte[di], 0 
+	.vga_text:
+		call check_vga_text_mode
+		jc .screen_width
+		nop
 		jmp .finished_key_value
-	.enable_vesa:
-		mov di, 0xFE00
-		mov byte[di], 1
+	.screen_width:
+		call check_screen_width
+		jc .screen_height
+		nop
+		jmp .finished_key_value
+	.screen_height:
+		call check_screen_height
+		jc .finished_key_value
+		nop
 		jmp .finished_key_value
 	.finished_key_value:
 		pop si
@@ -209,14 +213,153 @@ parse_boot_config:
 		times 16 db 0
 	.value_buffer:
 		times 257 db 0
-	.message:
-		db "message", 0, 0, 0, 0, 0, 0, 0, 0, 0
-	.vga_text:
-		db "vga-text", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+;;
+;; Check for and handle a debug message key-value.
+;;
+check_debug_message:
+	.main:
+		mov si, parse_boot_config.key_buffer
+		mov di, .key
+		mov cx, 7
+		rep cmpsb
+		jne .failed
+		nop
+	.print:
+		mov si, parse_boot_config.value_buffer
+		call dbg_put_string
+		mov si, .nl
+		call dbg_put_string
+		clc
+		ret
+	.failed:
+		stc
+		ret
+	.key:
+		db "message"
+	.nl:
+		db 0xD, 0xA, 0x0
+
+;;
+;; Check for and handle a vga text mode key-value
+;;
+check_vga_text_mode:
+	.main:
+		mov si, parse_boot_config.key_buffer
+		mov di, .key
+		mov cx, 8
+		rep cmpsb
+		jne .failed
+		nop
+	.check_state:
+		mov si, parse_boot_config.value_buffer
+		mov di, .enabled
+		mov cx, 7
+		rep cmpsb
+		je .enable_text_mode
+		nop
+	.enable_vesa_mode:
+		mov di, 0xfe00
+		mov byte[di + BootConf.vesa_mode], 1
+		jmp .done
+	.enable_text_mode:
+		mov di, 0xfe00
+		mov byte[di + BootConf.vesa_mode], 0
+		mov word[di + BootConf.width], 80
+		mov word[di + BootConf.height], 25
+		mov dword[di + BootConf.lfb], 0xB8000
+	.done:
+		clc
+		ret
+	.failed:
+		stc
+		ret
+	.key:
+		db "vga-text"
 	.enabled:
 		db "enabled"
-	.bios_newline:
-		db 0xD, 0xA, 0x0
+
+;;
+;; Check for and handle a resolution width key-value
+;;
+check_screen_width:
+	.main:
+		mov si, parse_boot_config.key_buffer
+		mov di, .key
+		mov cx, 12
+		rep cmpsb
+		jne .failed
+		nop
+	.parse_value:
+		mov si, parse_boot_config.value_buffer
+		call str_to_num
+		mov di, 0xfe00
+		mov word[di + BootConf.width], ax
+	.done:
+		clc
+		ret
+	.failed:
+		stc
+		ret
+	.key:
+		db "screen-width"
+
+;;
+;; Check for and handle a resolution height key-value
+;;
+check_screen_height:
+	.main:
+		mov si, parse_boot_config.key_buffer
+		mov di, .key
+		mov cx, 13
+		rep cmpsb
+		jne .failed
+		nop
+	.parse_value:
+		mov si, parse_boot_config.value_buffer
+		call str_to_num
+		mov di, 0xfe00
+		mov word[di + BootConf.height], ax
+	.done:
+		clc
+		ret
+	.failed:
+		stc
+		ret
+	.key:
+		db "screen-height"
+
+;;
+;; Convert a string into a number.
+;;
+;;	IN: SI => String
+;; OUT: AX => Value
+;;
+str_to_num:
+	.main:
+		xor ebx, ebx
+	.next_char:
+		xor eax, eax
+		lodsb
+		or ax, ax
+		jz .done
+		cmp ax, '0'
+		jl .error
+		cmp ax, '9'
+		jg .error
+		sub ax, '0'
+		xchg ebx, eax
+		mov edx, 10
+		mul dx
+		add eax, ebx
+		xchg ebx, eax
+		jmp .next_char
+	.error:
+		xor eax, eax
+	.done:
+		mov eax, ebx
+		ret
+
 
 ;;
 ;; Simple debug function to write a string to the screen. This is used for 
