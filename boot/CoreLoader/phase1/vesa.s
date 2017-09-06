@@ -299,19 +299,24 @@ prepare_vesa:
 		jmp vesa_vbe_error
 	.save_vbe_mode_info:
 		mov si, 0xf600					; Location of the Screen Configuration.
-		mov cx, 0xf200					; Location of the VBE Mode Info.
 		mov di, 0xfe00					; Location of the Boot Configuration.
 		movzx eax, word[si + ScreenConf.depth]
 		and eax, 0xFF
 		add eax, 7
 		shr eax, 3
 		mov dword[di + BootConf.bytes_per_pixel], eax
-		movzx eax, word[cx + VBEMode.pitch]
+		push si
+		mov si, 0xf200					; Location of the VBE Mode Info.
+		movzx eax, word[si + VBEMode.pitch]
+		pop si
 		mov dword[di + BootConf.bytes_per_line], eax
 		movzx ebx, word[si + ScreenConf.height]
 		mul ebx
 		mov dword[di + BootConf.screen_size], eax
-		movzx eax, dword[cx + VBEMode.frame_buffer]
+		push si
+		mov si, 0xf200					; Location of the VBE Mode Info.
+		mov eax, [si + VBEMode.frame_buffer]
+		pop si
 		mov dword[di + BootConf.lfb], eax
 		movzx eax, word[si + ScreenConf.width]
 		shr eax, 3

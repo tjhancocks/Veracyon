@@ -23,6 +23,7 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x0F200 - 0x0F3FF		VBE Mode Info (512B)
 	- 0x0F400 - 0x0F5FF		VBE EDID Info (512B)
 	- 0x0F600 - 0x0F7FF		Screen Configuration Information (512B)
+	- 0x0F800 - 0x0F8FF		Paging State Information (256B)
 	- 0x0FE00 - 0x0FFFF		Boot Configuration (512B)		
 	- 0x10000 - 0x107FF		Global Descriptor Table (2KiB)
 	- 0x10800 - 0x10805		Global Descriptor Table Pointer (6B)
@@ -54,5 +55,9 @@ but maybe accessed by the Kernel. This is not recommended however! The following
 	- 0xFE24 [Word]		Resolution Width
 	- 0xFE26 [Word]		Resolution Height
 	- 0xFE28 [Byte]		Resolution Depth
-	- 0xFE2A [DWord]	Linear Frame Buffer	
+	- 0xFE29 [DWord]	Linear Frame Buffer	
+	- 0xFE2D [DWord]	Background Color
+	- 0xFE31 [DWord]	Bytes Per Pixel
+	- 0xFE35 [DWord]	Bytes Per Line
+	- 0xFE39 [Dword]	Screen Size
 
