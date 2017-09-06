@@ -31,6 +31,7 @@ STRUC BootConf
 	.height				resw 1
 	.depth				resb 1
 	.lfb				resd 1
+	.background_color	resd 1
 ENDSTRUC
 
 ;;
@@ -190,6 +191,11 @@ parse_boot_config:
 		jmp .finished_key_value
 	.screen_height:
 		call check_screen_height
+		jc .default_background
+		nop
+		jmp .finished_key_value
+	.default_background:
+		call check_default_background
 		jc .finished_key_value
 		nop
 		jmp .finished_key_value
@@ -330,6 +336,31 @@ check_screen_height:
 		db "screen-height"
 
 ;;
+;; Check for and handle a default background key-value
+;;
+check_default_background:
+	.main:
+		mov si, parse_boot_config.key_buffer
+		mov di, .key
+		mov cx, 10
+		rep cmpsb
+		jne .failed
+		nop
+	.parse_value:
+		mov si, parse_boot_config.value_buffer
+		call hex_to_num
+		mov di, 0xfe00
+		mov dword[di + BootConf.background_color], eax
+	.done:
+		clc
+		ret
+	.failed:
+		stc
+		ret
+	.key:
+		db "background"
+
+;;
 ;; Convert a string into a number.
 ;;
 ;;	IN: SI => String
@@ -354,6 +385,52 @@ str_to_num:
 		add eax, ebx
 		xchg ebx, eax
 		jmp .next_char
+	.error:
+		xor eax, eax
+	.done:
+		mov eax, ebx
+		ret
+
+;;
+;; Convert a hex string into a number.
+;;
+;; 	IN: SI => String
+;; OUT: EAX => Value
+;;
+hex_to_num:
+	.main:
+		xor ebx, ebx
+	.next_char:
+		xor eax, eax
+		lodsb
+		or ax, ax
+		jz .done
+		cmp ax, '0'
+		jl .lower_check
+		cmp ax, '9'
+		jg .lower_check
+		sub ax, '0'
+	.merge:
+		xchg ebx, eax
+		mov edx, 16
+		mul dx
+		add eax, ebx
+		xchg ebx, eax
+		jmp .next_char
+	.lower_check:
+		cmp ax, 'a'
+		jl .upper_check
+		cmp ax, 'f'
+		jg .upper_check
+		sub ax, 'a'
+		jmp .merge
+	.upper_check:
+		cmp ax, 'A'
+		jl .error
+		cmp ax, 'F'
+		jg .error
+		sub ax, 'A' - 10
+		jmp .merge
 	.error:
 		xor eax, eax
 	.done:
