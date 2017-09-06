@@ -32,6 +32,13 @@ STRUC BootConf
 	.depth				resb 1
 	.lfb				resd 1
 	.background_color	resd 1
+	.bytes_per_pixel	resd 1
+	.bytes_per_line		resd 1
+	.screen_size		resd 1
+	.x_max				resd 1
+	.y_max				resd 1
+	.x					resd 1
+	.y					resd 1
 ENDSTRUC
 
 ;;
