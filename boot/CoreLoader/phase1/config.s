@@ -418,18 +418,15 @@ hex_to_num:
 		jg .lower_check
 		sub ax, '0'
 	.merge:
-		xchg ebx, eax
-		mov edx, 16
-		mul dx
-		add eax, ebx
-		xchg ebx, eax
+		shl ebx, 4
+		or ebx, eax
 		jmp .next_char
 	.lower_check:
 		cmp ax, 'a'
 		jl .upper_check
 		cmp ax, 'f'
 		jg .upper_check
-		sub ax, 'a'
+		sub ax, 'a' - 10
 		jmp .merge
 	.upper_check:
 		cmp ax, 'A'
