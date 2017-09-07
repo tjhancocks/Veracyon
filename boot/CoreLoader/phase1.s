@@ -64,7 +64,7 @@ start:
 		cli
 		mov si, strings16.far_jump
 		call send_serial_bytes
-		mov eax, 0xFE00					; GDT Pointer linear address
+		mov eax, BOOT_CONFIG
 		lgdt [eax + BootConf.gdt_size]	
 		mov ax, 0x10					; Kernel Data Segment
 		mov ss, ax	

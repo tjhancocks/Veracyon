@@ -129,7 +129,7 @@ _prepare_lfb_page_tables:
 		push 0							; [ebp - 8] Linear Frame Buffer Base
 		push 0							; [ebp - 12] Linear Frame Buffer Size
 	.required_test:
-		mov esi, 0xFE00
+		mov esi, BOOT_CONFIG
 		movzx eax, byte[esi]
 		or eax, eax
 		jz .unrequired
@@ -159,7 +159,7 @@ _prepare_lfb_page_tables:
 		mov ecx, [ebp - 12]				; Fetch the linear frame buffer size
 		shr ecx, 12						; Divide by the size of a page
 		add ecx, 1
-		mov edi, 0x17000				; Location of the first VESA Page Table
+		mov edi, VESA_PAGE_TABLE_1		; Location of the first VESA Page Table
 	.allocate_lfb_frame:
 		stosd
 		add eax, 0x1000
@@ -168,8 +168,8 @@ _prepare_lfb_page_tables:
 		mov edi, [ebp - 8]				; Fetch the linear frame buffer location
 		mov ecx, [ebp - 12]				; Fetch the linear frame buffer size
 		shr ecx, 2						; Divide by 4
-		mov esi, 0xFE00
-		mov eax, [esi + 0x2d]			; Fetch the default background color
+		mov esi, BOOT_CONFIG
+		mov eax, [esi + BootConf.background_color]
 		rep stosd
 		jmp .done
 	.unrequired:

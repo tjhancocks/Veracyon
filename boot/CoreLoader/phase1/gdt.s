@@ -60,7 +60,7 @@ gdt_install:
 	.setup_pointer:
 		xor ax, ax
 		mov es, ax
-		mov di, 0xFE00
+		mov di, BOOT_CONFIG
 		mov ax, 0x0017
 		mov [di + BootConf.gdt_size], ax
 		mov eax, 0x00010000

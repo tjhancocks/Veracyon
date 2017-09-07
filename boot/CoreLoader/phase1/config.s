@@ -21,31 +21,6 @@
 	[bits	16]
 
 ;;
-;; The following defines the layout of the Boot Configuration structure.
-;;
-STRUC BootConf
-	.vesa_mode			resb 1
-	.kernel_name		resb 31
-	.kernel_base		resd 1
-	.width				resw 1
-	.height				resw 1
-	.depth				resb 1
-	.lfb				resd 1
-	.background_color	resd 1
-	.bytes_per_pixel	resd 1
-	.bytes_per_line		resd 1
-	.screen_size		resd 1
-	.x_max				resd 1
-	.y_max				resd 1
-	.x					resd 1
-	.y					resd 1
-	.gdt_size			resw 1
-	.gdt_base			resd 1
-	.lower_memory		resw 1
-	.upper_memory		resd 1
-ENDSTRUC
-
-;;
 ;; Produce the default boot configuration structure in memory. This may be
 ;; overridden by user specified information later.
 ;;
@@ -56,23 +31,23 @@ prepare_boot_configuration_defaults:
 		pusha
 		push es
 	.clear:
-		mov di, 0xFE00
+		mov di, BOOT_CONFIG
 		mov cx, 0x100
 		xor ax, ax
 		rep stosb
 	.fill:
-		mov di, 0xFE00
+		mov di, BOOT_CONFIG
 		mov byte[di], 0x01				; VESA Mode
-		mov di, 0xFE01
+		mov di, BOOT_CONFIG + 1
 		mov si, .fat_kernel_name
 		mov cx, 11
 		rep movsb						; Write the kernel name (assume FAT)
-		mov di, 0xFE00
-		mov dword[di + 0x20], 0x100000	; Kernel Address (1MiB)
-		mov word[di + 0x24], 800		; Resolution Width
-		mov word[di + 0x26], 600		; Resolution Height
-		mov word[di + 0x28], 32			; Resolution Depth
-		mov dword[di + 0x2A], 0x00000	; Linear Frame Buffer / VGA Buffer
+		mov di, BOOT_CONFIG
+		mov dword[di + BootConf.kernel_base], 0x100000
+		mov word[di + BootConf.width], 800
+		mov word[di + BootConf.height], 600
+		mov word[di + BootConf.depth], 32
+		mov dword[di + BootConf.lfb], 0x00000
 	.epilogue:
 		pop es
 		popa
@@ -276,11 +251,11 @@ check_vga_text_mode:
 		je .enable_text_mode
 		nop
 	.enable_vesa_mode:
-		mov di, 0xfe00
+		mov di, BOOT_CONFIG
 		mov byte[di + BootConf.vesa_mode], 1
 		jmp .done
 	.enable_text_mode:
-		mov di, 0xfe00
+		mov di, BOOT_CONFIG
 		mov byte[di + BootConf.vesa_mode], 0
 		mov word[di + BootConf.width], 80
 		mov word[di + BootConf.height], 25
@@ -310,7 +285,7 @@ check_screen_width:
 	.parse_value:
 		mov si, parse_boot_config.value_buffer
 		call str_to_num
-		mov di, 0xfe00
+		mov di, BOOT_CONFIG
 		mov word[di + BootConf.width], ax
 	.done:
 		clc
@@ -335,7 +310,7 @@ check_screen_height:
 	.parse_value:
 		mov si, parse_boot_config.value_buffer
 		call str_to_num
-		mov di, 0xfe00
+		mov di, BOOT_CONFIG
 		mov word[di + BootConf.height], ax
 	.done:
 		clc
@@ -360,7 +335,7 @@ check_default_background:
 	.parse_value:
 		mov si, parse_boot_config.value_buffer
 		call hex_to_num
-		mov di, 0xfe00
+		mov di, BOOT_CONFIG
 		mov dword[di + BootConf.background_color], eax
 	.done:
 		clc

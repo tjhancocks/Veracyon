@@ -68,6 +68,30 @@ STRUC BPBlock
 	.fs_type            resb 8
 ENDSTRUC
 
+;;
+;; The following defines the layout of the Boot Configuration structure.
+;;
+STRUC BootConf
+	.vesa_mode			resb 1
+	.kernel_name		resb 31
+	.kernel_base		resd 1
+	.width				resw 1
+	.height				resw 1
+	.depth				resb 1
+	.lfb				resd 1
+	.background_color	resd 1
+	.bytes_per_pixel	resd 1
+	.bytes_per_line		resd 1
+	.screen_size		resd 1
+	.x_max				resd 1
+	.y_max				resd 1
+	.x					resd 1
+	.y					resd 1
+	.gdt_size			resw 1
+	.gdt_base			resd 1
+	.lower_memory		resw 1
+	.upper_memory		resd 1
+ENDSTRUC
 
 ;;
 ;; The following defines the layout of the VESA VBE Info structure.
