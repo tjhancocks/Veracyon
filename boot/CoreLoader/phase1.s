@@ -107,7 +107,7 @@ strings16:
 		db "unavailable.", 0xA, 0x0
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
-		db 0x0 
+		db 0xA, 0x0 
 
 ;;
 ;; Include various external source files with required functionality.

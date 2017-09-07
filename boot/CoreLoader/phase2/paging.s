@@ -140,7 +140,8 @@ _prepare_lfb_page_tables:
 		push 0							; [ebp - 12] Linear Frame Buffer Size
 	.required_test:
 		mov esi, 0xFE00
-		cmp byte[esi], 0
+		movzx eax, byte[esi]
+		or eax, eax
 		jz .unrequired
 	.calculate_page_table_count:
 		xor edx, edx
@@ -179,11 +180,16 @@ _prepare_lfb_page_tables:
 		mov esi, 0xFE00
 		mov eax, [esi + 0x2d]			; Fetch the default background color
 		rep stosd
+		jmp .done
 	.unrequired:
 		push strings.unrequired
 		call _send_serial_bytes
 		add esp, 4
 		jmp .epilogue
+	.done:
+		push strings.done
+		call _send_serial_bytes
+		add esp, 4
 	.epilogue:
 		mov esp, ebp
 		pop ebp
