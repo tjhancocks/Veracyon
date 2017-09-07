@@ -53,12 +53,12 @@ disk_read_sectors:
 		push bx
 		push cx
 		call lba_to_chs
-		mov si, 0x7c00					; Bootsector location
+		mov si, BIOS_PARAM_BLOCK		; Bootsector location
 		mov ax, 0x0201					; BIOS read one sector
 		mov ch, byte[$DISK.absolute_track]
 		mov cl, byte[$DISK.absolute_sector]
 		mov dh, byte[$DISK.absolute_head]
-		mov dl, byte[gs:si + 36]		; Fetch the boot drive number
+		mov dl, byte[gs:si + BPBlock.drive]; Fetch the boot drive number
 		int 0x13						; Invoke the BIOS function
 		jnc .success					; If no read error, then jump to success
 		xor ax, ax						; Reset the disk
@@ -73,8 +73,8 @@ disk_read_sectors:
 		pop cx
 		pop bx
 		pop ax
-		mov si, 0x7c00
-		add bx, word[gs:si + 11]		; Move to next buffer
+		mov si, BIOS_PARAM_BLOCK
+		add bx, word[gs:si + BPBlock.bps]; Move to next buffer
 		inc ax							; Move to the next sector
 		loop .next_sector
 	.epilogue:
@@ -97,13 +97,13 @@ lba_to_chs:
 		push 0
 		pop gs
 	.main:
-		mov si, 0x7c00					; Bootsector
+		mov si, BIOS_PARAM_BLOCK 		; Bootsector
 		xor dx, dx
-		div word[gs:si + 24]			; Divide by sectors per track
+		div word[gs:si + BPBlock.spt]	; Divide by sectors per track
 		inc dl							; First sector is sector 1, not 0
 		mov byte[$DISK.absolute_sector], dl
 		xor dx, dx
-		div word[gs:si + 26]			; Divide by heads per cylinder
+		div word[gs:si + BPBlock.head_count]; Divide by heads per cylinder
 		mov byte[$DISK.absolute_head], dl
 		mov byte[$DISK.absolute_track], al
 	.epilogue:
@@ -127,10 +127,10 @@ cluster_to_lba:
 		push 0
 		pop gs
 	.main:
-		mov si, 0x7c00
+		mov si, BIOS_PARAM_BLOCK
 		sub ax, 2						; Zero based cluster number
 		xor cx, cx
-		mov cl, byte[gs:si + 13]		; Sectors per cluster
+		mov cl, byte[gs:si + BPBlock.spc]; Sectors per cluster
 		mul cx
 		add ax, word[$DISK.base_sector]
 	.epilogue:

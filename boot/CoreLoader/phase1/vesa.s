@@ -21,106 +21,6 @@
 	[bits	16]
 
 ;;
-;; The following defines the layout of the VESA VBE Info structure.
-;;
-STRUC VBEInfo
-	.signature 			resb 4
-	.version 			resw 1
-	.oem				resd 1
-	.capabilities		resd 1
-	.video_modes_off	resw 1
-	.video_modes_seg	resw 1
-	.video_memory		resw 1
-	.software_revision	resw 1
-	.vendor				resd 1
-	.product_name		resd 1
-	.product_revision	resd 1
-	.reserved			resb 222
-	.oem_data			resb 256
-ENDSTRUC
-
-;;
-;; The following defines the layout of the EDID structure. EDID is used by the
-;; hardware to instruct the software of its preferred/native resolution.
-;;
-STRUC EDID
-	.padding 			resb 8
-	.manufacturer_id	resb 2
-	.edid_code			resb 2
-	.serial_code		resb 4
-	.week_number		resb 1
-	.manufacturer_year	resb 1
-	.edid_version		resb 1
-	.edid_revision		resb 1
-	.video_input		resb 1
-	.width_cm			resb 1
-	.height_cm			resb 1
-	.gamma_factor		resb 1
-	.dpms_flags			resb 1
-	.chroma				resb 10
-	.timings1			resb 1
-	.timings2			resb 1
-	.reserved_timing	resb 0
-	.standard_timings	resb 16
-	.timing_desc1		resb 18
-	.timing_desc2		resb 18
-	.timing_desc3		resb 18
-	.timing_desc4		resb 18
-	.reserved			resb 1
-	.checksum			resb 1
-ENDSTRUC
-
-;;
-;; The following defines the layout of the VBE Mode Info structure. This
-;; structure describes the configuration and how to use the mode.
-;;
-STRUC VBEMode
-	.attributes			resb 2
-	.window_a			resb 1
-	.window_b 			resb 1
-	.granularity		resb 2
-	.window_size		resb 2
-	.segment_a			resb 2
-	.segment_b			resb 2
-	.win_func_ptr		resb 4
-	.pitch				resb 2
-	.width				resb 2
-	.height				resb 2
-	.w_char				resb 1
-	.h_char				resb 1
-	.planes				resb 1
-	.bpp				resb 1
-	.banks				resb 1
-	.memory_model		resb 1
-	.bank_size			resb 1
-	.image_pages		resb 1
-	.reserved0			resb 1
-	.red_mask			resb 1
-	.red_position		resb 1
-	.green_mask			resb 1
-	.green_position		resb 1
-	.blue_mask			resb 1
-	.blue_position		resb 1
-	.reserved_mask		resb 1
-	.reserved_position	resb 1
-	.direct_color_attr	resb 1
-	.frame_buffer		resb 4
-	.off_screen_mem_off	resb 4
-	.off_screen_mem_sz	resb 2
-	.reserved1			resb 206
-ENDSTRUC
-
-;;
-;; The following defines the layout of the screen configuration structure.
-;; This is used to keep track of the VESA VBE configuration being used.
-;;
-STRUC ScreenConf
-	.width				resb 2
-	.height				resb 2
-	.depth				resb 2
-ENDSTRUC
-
-;;
 ;; Prepare VBE Information and settings. This will check to ensure that VGA
 ;; Text Mode has not been requested in the configuration, and then try to set
 ;; the optimal resolution for the system, unless a different resolution has
@@ -133,7 +33,7 @@ prepare_vesa:
 		push 0							; [bp - 2] VBE Mode Number
 		push 0							; [bp - 4] VBE Mode Offset
 	.check_vga_text_mode:
-		mov di, 0xfe00					; Location of the Boot Configuration
+		mov di, BOOT_CONFIG				; Location of the Boot Configuration
 		cmp byte[di + BootConf.vesa_mode], 0		
 		jne .get_vesa_info
 	.no_vesa:
@@ -142,7 +42,7 @@ prepare_vesa:
 		jmp .epilogue
 	.get_vesa_info:
 		push es
-		mov di, 0xf000					; Location of the VESA VBE Info
+		mov di, VESA_INFO				; Location of the VESA VBE Info
 		mov dword[di + VBEInfo.signature], "VBE2"
 		mov ax, 0x4f00					; BIOS Function to get VESA VBE Info
 		int 0x10						; Call BIOS
@@ -153,7 +53,7 @@ prepare_vesa:
 		mov si, strings16.unavailable
 		jmp vesa_vbe_error
 	.L01:
-		mov di, 0xf000					; Location of the VESA VBE Info
+		mov di, VESA_INFO				; Location of the VESA VBE Info
 		mov eax, dword[di + VBEInfo.signature]
 		cmp eax, "VESA"					; Have we got the correct signature?
 		je .L02
@@ -173,7 +73,7 @@ prepare_vesa:
 		mov bx, 0x1
 		xor cx, cx
 		xor dx, dx
-		mov di, 0xf400					; Location of the VESA EDID Info
+		mov di, EDID_INFO				; Location of the VESA EDID Info
 		int 0x10						; Call out to BIOS
 		pop es
 		cmp ax, 0x004f					; Check for success.
@@ -183,7 +83,7 @@ prepare_vesa:
 	.L03:
 		jmp .use_default_vbe_mode
 	.determine_preferred_vbe_mode:
-		mov di, 0xf400					; Location of the VESA EDID Info
+		mov di, EDID_INFO				; Location of the VESA EDID Info
 		mov si, 0xf600					; Location of the Screen Configuration.
 		movzx eax, byte[di + EDID.timing_desc1]
 		or al, al
@@ -212,20 +112,20 @@ prepare_vesa:
 		nop
 		jmp .set_vbe_mode
 	.use_default_vbe_mode:
-		mov di, 0xfe00					; Location of the Boot Configuration
-		mov si, 0xf600					; Location of the Screen Configuration.
+		mov di, BOOT_CONFIG				; Location of the Boot Configuration
+		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
 		movzx eax, word[di + BootConf.width]
 		movzx ebx, word[di + BootConf.height]
 		mov word[si + ScreenConf.width], ax
 		mov word[si + ScreenConf.height], bx
 	.set_vbe_mode:
 		mov word[si + ScreenConf.depth], 32
-		mov di, 0xf000					; Location of the VBE VESA Info
+		mov di, VESA_INFO				; Location of the VBE VESA Info
 		movzx esi, word[di + VBEInfo.video_modes_off]
 		mov [bp - 4], si				; Keep the offset in local memory
 	.find_vbe_mode:
 		push fs
-		mov di, 0xf000					; Location of the VBE VESA Info
+		mov di, VESA_INFO				; Location of the VBE VESA Info
 		movzx eax, word[di + VBEInfo.video_modes_seg]
 		mov fs, ax
 		movzx esi, word[bp - 4]			; Fetch the offset
@@ -246,7 +146,7 @@ prepare_vesa:
 		push es
 		mov ax, 0x4f01					; BIOS function to get VBE Mode Info
 		movzx ecx, word[bp - 2]			; Fetch the current mode
-		mov di, 0xf200					; Location of the VBE Mode Info
+		mov di, VBE_MODE				; Location of the VBE Mode Info
 		int 0x10						; Call out to BIOS
 		pop es
 		cmp ax, 0x004f					; Check for success.
@@ -257,8 +157,8 @@ prepare_vesa:
 		mov si, strings16.unavailable
 		jmp vesa_vbe_error
 	.check_vbe_mode:
-		mov si, 0xf600					; Location of the Screen Configuration.
-		mov di, 0xf200					; Location of the VBE Mode Info
+		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
+		mov di, VBE_MODE				; Location of the VBE Mode Info
 		movzx eax, word[si + ScreenConf.width]
 		movzx ebx, word[di + VBEMode.width]
 		cmp ax, bx
@@ -298,15 +198,15 @@ prepare_vesa:
 		mov si, strings16.unavailable
 		jmp vesa_vbe_error
 	.save_vbe_mode_info:
-		mov si, 0xf600					; Location of the Screen Configuration.
-		mov di, 0xfe00					; Location of the Boot Configuration.
+		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
+		mov di, BOOT_CONFIG				; Location of the Boot Configuration.
 		movzx eax, word[si + ScreenConf.depth]
 		and eax, 0xFF
 		add eax, 7
 		shr eax, 3
 		mov dword[di + BootConf.bytes_per_pixel], eax
 		push si
-		mov si, 0xf200					; Location of the VBE Mode Info.
+		mov si, VBE_MODE				; Location of the VBE Mode Info.
 		movzx eax, word[si + VBEMode.pitch]
 		pop si
 		mov dword[di + BootConf.bytes_per_line], eax
@@ -314,7 +214,7 @@ prepare_vesa:
 		mul ebx
 		mov dword[di + BootConf.screen_size], eax
 		push si
-		mov si, 0xf200					; Location of the VBE Mode Info.
+		mov si, VBE_MODE				; Location of the VBE Mode Info.
 		mov eax, [si + VBEMode.frame_buffer]
 		pop si
 		mov dword[di + BootConf.lfb], eax
