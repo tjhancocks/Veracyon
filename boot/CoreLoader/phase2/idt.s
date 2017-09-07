@@ -32,18 +32,18 @@ _prepare_idt:
 		push ebp
 		mov ebp, esp
 	.clear_memory:
-		mov edi, 0x11000
+		mov edi, IDT_BASE
 		mov ecx, 0x200
 		xor eax, eax
 		rep stosd
 	.prepare_idt_pointer:
-		mov edi, 0x11800
+		mov edi, IDT_PTR
 		mov ax, 0x7ff
 		stosw
-		mov eax, 0x11000
+		mov eax, IDT_BASE
 		stosd
 	.load_idt:
-		mov eax, 0x11800
+		mov eax, IDT_PTR
 		lidt [eax]
 	.epilogue:
 		mov esp, ebp

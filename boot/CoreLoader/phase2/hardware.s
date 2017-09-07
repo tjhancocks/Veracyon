@@ -31,7 +31,7 @@ _install_hardware_interrupts:
 		push ebp
 		mov ebp, esp
 	.main:
-		mov edi, 0x11000 + (0x20 * 8)	; Location of the first entry in IDT.
+		mov edi, IDT_BASE + (0x20 * 8)	; Location of the first entry in IDT.
 		mov edx, _hdw_int_0				; Pointer to the first handler.
 		mov ecx, 0x10					; The exception handler count (16).
 	.L0:
@@ -87,7 +87,7 @@ _handle_hardware_interrupt:
 		mov ebx, 4
 		mul ebx
 		add eax, (0x20 * 4)
-		add eax, 0x11900
+		add eax, INT_HANDLERS
 		mov esi, eax
 		mov eax, [esi]
 	.check_handler:
@@ -120,7 +120,7 @@ _register_hardware_interrupt_handler:
 	.main:
 		cli
 	.calculate_offset:
-		mov edi, 0x11900				; Base of the interrupt handlers.
+		mov edi, INT_HANDLERS			; Base of the interrupt handlers.
 		mov eax, [ebp + 8]				; Fetch the IRQ number
 		mov ebx, [ebp + 12]				; Fetch the function pointer.
 		mov [edi + (eax * 4)], ebx		; Save the function pointer to the table

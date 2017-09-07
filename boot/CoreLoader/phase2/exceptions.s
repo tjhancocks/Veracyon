@@ -31,7 +31,7 @@ _install_cpu_exceptions:
 		push ebp
 		mov ebp, esp
 	.main:
-		mov edi, 0x11000				; Location of the IDT
+		mov edi, IDT_BASE				; Location of the IDT
 		mov edx, _cpu_exp_0				; Pointer to the first handler.
 		mov ecx, 0x20					; The exception handler count (32).
 	.L0:
@@ -47,7 +47,7 @@ _install_cpu_exceptions:
 		add edx, _cpu_exp_1 - _cpu_exp_0; Move to the next handler.
 		loop .L0
 	.prepare_default_panic_handler:
-		mov edi, 0x11806				; Location of the panic handler pointer.
+		mov edi, PANIC_FN_PTR			; Location of the panic handler pointer.
 		xor eax, eax
 		stosd 							; Set the pointer to NULL.
 	.epilogue:
@@ -81,7 +81,7 @@ _handle_exception:
 ;;
 _panic:
 	.find_panic_handler:
-		mov esi, 0x11806				; Location of panic handler pointer.
+		mov esi, PANIC_FN_PTR			; Location of panic handler pointer.
 		mov eax, [esi]					; Load the panic handler pointer.
 		or eax, eax						; Check to see if it is NULL.
 		jz .report						; If NULL, proceed to basic reporter.
