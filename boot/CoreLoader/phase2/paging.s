@@ -21,13 +21,6 @@
 	[bits	32]
 
 ;;
-;; The following defines the layout of the paging state structure.
-;;
-STRUC PagingState
-	.next_frame				resd 1
-ENDSTRUC
-
-;;
 ;; Setup the basic paging environment and identity map the lowest 1MiB of
 ;; memory. This will ensure that the BootLoader and any early code/data is still
 ;; addressable once paging is enabled. In this the Page Table must be 
@@ -45,9 +38,6 @@ _prepare_paging:
 		xor eax, eax
 		cld
 		rep stosd
-	.frames:
-		mov edi, 0xF800					; Location of the Paging State structure
-		mov dword[edi + PagingState.next_frame], 0x3F ; 1 MiB, Frame 63
 	.epilogue:
 		mov esp, ebp
 		pop ebp
@@ -67,7 +57,7 @@ _enable_paging:
 		mov eax, 0x12000
 		mov cr3, eax
 		mov eax, cr0
-		or eax, 0x80000000
+		or eax, 0x80000001
 		mov cr0, eax
 	.epilogue:
 		mov esp, ebp
@@ -93,7 +83,7 @@ _configure_lower_identity_mapping:
 		mov edi, 0x13000
 		mov ecx, 0x100					; 256 Entries (1MiB of memory)
 		xor eax, eax
-		mov al, 0x03
+		or eax, 0x03
 	.L0:
 		stosd
 		add eax, 0x1000 				; Next page
@@ -158,6 +148,7 @@ _prepare_lfb_page_tables:
 		mov ebx, [ebp - 8]				; Restore the linear frame buffer base
 		shr ebx, 22						; Get the page directory offset
 	.next_page_table:
+		and eax, 0xFFFFF000
 		or eax, 0x03					; Apply attributes to the frame address
 		mov dword[edi + ebx * 4], eax	; Store the page table frame
 		add eax, 0x1000					; Move to the start of the next frame
