@@ -84,7 +84,7 @@ prepare_vesa:
 		jmp .use_default_vbe_mode
 	.determine_preferred_vbe_mode:
 		mov di, EDID_INFO				; Location of the VESA EDID Info
-		mov si, 0xf600					; Location of the Screen Configuration.
+		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
 		movzx eax, byte[di + EDID.timing_desc1]
 		or al, al
 		jz .L03							; Bad data. Use default mode instead!

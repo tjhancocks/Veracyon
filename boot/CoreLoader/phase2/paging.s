@@ -33,7 +33,7 @@ _prepare_paging:
 		push ebp
 		mov ebp, esp
 	.page_directory:
-		mov edi, 0x12000				; Location of the root page directory
+		mov edi, PAGE_DIR				; Location of the root page directory
 		mov ecx, 0x400					; 4KiB - 1024 Dwords
 		xor eax, eax
 		cld
@@ -54,7 +54,7 @@ _enable_paging:
 		push ebp
 		mov ebp, esp
 	.main:
-		mov eax, 0x12000
+		mov eax, PAGE_DIR
 		mov cr3, eax
 		mov eax, cr0
 		or eax, 0x80000001
@@ -74,13 +74,13 @@ _configure_lower_identity_mapping:
 		push ebp
 		mov ebp, esp
 	.clear_page_table:
-		mov edi, 0x13000
+		mov edi, ID_MAP_PAGE_TABLE
 		mov ecx, 0x400
 		xor eax, eax
 		cld
 		rep stosd
 	.populate_page_table:
-		mov edi, 0x13000
+		mov edi, ID_MAP_PAGE_TABLE
 		mov ecx, 0x100					; 256 Entries (1MiB of memory)
 		xor eax, eax
 		or eax, 0x03
@@ -89,8 +89,8 @@ _configure_lower_identity_mapping:
 		add eax, 0x1000 				; Next page
 		loop .L0
 	.register_page_table:
-		mov edi, 0x12000				; Page Directory. First entry.
-		mov eax, 0x13003				; 0x13000 | 0x03
+		mov edi, PAGE_DIR				; Page Directory. First entry.
+		mov eax, ID_MAP_PAGE_TABLE | 3
 		stosd
 	.epilogue:
 		mov esp, ebp
@@ -143,8 +143,8 @@ _prepare_lfb_page_tables:
 		mov [ebp - 4], eax				; required and save it
 		mov ecx, eax
 		add ecx, 1
-		mov edi, 0x12000				; Location of root page directory
-		mov eax, 0x17000				; First VESA page table is at...
+		mov edi, PAGE_DIR				; Location of root page directory
+		mov eax, VESA_PAGE_TABLE_1		; First VESA page table is at...
 		mov ebx, [ebp - 8]				; Restore the linear frame buffer base
 		shr ebx, 22						; Get the page directory offset
 	.next_page_table:
