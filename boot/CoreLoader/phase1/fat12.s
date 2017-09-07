@@ -37,16 +37,16 @@ fat12_read_file:
 		push si
 	.load_root:
 		xor ecx, ecx
-		mov si, 0x7c00
+		mov si, BIOS_PARAM_BLOCK
 		xor cx, cx
 		xor dx, dx
 		mov ax, 0x0020					; FAT uses 32 byte entries
-		mul word[gs:si + 17]			; Multiply by root entries
-		div word[gs:si + 11]			; Divide by bytes per sector
+		mul word[gs:si + BPBlock.dir_entries]; Multiply by root entries
+		div word[gs:si + BPBlock.bps]	; Divide by bytes per sector
 		xchg ax, cx
-		mov al, byte[gs:si + 16]		; Number of FATs
-		mul word[gs:si + 22]			; Sectors per FAT
-		add ax, word[gs:si + 14]		; Reserved sectors
+		mov al, byte[gs:si + BPBlock.fat_count]
+		mul word[gs:si + BPBlock.spf]
+		add ax, word[gs:si + BPBlock.reserved_count]
 		mov word[$DISK.base_sector], ax	; Base of root directory
 		add word[$DISK.base_sector], cx	; Add the size of it.
 		xor bx, bx
@@ -56,7 +56,7 @@ fat12_read_file:
 		pop ax
 		call disk_read_sectors			; Read the sectors from disk
 	.find_file:
-		mov cx, word[gs:si + 17]		; Fetch the number of root entries
+		mov cx, word[gs:si + BPBlock.dir_entries]; Fetch the number of root entries
 		xor di, di						; Start at the beginning
 	.L0:
 		push cx
@@ -79,11 +79,11 @@ fat12_read_file:
 	.load_fat:
 		mov dx, word[es:di + 26]		; Fetch the first cluster of the file
 		mov word[$FAT12.cluster], dx	; Store the cluster number
-		mov si, 0x7c00
-		movzx ax, byte[gs:si + 16]		; Number of FATs
-		mul word[gs:si + 22]			; Sectors per FAT
+		mov si, BIOS_PARAM_BLOCK
+		movzx ax, byte[gs:si + BPBlock.fat_count]
+		mul word[gs:si + BPBlock.spf]
 		mov cx, ax
-		mov ax, word[gs:si + 14]		; Reserved sectors
+		mov ax, word[gs:si + BPBlock.reserved_count]
 		xor bx, bx
 		push bx
 		call disk_read_sectors
@@ -91,8 +91,8 @@ fat12_read_file:
 		pop bx
 		mov ax, word[$FAT12.cluster]
 		call cluster_to_lba				; Convert the cluster to LBA
-		mov si, 0x7c00
-		movzx cx, byte[gs:si + 13]		; Sectors per cluster
+		mov si, BIOS_PARAM_BLOCK
+		movzx cx, byte[gs:si + BPBlock.spc]
 		push es
 		push 0x3000
 		pop es							; ES:BX = 0x3000:0x0000 (0x30000)
