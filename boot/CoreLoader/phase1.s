@@ -45,18 +45,27 @@ start:
 		call send_serial_bytes
 		call gdt_install
 	.enable_a20:
+		mov si, strings16.a20_line
+		call send_serial_bytes
 		in al, 0x92
         or al, 2
         out 0x92, al
+		mov si, strings16.done
+		call send_serial_bytes
     .enable_32bit:
+		mov si, strings16.setting_32bit
+		call send_serial_bytes
     	mov eax, cr0
         or al, 1
         mov cr0, eax
+		mov si, strings16.done
+		call send_serial_bytes
 	.enter_phase2:
-		mov ax, 0x10					; Kernel Data Segment
-		mov ds, ax
-		mov eax, 0x10800				; GDT Pointer linear address
-		lgdt [eax]	
+		cli
+		mov si, strings16.far_jump
+		call send_serial_bytes
+		mov eax, 0xFE00					; GDT Pointer linear address
+		lgdt [eax + BootConf.gdt_size]	
 		mov ax, 0x10					; Kernel Data Segment
 		mov ss, ax	
 		mov ds, ax
@@ -77,7 +86,13 @@ strings16:
 		db "CORELOADER VERSION 0.2", 0xA
 		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
 	.building_boot_configuration:
-		db "Building default boot configuration	... ", 0x0
+		db "Building default boot configuration... ", 0x0
+	.a20_line:
+		db "    Enabling A20 Line... ", 0x0
+	.setting_32bit:
+		db "    Setting 32-bit mode... ", 0x0
+	.far_jump:
+		db "    Performing far jump... ", 0x0
 	.reading_boot_configuration:
 		db "Reading boot configuration file... ", 0x0
 	.preparing_vesa:

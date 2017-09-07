@@ -58,11 +58,13 @@ gdt_install:
 		call gdt_set_gate
 		add sp, 14
 	.setup_pointer:
-		mov di, 0x800
+		xor ax, ax
+		mov es, ax
+		mov di, 0xFE00
 		mov ax, 0x0017
-		stosw
+		mov [di + BootConf.gdt_size], ax
 		mov eax, 0x00010000
-		stosd
+		mov dword[di + BootConf.gdt_base], eax
 	.epilogue:
 		mov sp, bp
 		pop bp

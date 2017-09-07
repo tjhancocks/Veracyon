@@ -39,6 +39,10 @@ STRUC BootConf
 	.y_max				resd 1
 	.x					resd 1
 	.y					resd 1
+	.gdt_size			resw 1
+	.gdt_base			resd 1
+	.lower_memory		resw 1
+	.upper_memory		resd 1
 ENDSTRUC
 
 ;;

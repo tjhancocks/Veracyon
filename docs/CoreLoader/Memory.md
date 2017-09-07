@@ -60,4 +60,11 @@ but maybe accessed by the Kernel. This is not recommended however! The following
 	- 0xFE31 [DWord]	Bytes Per Pixel
 	- 0xFE35 [DWord]	Bytes Per Line
 	- 0xFE39 [Dword]	Screen Size
-
+	- 0xFE3F [DWord]	X Max
+	- 0xFE41 [DWord]	Y Max
+	- 0xFE45 [DWord]	X
+	- 0xFE49 [DWord]	Y
+	- 0xFE4D [Word]		GDT Size
+	- 0xFE4F [DWord]	GDT Base
+	- 0xFE53 [Word]		Lower Memory (Unit: KiB)
+	- 0xFE55 [DWord]	Upper Memory (Unit: KiB)
