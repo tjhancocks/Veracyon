@@ -27,6 +27,10 @@ start:
 	.handshake:
 		mov si, strings16.welcome_serial
 		call send_serial_bytes
+	.detect_memory:
+		mov si, strings16.detecting_lower_memory
+		call send_serial_bytes
+		call detect_lower_memory
 	.boot_config:
 		mov si, strings16.building_boot_configuration
 		call send_serial_bytes
@@ -120,6 +124,10 @@ strings16:
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
 		db 0xA, 0x0 
+	.detecting_lower_memory:
+		db "Detecting lower memory... ", 0x0
+	.kib:
+		db "KiB", 0xA, 0x0
 
 ;;
 ;; Include various external source files with required functionality.
@@ -131,3 +139,4 @@ strings16:
 	%include "CoreLoader/phase1/disk.s"
 	%include "CoreLoader/phase1/fat12.s"
 	%include "CoreLoader/phase1/vesa.s"
+	%include "CoreLoader/phase1/memory.s"
