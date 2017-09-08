@@ -50,7 +50,7 @@ prepare_vesa:
 		cmp ax, 0x004f					; Check for success.
 		je .L01
 		nop
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable1
 		jmp vesa_vbe_error
 	.L01:
 		mov di, VESA_INFO				; Location of the VESA VBE Info
@@ -58,22 +58,22 @@ prepare_vesa:
 		cmp eax, "VESA"					; Have we got the correct signature?
 		je .L02
 		nop
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable2
 		jmp vesa_vbe_error
 	.L02:
 		movzx eax, word[di + VBEInfo.version]
 		cmp ax, 0x0200					; Is the VESA version too old?
 		jge .read_edid
 		nop
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable3
 		jmp vesa_vbe_error
 	.read_edid:
 		push es
-		mov ax, 0x4f15					; BIOS function to get EDID info
-		mov bx, 0x1
-		xor cx, cx
-		xor dx, dx
-		mov di, EDID_INFO				; Location of the VESA EDID Info
+		mov eax, 0x4f15					; BIOS function to get EDID info
+		mov ebx, 0x1
+		xor ecx, ecx
+		xor edx, edx
+		mov edi, EDID_INFO				; Location of the VESA EDID Info
 		int 0x10						; Call out to BIOS
 		pop es
 		cmp ax, 0x004f					; Check for success.
@@ -89,19 +89,17 @@ prepare_vesa:
 		or al, al
 		jz .L03							; Bad data. Use default mode instead!
 		movzx eax, byte[di + EDID.timing_desc1 + 2] ; Low byte of width
-		mov ebx, eax
+		mov word[si + ScreenConf.width], ax
 		movzx eax, byte[di + EDID.timing_desc1 + 4]
 		and eax, 0xf0
 		shl eax, 4
-		or eax, ebx
-		mov word[si + ScreenConf.width], ax
+		or word[si + ScreenConf.width], ax
 		movzx eax, byte[di + EDID.timing_desc1 + 5] ; Low byte of height
-		mov ebx, eax
+		mov word[si + ScreenConf.height], ax
 		movzx eax, byte[di + EDID.timing_desc1 + 7]
 		and eax, 0xf0
 		shl eax, 4
-		or eax, ebx
-		mov word[si + ScreenConf.height], ax
+		or word[si + ScreenConf.height], ax
 	.validate_mode:
 		movzx eax, word[si + ScreenConf.width]
 		or ax, ax
@@ -140,7 +138,7 @@ prepare_vesa:
 		nop
 		jmp .get_vbe_mode_info
 	.vbe_mode_not_found:
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable4
 		jmp vesa_vbe_error
 	.get_vbe_mode_info:
 		push es
@@ -154,7 +152,7 @@ prepare_vesa:
 		nop
 		jmp .check_vbe_mode
 	.L04:
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable5
 		jmp vesa_vbe_error
 	.check_vbe_mode:
 		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
@@ -195,7 +193,7 @@ prepare_vesa:
 		jmp .save_vbe_mode_info
 	.L05:
 		nop
-		mov si, strings16.unavailable
+		mov si, strings16.unavailable6
 		jmp vesa_vbe_error
 	.save_vbe_mode_info:
 		mov si, SCREEN_CONFIG			; Location of the Screen Configuration.
@@ -250,6 +248,8 @@ vesa_error_string:
 vesa_vbe_error:
 	.main:
 		call send_serial_bytes
+		mov si, BOOT_CONFIG				; Location of the Boot Configuration
+		mov byte[si + BootConf.vesa_mode], 0	
 	.epilogue:
 		mov sp, bp
 		pop bp

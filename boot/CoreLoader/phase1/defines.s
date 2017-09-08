@@ -133,8 +133,8 @@ STRUC EDID
 	.chroma				resb 10
 	.timings1			resb 1
 	.timings2			resb 1
-	.reserved_timing	resb 0
-	.standard_timings	resb 16
+	.reserved_timing	resb 1
+	.standard_timings	resw 8
 	.timing_desc1		resb 18
 	.timing_desc2		resb 18
 	.timing_desc3		resb 18

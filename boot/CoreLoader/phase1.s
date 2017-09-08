@@ -105,6 +105,18 @@ strings16:
 		db "missing.", 0xA, 0x0
 	.unavailable:
 		db "unavailable.", 0xA, 0x0
+	.unavailable1:
+		db "unavailable (1).", 0xA, 0x0
+	.unavailable2:
+		db "unavailable (2).", 0xA, 0x0
+	.unavailable3:
+		db "unavailable (3).", 0xA, 0x0
+	.unavailable4:
+		db "unavailable (4).", 0xA, 0x0
+	.unavailable5:
+		db "unavailable (5).", 0xA, 0x0
+	.unavailable6:
+		db "unavailable (6).", 0xA, 0x0
 	.preparing_pmode:
 		db "Preparing to setup and configure protected mode on primary CPU... ",
 		db 0xA, 0x0 

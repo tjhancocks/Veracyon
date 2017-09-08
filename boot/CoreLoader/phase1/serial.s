@@ -91,3 +91,27 @@ send_serial_bytes:
 	.finish:
 		popa
 		ret
+
+;;
+;;
+;;
+send_serial_number:
+	.prepare:
+		pusha
+        mov di, .buffer + 30
+        mov ecx, 10
+    .next_digit:
+        xor edx, edx
+        idiv ecx
+        add edx, 0x30
+        dec di
+        mov byte[di], dl
+        cmp eax, 0
+        jnz .next_digit
+    .done:
+        mov si, di
+        call send_serial_bytes
+        popa
+        ret
+    .buffer:
+        times 31 db 0
