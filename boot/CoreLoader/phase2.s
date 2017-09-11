@@ -98,8 +98,11 @@ _phase2_start:
 		push strings.done
 		call _send_serial_bytes
 		add esp, 4
-		; todo
 	.detect_boot_media:
+		push strings.detecting_boot_media
+		call _send_serial_bytes
+		add esp, 4
+		call _identify_boot_media
 		; Todo
 	.load_boot_media_driver:
 		; Todo
@@ -147,6 +150,8 @@ strings:
 		db "skipped.", 0xA, 0x0
 	.enabling_paging:
 		db "    Enabling paging... ", 0x0
+	.detecting_boot_media:
+		db "Detecting boot media:", 0xA, "    ", 0x0
 
 ;;
 ;; Include various external source files with required functionality.
@@ -158,3 +163,4 @@ strings:
 	%include "CoreLoader/phase2/pic.s"
 	%include "CoreLoader/phase2/pit.s"
 	%include "CoreLoader/phase2/paging.s"
+	%include "CoreLoader/phase2/disk.s"
