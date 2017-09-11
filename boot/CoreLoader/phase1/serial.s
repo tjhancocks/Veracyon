@@ -93,7 +93,7 @@ send_serial_bytes:
 		ret
 
 ;;
-;;
+;; Write the specified value to the serial port as a decimal string
 ;;
 send_serial_number:
 	.prepare:
@@ -115,3 +115,45 @@ send_serial_number:
         ret
     .buffer:
         times 31 db 0
+
+
+;;
+;; Write the specified value to the serial port as a hex string
+;;
+send_serial_hex: 
+        push eax
+        mov edi, .buffer
+        mov ecx, 8
+        mov al, 0x30
+        rep stosb
+        pop eax
+        mov edi, .buffer + 8
+        mov ecx, 16
+    .next_digit:
+        xor edx, edx
+        idiv ecx
+        cmp edx, 10
+        jl .digit
+    .char:
+        push eax
+        mov eax, edx
+        sub eax, 10
+        mov edx, eax
+        pop eax
+        add edx, "A"
+        jmp .L0
+    .digit:
+        add edx, "0"
+    .L0:
+        dec edi
+        mov byte[edi], dl
+        cmp eax, 0
+        jnz .next_digit
+    .done:
+        mov esi, .result
+        call send_serial_bytes
+        ret
+    .result:
+        db "0x"
+    .buffer:
+        db "00000000", 0
