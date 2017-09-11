@@ -31,6 +31,27 @@ start:
 		mov si, strings16.detecting_lower_memory
 		call send_serial_bytes
 		call detect_lower_memory
+		mov si, strings16.reading_memory_map
+		call send_serial_bytes
+		call read_memory_map
+		jc .mmap_failed
+		jmp .mmap_done
+	.mmap_failed:
+		mov si, strings16.e820_failed
+		call send_serial_bytes
+		call dbg_put_string
+		cli
+		hlt
+		jmp $
+	.mmap_done:
+		mov si, strings16.done
+		call send_serial_bytes
+		mov si, strings16.calculating_memory
+		call send_serial_bytes
+		call calculate_total_memory
+		call send_serial_number
+		mov si, strings16.mib
+		call send_serial_bytes
 	.boot_config:
 		mov si, strings16.building_boot_configuration
 		call send_serial_bytes
@@ -126,8 +147,16 @@ strings16:
 		db 0xA, 0x0 
 	.detecting_lower_memory:
 		db "Detecting lower memory... ", 0x0
+	.reading_memory_map:
+		db "Reading memory map... ", 0x0
+	.calculating_memory:
+		db "Calculating total memory... ", 0x0
 	.kib:
 		db "KiB", 0xA, 0x0
+	.mib:
+		db "MiB", 0xA, 0x0
+	.e820_failed:
+		db "E820 Failed!", 0xA, 0x0
 
 ;;
 ;; Include various external source files with required functionality.
