@@ -41,6 +41,9 @@
 	VESA_PAGE_TABLE_1	equ 0x17000
 	DMA_BUFFER			equ 0x20000
 	FILE_BUFFER			equ 0x30000
+	MEMORY_MAP_SEG		equ 0x7000
+	MEMORY_MAP_OFFSET	equ 0x0000
+	MEMORY_MAP			equ 0x70000
 
 ;;
 ;; The following defines the layout of the BIOS Parameter Block (Bootsector)
@@ -91,6 +94,7 @@ STRUC BootConf
 	.gdt_base			resd 1
 	.lower_memory		resw 1
 	.upper_memory		resd 1
+	.mmap_count			resw 1
 ENDSTRUC
 
 ;;
