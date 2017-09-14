@@ -42,6 +42,8 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x1A000 - 0x1AFFF		Reserved
 	- 0x20000 - 0x2FFFF		Assigned DMA Buffer (64KiB)
 	- 0x30000 - 0x3FFFF		File Buffer (64KiB)
+	- 0x40000 - 0x401FF		Disk Driver Data (512B)
+	- 0x70000 - 0x7FFFF		Memory Map (64KiB)
 
 ### Boot Configuration
 

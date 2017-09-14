@@ -164,3 +164,4 @@ strings:
 	%include "CoreLoader/phase2/pit.s"
 	%include "CoreLoader/phase2/paging.s"
 	%include "CoreLoader/phase2/disk.s"
+	%include "CoreLoader/phase2/fdc.s"

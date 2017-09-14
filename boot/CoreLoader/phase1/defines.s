@@ -41,6 +41,8 @@
 	VESA_PAGE_TABLE_1	equ 0x17000
 	DMA_BUFFER			equ 0x20000
 	FILE_BUFFER			equ 0x30000
+	DISK_DRIVER			equ	0x40000
+	DISK_INTERFACE		equ	0x48000
 	MEMORY_MAP_SEG		equ 0x7000
 	MEMORY_MAP_OFFSET	equ 0x0000
 	MEMORY_MAP			equ 0x70000
@@ -196,3 +198,24 @@ STRUC ScreenConf
 	.height				resb 2
 	.depth				resb 2
 ENDSTRUC
+
+;;
+;; The following defines the layout for the Floppy Disk Controller driver data
+;; structure.
+;;
+STRUC FDCData
+	.ticks				resd 1
+	.state				resb 1
+	.irq_received		resb 1
+	.cmd_result			resb 1
+	.mode				resb 1
+ENDSTRUC
+
+;;
+;;
+;;
+STRUC DiskInterface
+	.read_sectors		resd 1
+ENDSTRUC
+
+
