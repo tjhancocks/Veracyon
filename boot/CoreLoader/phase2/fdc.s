@@ -83,6 +83,9 @@ _fdc_wait:
 	.prologue:
 		push ebp
 		mov ebp, esp
+		push fdc_string.wait_1
+		call _send_serial_bytes
+		add esp, 4
 	.detect_bochs:
 		in al, 0xE9
 		cmp al, 0xE9
@@ -103,6 +106,9 @@ _fdc_wait:
 		call _sleep
 		add esp, 4
 	.finish:
+		push fdc_string.done
+		call _send_serial_bytes
+		add esp, 4
 		mov esi, DISK_DRIVER
 		mov byte[esi + FDCData.irq_received], 0
 		pop eax
@@ -289,19 +295,34 @@ _fdc_reset:
 		push ebp
 		mov ebp, esp
 	.main:
+		push fdc_string.reset_1
+		call _send_serial_bytes
+		add esp, 4
 		mov esi, DISK_DRIVER
 		mov byte[esi + FDCData.irq_received], 0
+		push fdc_string.disabling
+		call _send_serial_bytes
+		add esp, 4
 		mov edx, FDC_DOR
 		xor eax, eax
-		out dx, al
+		out dx, al						; Disable Controller
+		push fdc_string.enabling
+		call _send_serial_bytes
+		add esp, 4
 		mov eax, 0x0C
-		out dx, al
+		out dx, al						; Enable Controller
+		push fdc_string.enabled
+		call _send_serial_bytes
+		add esp, 4
 		call _fdc_wait
 		push 0
 		push 0
 		call _fdc_sense
 		add esp, 8
 	.set_speed:
+		push fdc_string.reset_2
+		call _send_serial_bytes
+		add esp, 4
 		mov edx, FDC_CCR
 		xor eax, eax
 		out dx, al
@@ -314,6 +335,12 @@ _fdc_reset:
 		out dx, al
 	.check_failure:
 		call _fdc_calibrate
+		push eax
+		push fdc_string.reset_3
+		call _send_serial_bytes
+		pop eax
+		add esp, 4
+		test eax, eax
 		jz .failed
 	.epilogue:
 		mov esp, ebp
@@ -537,6 +564,9 @@ _fdc_read_cylinder:
 		call _fdc_reset
 		mov eax, [ebp + 8]
 		mov [ebp - 4], eax
+		push fdc_string.read_cyl_1
+		call _send_serial_bytes
+		add esp, 4
 	.construct_command:
 		; Read is MT:MF:SK:0:0:1:1:0
 		; where MT = multitrack, MF = MFM mode, SK = skip deleted
@@ -545,6 +575,9 @@ _fdc_read_cylinder:
 		or eax, 0xc0
 		mov [ebp - 8], eax
 	.seek:
+		push fdc_string.read_cyl_2
+		call _send_serial_bytes
+		add esp, 4
 		mov eax, [ebp + 8]
 		push eax
 		push 0							; Head 0 & specified cylinder
@@ -556,6 +589,9 @@ _fdc_read_cylinder:
 		call _fdc_seek
 		add esp, 8
 	.seek_done:
+		push fdc_string.read_cyl_3
+		call _send_serial_bytes
+		add esp, 4
 		mov ecx, 20						; Attempt 20 retries
 		call _fdc_motor_on
 	.L0:
@@ -596,7 +632,7 @@ _fdc_read_cylinder:
 		mov eax, [ebp - 20]				; Fetch st2
 		test eax, 0x73					; Check if there was an error
 		jnz .soft_error	
-		mov eax, [ebp - 20]				; Fetch bps
+		mov eax, [ebp - 36]				; Fetch bps
 		cmp eax, 2						; It should be equal to 2
 		jne .hard_error
 		jmp .finished
@@ -609,6 +645,9 @@ _fdc_read_cylinder:
 		cli
 		hlt
 	.retry:
+		push fdc_string.read_cyl_4
+		call _send_serial_bytes
+		add esp, 4
 		jmp .L0
 	.hard_error:
 		push .hard_error_message
@@ -616,6 +655,9 @@ _fdc_read_cylinder:
 		cli
 		hlt
 	.finished:
+		push fdc_string.read_cyl_5
+		call _send_serial_bytes
+		add esp, 4
 		pop ecx
 		xor eax, eax
 	.epilogue:
@@ -638,6 +680,9 @@ _fdc_transfer_commands:
 	.prologue:
 		push ebp
 		mov ebp, esp
+		push fdc_string.transfer_cmds
+		call _send_serial_bytes
+		add esp, 4
 	.main:
 		mov eax, [ebp + 8]				; Fetch the command
 		push eax
@@ -660,6 +705,9 @@ _fdc_transfer_commands:
 		mov dword[esp], 0xff		
 		call _fdc_send_cmd 				; Data length (0xff is BPS != 0) 
 	.epilogue:
+		push fdc_string.done
+		call _send_serial_bytes
+		add esp, 4
 		mov esp, ebp
 		pop ebp
 		ret
@@ -677,6 +725,9 @@ _fdc_translate_lba:
 	.prologue:
 		push ebp
 		mov ebp, esp
+		push fdc_string.lba_1
+		call _send_serial_bytes
+		add esp, 4
 	.main:
 		mov eax, [ebp + 8]				; EAX = lba
 		xor edx, edx
@@ -692,6 +743,9 @@ _fdc_translate_lba:
 		mov [ebp + 16], edx				; *head = edx
 		mov [ebp + 12], eax				; *cylinder = eax
 	.epilogue:
+		push fdc_string.done
+		call _send_serial_bytes
+		add esp, 4
 		mov esp, ebp
 		pop ebp
 		ret
@@ -707,8 +761,11 @@ _fdc_translate_lba:
 _fdc_read_sectors:
 	.prologue:
 		push ebp
-		mov esp, ebp
+		mov ebp, esp
 	.main:
+		push fdc_string.read_1
+		call _send_serial_bytes
+		add esp, 4
 		mov eax, [ebp + 8]				; Fetch the sector number
 		and eax, 0xFFFF					; and mask it
 		mov [ebp + 8], eax
@@ -719,10 +776,12 @@ _fdc_read_sectors:
 	.calculate_chs:
 		mov [ebp + 12], ecx
 		sub esp, 12
-		push dword[ebp + 8]				; The sector number
+		mov eax, dword[ebp + 8]
+		push eax 						; The sector number
 		call _fdc_translate_lba
 		mov eax, [esp + 4]				; EAX = cylinder
-		add esp, 12
+		cmp al, [.cylinder]
+		je .transfer
 		push eax
 		call _fdc_read_cylinder
 		add esp, 4
@@ -746,7 +805,47 @@ _fdc_read_sectors:
 		mov ecx, [ebp + 12]				; Fetch the current sector count
 		loop .calculate_chs
 	.epilogue:
+		push fdc_string.read_2
+		call _send_serial_bytes
+		add esp, 4
 		mov esp, ebp
 		pop ebp
 		ret
+	.cylinder:
+		db 0xff
 
+fdc_string:
+	.read_1:
+		db "Reading floppy disk sectors...", 0xA, 0x0
+	.read_2:
+		db "Finished reading floppy disk sectors!", 0xA, 0x0
+	.lba_1:
+		db "Translating floppy disk LBA... ", 0x0
+	.done:
+		db "done.", 0xA, 0x0
+	.transfer_cmds:
+		db "Transferring floppy disk controller commands... ", 0x0
+	.read_cyl_1:
+		db "Preparing to read floppy disk cylinders", 0xA, 0x0
+	.read_cyl_2:
+		db "Seeking to requested starting sector on floppy disk", 0xA, 0x0
+	.read_cyl_3:
+		db "Finished seeking floppy disk.", 0xA, 0x0
+	.read_cyl_4:
+		db "Failed to read, retrying.", 0xA, 0x0
+	.read_cyl_5:
+		db "Read from floppy disk successfully!", 0xA, 0x0
+	.reset_1:
+		db "Resetting floppy disk controller.", 0xA, 0x0
+	.reset_2:
+		db "Setting floppy disk controller transfer speed.", 0xA, 0x0
+	.reset_3:
+		db "Checking for failures in floppy disk calibration", 0xA, 0x0
+	.wait_1:
+		db "Waiting for floppy disk controller irq...", 0x0
+	.disabling:
+		db "Disabling floppy disk controller.", 0xA, 0x0
+	.enabling:
+		db "Enabling floppy disk controller.", 0xA, 0x0
+	.enabled:
+		db "Enabled floppy disk controller.", 0xA, 0x0

@@ -81,7 +81,7 @@ _configure_lower_identity_mapping:
 		rep stosd
 	.populate_page_table:
 		mov edi, ID_MAP_PAGE_TABLE
-		mov ecx, 0x100					; 256 Entries (1MiB of memory)
+		mov ecx, 0x200					; 256 Entries (1MiB of memory)
 		xor eax, eax
 		or eax, 0x03
 	.L0:
