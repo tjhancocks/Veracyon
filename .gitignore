@@ -1,4 +1,5 @@
 # Build/Debug Files
+build/*
 *.o
 *.img
 *.bin
