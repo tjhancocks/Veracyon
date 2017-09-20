@@ -103,9 +103,9 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 		call _identify_boot_media
-		; Todo
 	.load_boot_media_driver:
-		; Todo
+		; Todo - Actually use the detected boot media here
+		call _prepare_fdc
 	.detect_boot_filesystem:
 		; Todo
 	.load_filesystem_driver:

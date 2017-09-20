@@ -53,11 +53,12 @@ _prepare_fdc:
 		mov ebp, esp
 	.irq_handler:
 		push _fdc_irq_handler
-		push 6
+		push 6 + 0x20
 		call _register_hardware_interrupt_handler
 		add esp, 8
 	.install_stubs:
-		
+		mov esi, DISK_INTERFACE
+		mov dword[esi + DiskInterface.read_sectors], _fdc_read_sectors
 	.epilogue:
 		mov esp, ebp
 		pop ebp

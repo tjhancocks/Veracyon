@@ -58,12 +58,14 @@ _install_hardware_interrupts:
 ;;
 _handle_hardware_interrupt:
 		pushad
+		xor eax, eax
+		xor ebx, ebx
 		movzx ebx, byte[esp + 32]
 		mov eax, ebx
 	.handle_spurious_irq7:
 		cmp bl, 0x07
 		jne .handle_irq
-		mov al, 0x08
+		mov al, 0x0B
 		out 0x20, al
 		in al, 0x20
 		and al, 0x80
@@ -91,12 +93,12 @@ _handle_hardware_interrupt:
 		mov esi, eax
 		mov eax, [esi]
 	.check_handler:
-		or eax, eax
+		cmp eax, 0
 		jz .acknowledge_irq
 		call eax
 	.acknowledge_irq:
-		movzx ebx, byte[esp + 32]
-		cmp bl, 0x80
+		; movzx ebx, byte[esp + 32]
+		cmp bl, 0x08
 		jl .acknowledge_master_irq
 		mov al, 0x20
 		out 0xa0, al
@@ -107,6 +109,7 @@ _handle_hardware_interrupt:
 		popad
 		add esp, 4
 		iret
+
 
 ;;
 ;; Register a hardware interrupt handler for the specified IRQ.
