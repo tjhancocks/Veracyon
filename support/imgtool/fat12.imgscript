@@ -28,6 +28,8 @@ format fat12 build/core.fat12.bin build/core.loader.bin
 mount
 import kernel/boot/fat12.boot.config
 write boot.cli
+import build/vkernel
+write vkernel
 
 # Clean up
 unmount
