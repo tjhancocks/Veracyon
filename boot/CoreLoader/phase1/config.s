@@ -31,14 +31,14 @@ prepare_boot_configuration_defaults:
 		pusha
 		push es
 	.clear:
-		mov di, BOOT_CONFIG
+		mov di, BOOT_CONFIG + 1			; First byte was set by bootsector.
 		mov cx, 0x100
 		xor ax, ax
 		rep stosb
 	.fill:
 		mov di, BOOT_CONFIG
-		mov byte[di], 0x01				; VESA Mode
-		mov di, BOOT_CONFIG + 1
+		mov byte[di + BootConf.vesa_mode], 0x01
+		mov di, BOOT_CONFIG + BootConf.kernel_name
 		mov si, .fat_kernel_name
 		mov cx, 11
 		rep movsb						; Write the kernel name (assume FAT)

@@ -21,6 +21,9 @@
 	[bits	16]
 	[org	0x7c00]
 
+; This should only include some definitions and symbols, so should be safe!
+	%include "CoreLoader/phase1/defines.s"
+
 _boot:
 	.entry:
 		jmp short _start
@@ -61,6 +64,9 @@ _start:
 		mov gs, ax
 		mov ss, ax
 		mov sp, 0xFDFF
+	.set_config_filesystem:
+		mov edi, BOOT_CONFIG
+		mov byte[edi + BootConf.filesystem], FILE_SYSTEM_FAT12
 	.fdc_reset:
 		xor dx, dx
 		int 0x13

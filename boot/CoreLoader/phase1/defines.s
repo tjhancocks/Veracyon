@@ -49,6 +49,19 @@
 	FIRST_FRAME			equ 0x100000
 
 ;;
+;; The following definitions are the internal identifiers of different 
+;; file systems. These are communicated from the bootsector to phase 2 of
+;; CoreLoader so that it knows what file system to use.
+;;
+	FILE_SYSTEM_FAT12	equ	0x10
+	FILE_SYSTEM_FAT16	equ 0x11
+	FILE_SYSTEM_FAT32	equ 0x12
+	FILE_SYSTEM_NTFS	equ 0x20
+	FILE_SYSTEM_EXT2	equ 0x30
+	FILE_SYSTEM_EXT3	equ 0x31
+	FILE_SYSTEM_EXT4	equ 0x32
+
+;;
 ;; The following defines the layout of the BIOS Parameter Block (Bootsector)
 ;;
 STRUC BPBlock
@@ -78,6 +91,7 @@ ENDSTRUC
 ;; The following defines the layout of the Boot Configuration structure.
 ;;
 STRUC BootConf
+	.filesystem			resb 1
 	.vesa_mode			resb 1
 	.kernel_name		resb 31
 	.kernel_base		resd 1
