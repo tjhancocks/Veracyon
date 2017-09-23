@@ -84,37 +84,39 @@ _identify_boot_media:
 		cmp ebx, 36
 		jne .f0_1
 		push _media_descriptor_strings.f0
-		jmp .report_type
+		jmp .handle_fdc
 	.f0_1:
 		cmp ebx, 18
 		jne .unknown
 		push _media_descriptor_strings.f0_1
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_floppy_disk_f9:
 		cmp ebx, 9
 		jne .f9_1
 		push _media_descriptor_strings.f9
-		jmp .report_type
+		jmp .handle_fdc
 	.f9_1:
 		cmp ebx, 15
 		jne .unknown
 		push _media_descriptor_strings.f9_1
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_floppy_disk_fd:
 		push _media_descriptor_strings.fd
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_floppy_disk_ff:
 		push _media_descriptor_strings.ff
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_floppy_disk_fc:
 		push _media_descriptor_strings.fc
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_floppy_disk_fe:
 		push _media_descriptor_strings.fe
-		jmp .report_type
+		jmp .handle_fdc
 	.identify_fixed_disk_f8:
 		push _media_descriptor_strings.f8
 		jmp .report_type
+	.handle_fdc:
+		call _prepare_fdc
 	.report_type:
 		call _send_serial_bytes
 		add esp, 4

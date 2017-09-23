@@ -68,6 +68,7 @@ _identify_file_system:
 		nop
 		jmp .unknown
 	.fat12:
+		call _prepare_fat12
 		push _file_system_names.fat12
 		jmp .supported
 	.fat16:
@@ -103,3 +104,28 @@ _identify_file_system:
 		mov esp, ebp
 		pop ebp
 		ret
+
+;;
+;; Read the specified file from the current (root) directory of the file system.
+;;
+;;	void file_read(const char *name, void *dst)
+;;
+_file_read:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.find_function:
+		mov esi, FS_INTERFACE
+		mov eax, [esi + FileSystemInterface.file_read]
+		test eax, eax
+		jz .failed
+		jmp eax
+	.failed:
+		push .missing
+		call _send_serial_bytes
+		cli
+		hlt
+		jmp $
+	.missing:
+		db "File System read_file() function was not installed. Aborting."
+		db 0xA, 0x0

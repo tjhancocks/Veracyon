@@ -103,16 +103,11 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 		call _identify_boot_media
-	.load_boot_media_driver:
-		; Todo - Actually use the detected boot media here
-		call _prepare_fdc
 	.detect_boot_filesystem:
 		push strings.checking_file_system
 		call _send_serial_bytes
 		add esp, 4
 		call _identify_file_system
-	.load_filesystem_driver:
-		; Todo
 	.build_system_configuration_structure:
 		; Todo
 	.load_kernel:
@@ -171,3 +166,4 @@ strings:
 	%include "CoreLoader/phase2/disk.s"
 	%include "CoreLoader/phase2/fdc.s"
 	%include "CoreLoader/phase2/filesystem.s"
+	%include "CoreLoader/phase2/fat12.s"

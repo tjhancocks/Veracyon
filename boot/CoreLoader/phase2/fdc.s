@@ -759,9 +759,6 @@ _fdc_translate_lba:
 ;;						  void *dst)
 ;;
 _fdc_read_sectors:
-	.prologue:
-		push ebp
-		mov ebp, esp
 	.main:
 		push fdc_string.read_1
 		call _send_serial_bytes
