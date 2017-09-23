@@ -46,6 +46,7 @@
 	MEMORY_MAP_SEG		equ 0x7000
 	MEMORY_MAP_OFFSET	equ 0x0000
 	MEMORY_MAP			equ 0x70000
+	FIRST_FRAME			equ 0x100000
 
 ;;
 ;; The following defines the layout of the BIOS Parameter Block (Bootsector)
@@ -98,6 +99,7 @@ STRUC BootConf
 	.lower_memory		resw 1
 	.upper_memory		resd 1
 	.mmap_count			resw 1
+	.first_free_frame	resd 1
 ENDSTRUC
 
 ;;

@@ -50,6 +50,7 @@ prepare_boot_configuration_defaults:
 		mov dword[di + BootConf.lfb], 0x00000
 		mov dword[di + BootConf.kernel_base], 0x00100000	; 1 MiB Point
 		mov dword[di + BootConf.kernel_size], 0x00300000 	; 3 MiB Size
+		mov dword[di + BootConf.first_free_frame], 0x00100000; 1 MiB Point
 	.epilogue:
 		pop es
 		popa
@@ -348,7 +349,6 @@ check_kernel_base:
 		mov si, parse_boot_config.value_buffer
 		call hex_to_num
 		mov di, BOOT_CONFIG
-		xchg bx, bx
 		mov dword[di + BootConf.kernel_base], eax
 	.done:
 		clc
@@ -374,7 +374,6 @@ check_kernel_size:
 		mov si, parse_boot_config.value_buffer
 		call hex_to_num
 		mov di, BOOT_CONFIG
-		xchg bx, bx
 		mov dword[di + BootConf.kernel_size], eax
 	.done:
 		clc

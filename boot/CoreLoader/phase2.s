@@ -106,9 +106,9 @@ _phase2_start:
 	.load_boot_media_driver:
 		; Todo - Actually use the detected boot media here
 		call _prepare_fdc
-		push 0x00100000					; Destination
+		push 0xC0000000					; Destination
 		push 1							; Sector count
-		push 50							; Sector 50 starting point
+		push 53							; Sector 50 starting point
 		mov esi, DISK_INTERFACE
 		mov eax, [esi + DiskInterface.read_sectors]
 		call eax
