@@ -43,6 +43,8 @@
 	FILE_BUFFER			equ 0x30000
 	DISK_DRIVER			equ	0x40000
 	DISK_INTERFACE		equ	0x48000
+	FS_DRIVER			equ	0x50000
+	FS_INTERFACE		equ	0x58000
 	MEMORY_MAP_SEG		equ 0x7000
 	MEMORY_MAP_OFFSET	equ 0x0000
 	MEMORY_MAP			equ 0x70000
@@ -229,10 +231,17 @@ STRUC FDCData
 ENDSTRUC
 
 ;;
-;;
+;; The following defines the layout of a Disk Driver Interface. Each field is a
+;; pointer to an appropriate function.
 ;;
 STRUC DiskInterface
 	.read_sectors		resd 1
 ENDSTRUC
 
-
+;;
+;; The following defines the layout of a File System Interface. Each field is a
+;; pointer to an appropriate function.
+;;
+STRUC FileSystemInterface
+	.file_read			resd 1
+ENDSTRUC

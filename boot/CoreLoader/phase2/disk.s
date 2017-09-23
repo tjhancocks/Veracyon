@@ -123,3 +123,29 @@ _identify_boot_media:
 		mov esp, ebp
 		pop ebp
 		ret
+
+;;
+;; Read the specified sectors from the boot disk.
+;;
+;;	void disk_read_sectors(unsigned int sector,
+;;						   unsigned int count,
+;;						   void *dst)
+;;
+_disk_read_sectors:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.find_function:
+		mov esi, DISK_DRIVER
+		mov eax, [esi + DiskInterface.read_sectors]
+		test eax, eax
+		jz .failed
+		jmp eax
+	.failed:
+		push .missing
+		call _send_serial_bytes
+		cli
+		hlt
+		jmp $
+	.missing:
+		db "Disk read_sectors() function was not installed. Aborting.", 0xA, 0x0

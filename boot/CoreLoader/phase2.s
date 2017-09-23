@@ -106,17 +106,11 @@ _phase2_start:
 	.load_boot_media_driver:
 		; Todo - Actually use the detected boot media here
 		call _prepare_fdc
-		push 0xC0000000					; Destination
-		push 1							; Sector count
-		push 53							; Sector 50 starting point
-		mov esi, DISK_INTERFACE
-		mov eax, [esi + DiskInterface.read_sectors]
-		call eax
-		add esp, 8
+	.detect_boot_filesystem:
+		push strings.checking_file_system
 		call _send_serial_bytes
 		add esp, 4
-	.detect_boot_filesystem:
-		; Todo
+		call _identify_file_system
 	.load_filesystem_driver:
 		; Todo
 	.build_system_configuration_structure:
@@ -161,6 +155,8 @@ strings:
 		db "    Enabling paging... ", 0x0
 	.detecting_boot_media:
 		db "Detecting boot media:", 0xA, "    ", 0x0
+	.checking_file_system:
+		db "Checking file system:", 0xA, "    ", 0x0
 
 ;;
 ;; Include various external source files with required functionality.
@@ -174,3 +170,4 @@ strings:
 	%include "CoreLoader/phase2/paging.s"
 	%include "CoreLoader/phase2/disk.s"
 	%include "CoreLoader/phase2/fdc.s"
+	%include "CoreLoader/phase2/filesystem.s"
