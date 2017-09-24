@@ -114,7 +114,7 @@ _phase2_start:
 		; Todo
 	.main:
 		hlt
-		jmp $
+		jmp .main
 
 ;;
 ;; The following are a collection of strings used by CoreLoader phase 2.

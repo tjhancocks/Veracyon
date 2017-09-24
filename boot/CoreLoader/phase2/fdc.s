@@ -58,7 +58,7 @@ _prepare_fdc:
 		add esp, 8
 	.install_stubs:
 		mov esi, DISK_INTERFACE
-		mov dword[esi + DiskInterface.read_sectors], _fdc_read_sectors
+		mov dword[esi + DiskInterface.read_sectors], _fdc_read_sectors.main
 	.epilogue:
 		mov esp, ebp
 		pop ebp
@@ -102,7 +102,7 @@ _fdc_wait:
 		jmp .L0
 	.skip:
 		push eax
-		push 100
+		push 300
 		call _sleep
 		add esp, 4
 	.finish:
@@ -326,20 +326,22 @@ _fdc_reset:
 		mov edx, FDC_CCR
 		xor eax, eax
 		out dx, al
-		mov edx, FDC_REG_A
-		mov eax, FDC_CMD_SPECIFY
-		out dx, al
-		mov eax, 0xDF
-		out dx, al
-		mov eax, 0x02
-		out dx, al
+		push FDC_CMD_SPECIFY
+		call _fdc_send_cmd
+		add esp, 4
+		push 0xdf
+		call _fdc_send_cmd
+		add esp, 4
+		push 0x02
+		call _fdc_send_cmd
+		add esp, 4
 	.check_failure:
 		call _fdc_calibrate
 		push eax
 		push fdc_string.reset_3
 		call _send_serial_bytes
-		pop eax
 		add esp, 4
+		pop eax
 		test eax, eax
 		jz .failed
 	.epilogue:
@@ -759,57 +761,58 @@ _fdc_translate_lba:
 ;;						  void *dst)
 ;;
 _fdc_read_sectors:
+	.prologue:
+		push ebp
+		mov ebp, esp
 	.main:
-		push fdc_string.read_1
-		call _send_serial_bytes
-		add esp, 4
-		mov eax, [ebp + 8]				; Fetch the sector number
-		and eax, 0xFFFF					; and mask it
-		mov [ebp + 8], eax
-		mov eax, [ebp + 12]				; Fetch the sector count
-		and eax, 0xFFFF					; and mask it
-		mov ecx, eax
-		mov edi, [ebp + 16]				; Fetch the destination pointer
-	.calculate_chs:
-		mov [ebp + 12], ecx
-		sub esp, 12
-		mov eax, dword[ebp + 8]
-		push eax 						; The sector number
-		call _fdc_translate_lba
-		mov eax, [esp + 4]				; EAX = cylinder
-		cmp al, [.cylinder]
-		je .transfer
-		push eax
+		push 0xFF						; [ebp - 4] last_cylinder
+		push 0							; [ebp - 8] *sector (unused)
+		push 0							; [ebp - 12] *head (unused)
+		push 0							; [ebp - 16] *cylinder
+		push 0							; [ebp - 20] lba
+	.prepare:
+		mov eax, [ebp + 8]				; Fetch the specified sector and use it
+		mov [ebp - 20], eax				; as the LBA.
+	.next_sector:
+		call _fdc_translate_lba 		; LBA -> CHS
+		mov eax, [ebp - 16]				; Fetch the *cylinder
+		cmp eax, [ebp - 4]				; Is *cylinder equal to last_cylinder?
+		je .cylinder_ready				; Yes. We already have the cylinder...
+		push eax						; Read the specified cylinder
+		mov [ebp - 4], eax				; Update the previous cylinder
 		call _fdc_read_cylinder
 		add esp, 4
-		mov eax, [esp + 8]				;  EAX = head
+	.cylinder_ready:
+		xor edx, edx
+		mov eax, [ebp - 20]				; Fetch the current sector (LBA)
 		mov ebx, 18
-		mul ebx							; Head * (18) sectors
-		mov ebx, [esp + 12]				; EBX = sector
-		add eax, ebx					; + the absolute sector
-		sub eax, 1
-		mov ebx, 0x200
-		mul ebx
-		add eax, DMA_BUFFER				; Get to the current location
-		mov esi, eax
-	.transfer:
-		add esp, 16
-		mov ecx, 0x200					; 1 Sector (512 bytes)
-		rep movsb						; ESI -> EDI
-		mov eax, [ebp + 8]				; Update the starting sector
-		add eax, 1
-		mov [ebp + 8], eax				; Store the new starting sector
+		div ebx							; EDX = EAX % 18
+		mov eax, edx
+		mov ebx, 512
+		mul ebx							; EAX *= 512
+	.copy:
+		mov edi, [ebp + 16]				; Get the current buffer location
+		mov esi, DMA_BUFFER
+		add esi, eax					; DMA Buffer + Sector Offset
+		mov ecx, 512
+		rep movsb						; Copy a single sector of data
+	.move_to_next_sector:
+		mov eax, [ebp - 20]				; Fetch the current sector
+		add eax, 1						; Next
+		mov [ebp - 20], eax				; Save it
 		mov ecx, [ebp + 12]				; Fetch the current sector count
-		loop .calculate_chs
+		sub ecx, 1						; Less 1
+		mov [ebp + 12], ecx				; Save it
+		mov eax, [ebp + 16]				; Fetch the current buffer location
+		add eax, 512					; Progress the current buffer location
+		mov [ebp + 16], eax				; And save it as well.
+		cmp ecx, 0						; Have we got any sectors left?
+		jg .next_sector
 	.epilogue:
-		push fdc_string.read_2
-		call _send_serial_bytes
-		add esp, 4
+		xchg bx, bx
 		mov esp, ebp
 		pop ebp
 		ret
-	.cylinder:
-		db 0xff
 
 fdc_string:
 	.read_1:
@@ -818,7 +821,7 @@ fdc_string:
 		db "Finished reading floppy disk sectors!", 0xA, 0x0
 	.lba_1:
 		db "Translating floppy disk LBA... ", 0x0
-	.done:
+	.done: 
 		db "done.", 0xA, 0x0
 	.transfer_cmds:
 		db "Transferring floppy disk controller commands... ", 0x0

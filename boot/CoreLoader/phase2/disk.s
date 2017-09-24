@@ -138,7 +138,7 @@ _disk_read_sectors:
 		push ebp
 		mov ebp, esp
 	.find_function:
-		mov esi, DISK_DRIVER
+		mov esi, DISK_INTERFACE
 		mov eax, [esi + DiskInterface.read_sectors]
 		test eax, eax
 		jz .failed

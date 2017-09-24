@@ -36,7 +36,7 @@ fat12-bochs: clean fat12
 			 "magic_break: enabled=1" \
 			 "com1: enabled=1, mode=file, dev=debug/bochs.log" \
 			 "port_e9_hack: enabled=1" \
-			 "clock: sync=realtime"
+			 "memory: guest=512, host=256"
 
 
 # FAT12 Boot Sector
