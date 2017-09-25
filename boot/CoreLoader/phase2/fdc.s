@@ -809,7 +809,6 @@ _fdc_read_sectors:
 		cmp ecx, 0						; Have we got any sectors left?
 		jg .next_sector
 	.epilogue:
-		xchg bx, bx
 		mov esp, ebp
 		pop ebp
 		ret

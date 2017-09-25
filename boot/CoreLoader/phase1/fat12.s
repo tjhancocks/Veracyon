@@ -37,9 +37,8 @@ fat12_read_file:
 		push si
 	.load_root:
 		xor ecx, ecx
+		xor edx, edx
 		mov si, BIOS_PARAM_BLOCK
-		xor cx, cx
-		xor dx, dx
 		mov ax, 0x0020					; FAT uses 32 byte entries
 		mul word[gs:si + BPBlock.dir_entries]; Multiply by root entries
 		div word[gs:si + BPBlock.bps]	; Divide by bytes per sector
