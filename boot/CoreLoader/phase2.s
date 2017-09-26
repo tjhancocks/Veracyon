@@ -79,18 +79,18 @@ _phase2_start:
 		push strings.identity_mapping
 		call _send_serial_bytes
 		add esp, 4
-		call _configure_lower_identity_mapping
+		call _prepare_lower_id_map
 		push strings.done
 		call _send_serial_bytes
 		add esp, 4
 		push strings.kernel_page_tables
 		call _send_serial_bytes
 		add esp, 4
-		call _prepare_kernel_page_tables
+		call _alloc_kernel_memory
 		push strings.linear_frame_buffer
 		call _send_serial_bytes
 		add esp, 4
-		call _prepare_lfb_page_tables
+		call _alloc_vesa_memory
 		push strings.enabling_paging
 		call _send_serial_bytes
 		add esp, 4

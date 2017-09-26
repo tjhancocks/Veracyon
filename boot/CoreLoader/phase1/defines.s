@@ -37,8 +37,6 @@
 	INT_HANDLERS		equ 0x11900
 	PAGE_DIR			equ 0x12000
 	ID_MAP_PAGE_TABLE	equ 0x13000
-	KERNEL_PAGE_TABLE_1	equ	0x14000
-	VESA_PAGE_TABLE_1	equ 0x17000
 	DMA_BUFFER			equ 0x20000
 	FILE_BUFFER			equ 0x30000
 	DISK_DRIVER			equ	0x40000
@@ -46,6 +44,7 @@
 	FS_DRIVER			equ	0x50000
 	FS_INTERFACE		equ	0x50200
 	FS_BUFFER			equ 0x51000
+	FIRST_PTABLE_FRAME	equ 0x60000
 	MEMORY_MAP_SEG		equ 0x7000
 	MEMORY_MAP_OFFSET	equ 0x0000
 	MEMORY_MAP			equ 0x70000
@@ -116,7 +115,8 @@ STRUC BootConf
 	.lower_memory		resw 1
 	.upper_memory		resd 1
 	.mmap_count			resw 1
-	.first_free_frame	resd 1
+	.next_ptable_frame	resd 1
+	.next_frame			resd 1
 ENDSTRUC
 
 ;;

@@ -44,14 +44,14 @@ prepare_boot_configuration_defaults:
 		mov cx, 11
 		rep movsb						; Write the kernel name (assume FAT)
 		mov di, BOOT_CONFIG
-		mov dword[di + BootConf.kernel_base], 0x100000
 		mov word[di + BootConf.width], 800
 		mov word[di + BootConf.height], 600
 		mov word[di + BootConf.depth], 32
 		mov dword[di + BootConf.lfb], 0x00000
 		mov dword[di + BootConf.kernel_base], 0x00100000	; 1 MiB Point
 		mov dword[di + BootConf.kernel_size], 0x00300000 	; 3 MiB Size
-		mov dword[di + BootConf.first_free_frame], 0x00100000; 1 MiB Point
+		mov dword[di + BootConf.next_ptable_frame], FIRST_PTABLE_FRAME
+		mov dword[di + BootConf.next_frame], FIRST_FRAME
 	.epilogue:
 		pop es
 		popa
