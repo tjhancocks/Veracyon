@@ -131,7 +131,7 @@ _fdc_send_cmd:
 		mov eax, [ebp + 8]				; Fetch the command
 	.L0:
 		push ecx
-		push 50							; Wait for 50ms
+		push 10							; Wait for 10ms
 		call _sleep
 		add esp, 4
 		mov edx, FDC_MSR
@@ -174,7 +174,7 @@ _fdc_read_byte:
 		mov ecx, 600					; 30 second timeout (600 attempts)
 	.L0:
 		push ecx
-		push 50							; Wait for 50ms
+		push 10							; Wait for 10ms
 		call _sleep
 		add esp, 4
 		mov edx, FDC_MSR
@@ -248,7 +248,9 @@ _fdc_calibrate:
 		call _fdc_send_cmd
 		mov dword[esp], 0
 		call _fdc_send_cmd
-		add esp, 4
+		push 100
+		call _sleep
+		add esp, 8
 		call _fdc_wait
 		push 0							; Reserve space for cyl
 		push 0							; Reserve space for st0
@@ -258,14 +260,15 @@ _fdc_calibrate:
 		jnz .status
 		mov eax, [esp + 4]				; EAX = cyl
 		add esp, 8
-		test eax, eax
-		jz .found_sector_zero
+		cmp eax, 0
+		je .found_sector_zero
 	.next_attempt:
 		pop ecx
 		loop .L0
 		jmp .failed
 	.status:
 		add esp, 8
+		nop
 		; ... Maybe add something for reporting status here ...
 		jmp .next_attempt
 	.found_sector_zero:
@@ -276,6 +279,7 @@ _fdc_calibrate:
 		pop ebp
 		ret
 	.failed:
+		call _fdc_motor_off
 		push .failed_message
 		call _send_serial_bytes
 		xor eax, eax
@@ -377,12 +381,17 @@ _fdc_motor_on:
 		call _sleep
 		add esp, 4
 	.L1:
+		push .powering_on
+		call _send_serial_bytes
+		add esp, 4
 		mov esi, DISK_DRIVER
 		mov byte[esi + FDCData.state], FDC_MOTOR_ON
 	.epilogue:
 		mov esp, ebp
 		pop ebp
 		ret
+	.powering_on:
+		db "Powering Floppy Disk Drive motor on", 0xA, 0x0
 
 ;;
 ;; Turn off the Floppy Disk Motor if it is not already turned off.
@@ -394,6 +403,9 @@ _fdc_motor_off:
 		push ebp
 		mov ebp, esp
 	.main:
+		push .powering_off
+		call _send_serial_bytes
+		add esp, 4
 		mov esi, DISK_DRIVER
 		mov dword[esi + FDCData.ticks], 300
 		mov byte[esi + FDCData.state], FDC_MOTOR_WAIT
@@ -402,6 +414,8 @@ _fdc_motor_off:
 		mov esp, ebp
 		pop ebp
 		ret
+	.powering_off:
+		db "Preparing to power Floppy Disk Drive motor off", 0xA, 0x0
 
 ;;
 ;; Kill the Floppy Disk Driver motor.
@@ -413,6 +427,9 @@ _fdc_motor_kill:
 		push ebp
 		mov ebp, esp
 	.main:
+		push .killed
+		call _send_serial_bytes
+		add esp, 4
 		mov edx, FDC_DOR
 		mov eax, 0x0c
 		out dx, al
@@ -422,6 +439,8 @@ _fdc_motor_kill:
 		mov esp, ebp
 		pop ebp
 		ret
+	.killed:
+		db "Killed floppy disk drive motor.", 0xA, 0x0
 
 ;;
 ;; Suspend the main thread until the Floppy Disk Controller timer tick counter
@@ -434,7 +453,7 @@ _fdc_timer:
 		push ebp
 		mov ebp, esp
 	.L0:
-		push 250						; Wait for 250ms
+		push 500						; Wait for 500ms
 		call _sleep
 		add esp, 4
 		mov esi, DISK_DRIVER
@@ -595,9 +614,9 @@ _fdc_read_cylinder:
 		call _send_serial_bytes
 		add esp, 4
 		mov ecx, 20						; Attempt 20 retries
-		call _fdc_motor_on
 	.L0:
 		push ecx
+		call _fdc_motor_on
 		call _fdc_read_dma_init
 		push 500						; 500ms for heads to settle after seek
 		call _sleep
@@ -642,21 +661,25 @@ _fdc_read_cylinder:
 		pop ecx
 		loop .retry
 	.timeout:
+		call _fdc_motor_kill
 		push .timeout_message
 		call _send_serial_bytes
 		cli
 		hlt
 	.retry:
+		call _fdc_motor_off
 		push fdc_string.read_cyl_4
 		call _send_serial_bytes
 		add esp, 4
 		jmp .L0
 	.hard_error:
+		call _fdc_motor_kill
 		push .hard_error_message
 		call _send_serial_bytes
 		cli
 		hlt
 	.finished:
+		call _fdc_motor_off
 		push fdc_string.read_cyl_5
 		call _send_serial_bytes
 		add esp, 4
@@ -739,7 +762,8 @@ _fdc_translate_lba:
 		and edx, 0xFF
 		mov [ebp + 20], edx				; *sector = edx
 		xor edx, edx
-		shr eax, 1
+		mov ebx, 2
+		div ebx
 		and edx, 0xFF
 		and eax, 0xFF
 		mov [ebp + 16], edx				; *head = edx
@@ -748,9 +772,39 @@ _fdc_translate_lba:
 		push fdc_string.done
 		call _send_serial_bytes
 		add esp, 4
+		push dword[ebp + 8]
+		call _send_serial_number
+		add esp, 4
+		push .arrow
+		call _send_serial_bytes
+		add esp, 4
+		push dword[ebp + 12]
+		call _send_serial_number
+		add esp, 4
+		push .comma
+		call _send_serial_bytes
+		add esp, 4
+		push dword[ebp + 16]
+		call _send_serial_number
+		add esp, 4
+		push .comma
+		call _send_serial_bytes
+		add esp, 4
+		push dword[ebp + 20]
+		call _send_serial_number
+		add esp, 4
+		push .nl
+		call _send_serial_bytes
+		add esp, 4
 		mov esp, ebp
 		pop ebp
 		ret
+	.arrow:
+		db " => (", 0x0
+	.comma:
+		db ", ", 0x0
+	.nl:
+		db ")", 0xA, 0x0
 
 ;;
 ;; Read the specified number of sectors from the Flopy Disk, starting from the
@@ -791,6 +845,7 @@ _fdc_read_sectors:
 		mov ebx, 512
 		mul ebx							; EAX *= 512
 	.copy:
+		xchg bx, bx
 		mov edi, [ebp + 16]				; Get the current buffer location
 		mov esi, DMA_BUFFER
 		add esi, eax					; DMA Buffer + Sector Offset

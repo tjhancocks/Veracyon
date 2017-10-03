@@ -73,3 +73,37 @@ _send_serial_bytes:
 		mov esp, ebp
 		pop ebp
 		ret
+
+;;
+;; Write the specified value to the serial port as a decimal string
+;;
+_send_serial_number:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.prepare:
+		mov edi, .buffer
+		mov ecx, 31
+		xor eax, eax
+		rep stosb
+		mov eax, [ebp + 8]
+		mov edi, .buffer + 30
+		mov ecx, 10
+	.next_digit:
+		xor edx, edx
+		idiv ecx
+		add edx, 0x30
+		dec edi
+		mov byte[edi], dl
+		cmp eax, 0
+		jnz .next_digit
+	.done:
+		push edi
+		call _send_serial_bytes
+		add esp, 4
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
+	.buffer:
+		times 31 db 0
