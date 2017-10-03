@@ -821,7 +821,7 @@ _fdc_read_sectors:
 	.main:
 		push 0xFF						; [ebp - 4] last_cylinder
 		push 0							; [ebp - 8] *sector (unused)
-		push 0							; [ebp - 12] *head (unused)
+		push 0							; [ebp - 12] *head
 		push 0							; [ebp - 16] *cylinder
 		push 0							; [ebp - 20] lba
 	.prepare:
@@ -844,8 +844,14 @@ _fdc_read_sectors:
 		mov eax, edx
 		mov ebx, 512
 		mul ebx							; EAX *= 512
+		push eax						; Save the current sector offset
+		xor edx, edx
+		mov eax, [ebp - 12]				; Fetch the head
+		mov ebx, 512 * 18
+		mul ebx							; Which head are we on?
+		pop ebx							; Restore the sector offset
+		add eax, ebx					; Combine the two
 	.copy:
-		xchg bx, bx
 		mov edi, [ebp + 16]				; Get the current buffer location
 		mov esi, DMA_BUFFER
 		add esi, eax					; DMA Buffer + Sector Offset

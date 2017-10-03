@@ -111,6 +111,12 @@ _phase2_start:
 	.build_system_configuration_structure:
 		; Todo
 	.load_kernel:
+		mov esi, BOOT_CONFIG
+		add esi, BootConf.kernel_name
+		mov eax, esi
+		push eax						; Push a pointer to kernel name
+		call _file_read					; Attempt to open the file.
+		add esp, 4
 		; Todo
 	.main:
 		hlt
