@@ -117,7 +117,9 @@ _phase2_start:
 		push eax						; Push a pointer to kernel name
 		call _file_read					; Attempt to open the file.
 		add esp, 4
-		; Todo
+		push 0x10000000					; File Buffer. Hard coded for now.
+		call _elf_load
+		add esp, 4
 	.main:
 		hlt
 		jmp .main
@@ -173,3 +175,4 @@ strings:
 	%include "CoreLoader/phase2/fdc.s"
 	%include "CoreLoader/phase2/filesystem.s"
 	%include "CoreLoader/phase2/fat12.s"
+	%include "CoreLoader/phase2/elf.s"
