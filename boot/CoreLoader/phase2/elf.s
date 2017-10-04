@@ -87,6 +87,12 @@ _elf_load:
 		call _elf_check_type
 	.parse_elf:
 		call _elf_parse_phdr
+		add esp, 4
+	.launch:
+		xchg bx, bx
+		mov esi, [ebp + 8]
+		mov eax, [esi + ELFHdr.e_entry]
+		call eax
 	.epilogue:
 		mov esp, ebp
 		pop ebp
@@ -328,22 +334,44 @@ _elf_parse_phdr:
 		mov [ebp - 8], ecx				; Store the program header count
 		movzx eax, word[esi + ELFHdr.e_phentsize]
 		mov [ebp - 12], eax				; Store the program header size
-	.next_entry:
-		mov eax, [ebp - 4]				; Restore the current program header
-		push eax
+	.get_program_header_entry:
+		push dword[ebp - 4]				; Push program header as argument
 		call _elf_describe_phdr
-		pop eax
+		add esp, 4
+	.handle_entry:
+		mov esi, [ebp - 4]				; Fetch the current program header
+		mov eax, [esi + ELFPhdr.p_type]	; Get the program section type.
+		cmp eax, 0x00000000
+		je .next_entry					; Skip NULL sections, as per spec
+		cmp eax, 0x00000001
+		je .handle_load_section			; Handle a load section.
+		nop
+		jmp .unsupported_section		; We've hit an unsupported section.
+	.handle_load_section:
+		push dword[ebp + 8]				; Push the ELF location as 2nd arg
+		push dword[ebp - 4]				; Push the program header as 1st arg
+		call _elf_parse_load_section
+		add esp, 8
+	.next_entry:
+		mov eax, [ebp - 4]				; Fetch the current program header
 		add eax, [ebp - 12]				; Move to the next program header
 		mov [ebp - 4], eax				; Update the current program header
 		mov ecx, [ebp - 8]				; Get the current header count
 		sub ecx, 1						; Subtract 1
 		mov [ebp - 8], ecx
 		cmp ecx, 0						; Have we reached the last one?
-		jne .next_entry					; No, proceed to next entry
+		je .end_of_list					; No, proceed to next entry
+		jmp .get_program_header_entry
+	.end_of_list:
 	.epilogue:
 		mov esp, ebp
 		pop ebp
 		ret
+	.unsupported_section:
+		push .unsupported_message
+		call _elf_panic
+	.unsupported_message:
+		db "Attempted to load an ELF file with unsupported section.", 0xA, 0x0
 
 ;;
 ;; Output the type name of the specified ELF Program Header.
@@ -452,3 +480,39 @@ _elf_describe_phdr:
 		db "LOPROC", 0x0
 	.pt_hiproc:
 		db "HIPROC", 0x0
+
+;;
+;; Parse a "load section" from the specified ELF file, using the specified
+;; program header.
+;;
+;;	void elf_parse_load_section(void *elf_phdr, void *elf_data)
+;;
+_elf_parse_load_section:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.allocate_memory:
+		mov esi, [ebp + 8]				; Fetch the program header
+		mov edi, [esi + ELFPhdr.p_vaddr]; Get the virtual address of the section
+		mov ecx, [esi + ELFPhdr.p_memsz]; Get the size of the section
+		push 0							; Not identity mapped
+		push ecx						; The amount of memory
+		push edi						; The location of memory
+		call _alloc_memory				; Allocate the requested memory
+		pop edi							; Restore location
+		pop ecx							; Restore amount of memory
+	.clear_memory:
+		xor eax, eax
+		shr ecx, 2						; Divide by 4, operate on dwords
+		rep stosd
+	.copy_section:
+		mov esi, [ebp + 8]				; Fetch the program header
+		mov edi, [esi + ELFPhdr.p_vaddr]; Get the virtual address of the section
+		mov ecx, [esi + ELFPhdr.p_filesz]; Get the size of the section in file
+		mov esi, [esi + ELFPhdr.p_offset]; Get the file offset of the section
+		add esi, [ebp + 12]				; Add the location of the ELF data
+		rep movsb
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
