@@ -24,33 +24,47 @@
 ;; ELF Ident Structure.
 ;;
 STRUC ELFIdent
-	.magic			resd 1
-	.class 			resb 1
-	.data			resb 1
-	.version		resb 1
-	.os_abi			resb 1
-	.abi_version	resb 1
-	.pad			resb 7
+	.e_magic			resd 1
+	.e_class 			resb 1
+	.e_data				resb 1
+	.e_version			resb 1
+	.e_os_abi			resb 1
+	.e_abi_version		resb 1
+	.e_pad				resb 7
 ENDSTRUC
 
 ;;
 ;; ELF Header Structure.
 ;;
-STRUC ELFHeader
-	.ident			resb 16
-	.type			resw 1
-	.machine		resw 1
-	.version		resd 1
-	.entry			resd 1
-	.phoff			resd 1
-	.shoff			resd 1
-	.flags			resd 1
-	.ehsize			resw 1
-	.phentsize		resw 1
-	.phnum			resw 1
-	.shentsize		resw 1
-	.shnum			resw 1
-	.shstrndx		resw 1
+STRUC ELFHdr
+	.e_ident			resb 16
+	.e_type				resw 1
+	.e_machine			resw 1
+	.e_version			resd 1
+	.e_entry			resd 1
+	.e_phoff			resd 1
+	.e_shoff			resd 1
+	.e_flags			resd 1
+	.e_ehsize			resw 1
+	.e_phentsize		resw 1
+	.e_phnum			resw 1
+	.e_shentsize		resw 1
+	.e_shnum			resw 1
+	.e_shstrndx			resw 1
+ENDSTRUC
+
+;;
+;; ELF Program Header Structure
+;;
+STRUC ELFPhdr
+	.p_type				resd 1
+	.p_offset			resd 1
+	.p_vaddr			resd 1
+	.p_paddr 			resd 1
+	.p_filesz			resd 1
+	.p_memsz			resd 1
+	.p_flags			resd 1
+	.p_align 			resd 1
 ENDSTRUC
 
 ;;
@@ -71,9 +85,8 @@ _elf_load:
 		call _elf_check_machine_isa
 		call _elf_check_version
 		call _elf_check_type
-	.determine_type:
-	.load_relocatable_elf:
-	.load_executable_elf:
+	.parse_elf:
+		call _elf_parse_phdr
 	.epilogue:
 		mov esp, ebp
 		pop ebp
@@ -116,8 +129,8 @@ _elf_check_file:
 		call _send_serial_bytes
 		mov esi, .magic					; Fetch the ELF data and compare the 1st
 		mov edi, [ebp + 8] 				; 4 bytes with the magic number and
-		add edi, ELFHeader.ident		; ensure that they match. If they do
-		add edi, ELFIdent.magic			; then we have a valid ELF file. 
+		add edi, ELFHdr.e_ident			; ensure that they match. If they do
+		add edi, ELFIdent.e_magic		; then we have a valid ELF file. 
 		mov ecx, 4
 		rep cmpsb
 		jne .error						; If not equal then error!
@@ -150,7 +163,7 @@ _elf_check_32:
 		push .message
 		call _send_serial_bytes
 		mov edi, [ebp + 8]				; Fetch the ELF data.
-		movzx eax, byte[edi + ELFHeader.ident + ELFIdent.class]
+		movzx eax, byte[edi + ELFHdr.e_ident + ELFIdent.e_class]
 		cmp eax, 1						; Ensure we're looking at class 1
 		jne .error
 		push strings.done
@@ -181,7 +194,7 @@ _elf_check_endianess:
 		push .message
 		call _send_serial_bytes
 		mov edi, [ebp + 8]				; Fetch the ELF data.
-		movzx eax, byte[edi + ELFHeader.ident + ELFIdent.data]
+		movzx eax, byte[edi + ELFHdr.e_ident + ELFIdent.e_data]
 		cmp eax, 1						; Ensure we're looking at class 1
 		jne .error
 		push strings.done
@@ -212,7 +225,7 @@ _elf_check_machine_isa:
 		push .message
 		call _send_serial_bytes
 		mov edi, [ebp + 8]				; Fetch the ELF data.
-		movzx eax, byte[edi + ELFHeader.machine]
+		movzx eax, byte[edi + ELFHdr.e_machine]
 		cmp eax, 3						; Ensure we're looking at x86 (3)
 		jne .error
 		push strings.done
@@ -243,7 +256,7 @@ _elf_check_version:
 		push .message
 		call _send_serial_bytes
 		mov edi, [ebp + 8]				; Fetch the ELF data.
-		movzx eax, byte[edi + ELFHeader.version]
+		movzx eax, byte[edi + ELFHdr.e_version]
 		cmp eax, 1						; Ensure we're looking version 1
 		jne .error
 		push strings.done
@@ -275,7 +288,7 @@ _elf_check_type:
 		push .message
 		call _send_serial_bytes
 		mov edi, [ebp + 8]				; Fetch the ELF data.
-		movzx eax, byte[edi + ELFHeader.type]
+		movzx eax, byte[edi + ELFHdr.e_type]
 		cmp eax, 2						; Executable?
 		jne .error
 		push strings.done
@@ -292,3 +305,150 @@ _elf_check_type:
 		db 0xA, 0x0
 	.message:
 		db "Checking the ELF type is compatible... ", 0x0
+
+;;
+;; Parse the program headers of the specified ELF file. This will kick off
+;; relocation for those program sections accordingly.
+;;
+;;	void elf_parse_phdr(void *elf_data)
+;;
+_elf_parse_phdr:
+	.prologue:
+		push ebp
+		mov ebp, esp
+		push 0							; [ebp - 4] Program Header Offset
+		push 0							; [ebp - 8] Program Header Count
+		push 0							; [ebp - 12] Program Header Size
+	.locate_program_headers:
+		mov esi, [ebp + 8]				; Fetch the ELF Data location
+		mov eax, [esi + ELFHdr.e_phoff]	; Get the program header offset
+		add eax, esi					; Add the location of the ELF data
+		mov [ebp - 4], eax				; Store for easy lookup in future
+		movzx ecx, word[esi + ELFHdr.e_phnum]
+		mov [ebp - 8], ecx				; Store the program header count
+		movzx eax, word[esi + ELFHdr.e_phentsize]
+		mov [ebp - 12], eax				; Store the program header size
+	.next_entry:
+		mov eax, [ebp - 4]				; Restore the current program header
+		push eax
+		call _elf_describe_phdr
+		pop eax
+		add eax, [ebp - 12]				; Move to the next program header
+		mov [ebp - 4], eax				; Update the current program header
+		mov ecx, [ebp - 8]				; Get the current header count
+		sub ecx, 1						; Subtract 1
+		mov [ebp - 8], ecx
+		cmp ecx, 0						; Have we reached the last one?
+		jne .next_entry					; No, proceed to next entry
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
+
+;;
+;; Output the type name of the specified ELF Program Header.
+;;
+;;	void elf_describe_phdr(void *elf_phdr)
+;;
+_elf_describe_phdr:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.main:
+		push .prefix
+		call _send_serial_bytes
+		add esp, 4
+		mov esi, [ebp + 8]				; Fetch the Program Header
+		mov eax, [esi + ELFPhdr.p_type]	; Lookup the type of section
+		cmp eax, 0x00000000
+		je .is_pt_null
+		cmp eax, 0x00000001
+		je .is_pt_load
+		cmp eax, 0x00000002
+		je .is_pt_dyn
+		cmp eax, 0x00000003
+		je .is_pt_interp
+		cmp eax, 0x00000004
+		je .is_pt_note
+		cmp eax, 0x00000005
+		je .is_pt_shlib
+		cmp eax, 0x00000006
+		je .is_pt_phdr
+		cmp eax, 0x60000000
+		je .is_pt_loos
+		cmp eax, 0x6fffffff
+		je .is_pt_hios
+		cmp eax, 0x70000000
+		je .is_pt_loproc
+		cmp eax, 0x7fffffff
+		jmp .finish
+	.is_pt_null:
+		push .pt_null
+		jmp .show_type
+	.is_pt_load:
+		push .pt_load
+		jmp .show_type
+	.is_pt_dyn:
+		push .pt_dyn
+		jmp .show_type
+	.is_pt_interp:
+		push .pt_interp
+		jmp .show_type
+	.is_pt_note:
+		push .pt_note
+		jmp .show_type
+	.is_pt_shlib:
+		push .pt_shlib
+		jmp .show_type
+	.is_pt_phdr:
+		push .pt_phdr
+		jmp .show_type
+	.is_pt_loos:
+		push .pt_loos
+		jmp .show_type
+	.is_pt_hios:
+		push .pt_hios
+		jmp .show_type
+	.is_pt_loproc:
+		push .pt_loproc
+		jmp .show_type
+	.is_pt_hiproc:
+		push .pt_hiproc
+		jmp .show_type
+	.show_type:
+		call _send_serial_bytes
+		add esp, 4
+	.finish
+		push .suffix
+		call _send_serial_bytes
+		add esp, 4
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
+	.prefix:
+		db "ELF Program Header (type = PT_", 0x0
+	.suffix:
+		db ")", 0xA, 0x0
+	.pt_null:
+		db "NULL", 0x0
+	.pt_load:
+		db "LOAD", 0x0
+	.pt_dyn:
+		db "DYNAMIC", 0x0
+	.pt_interp:
+		db "INTERP", 0x0
+	.pt_note:
+		db "NOTE", 0x0
+	.pt_shlib:
+		db "SHLIB", 0x0
+	.pt_phdr:
+		db "PHDR", 0x0
+	.pt_loos:
+		db "LOOS", 0x0
+	.pt_hios:
+		db "HIOS", 0x0
+	.pt_loproc:
+		db "LOPROC", 0x0
+	.pt_hiproc:
+		db "HIPROC", 0x0
