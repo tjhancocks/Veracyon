@@ -96,8 +96,6 @@ STRUC BootConf
 	.filesystem			resb 1
 	.vesa_mode			resb 1
 	.kernel_name		resb 31
-	.kernel_base		resd 1
-	.kernel_size		resd 1
 	.width				resw 1
 	.height				resw 1
 	.depth				resb 1

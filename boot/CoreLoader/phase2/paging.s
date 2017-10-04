@@ -246,32 +246,6 @@ _alloc_memory:
 		ret
 
 ;;
-;; Allocates required memory for the Kernel.
-;;
-;; 	void alloc_kernel_memory(void)
-;;
-_alloc_kernel_memory:
-	.prologue:
-		push ebp
-		mov ebp, esp
-	.main:
-		mov esi, BOOT_CONFIG
-		mov eax, [esi + BootConf.kernel_base]
-		mov ebx, [esi + BootConf.kernel_size]
-		push 0							; Not identity mapped
-		push ebx						; The size of the kernel
-		push eax						; The location of the kernel
-		call _alloc_memory
-		add esp, 12
-	.done:
-		push strings.done
-		call _send_serial_bytes
-	.epilogue:
-		mov esp, ebp
-		pop ebp
-		ret
-
-;;
 ;; Allocates required memory for the linear frame buffer if it is required.
 ;;
 ;; 	void alloc_vesa_memory(void)

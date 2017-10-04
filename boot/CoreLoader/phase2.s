@@ -83,10 +83,6 @@ _phase2_start:
 		push strings.done
 		call _send_serial_bytes
 		add esp, 4
-		push strings.kernel_page_tables
-		call _send_serial_bytes
-		add esp, 4
-		call _alloc_kernel_memory
 		push strings.linear_frame_buffer
 		call _send_serial_bytes
 		add esp, 4
@@ -146,8 +142,6 @@ strings:
 		db "Preparing paging functionality:", 0xA, 0x0
 	.identity_mapping:
 		db "    Lower 1MiB Identity Mapping... ", 0x0
-	.kernel_page_tables:
-		db "    Mapping Kernel page tables... ", 0x0
 	.linear_frame_buffer:
 		db "    Mapping VESA Linear Frame Buffer... ", 0x0
 	.unrequired:

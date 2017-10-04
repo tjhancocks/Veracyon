@@ -48,8 +48,6 @@ prepare_boot_configuration_defaults:
 		mov word[di + BootConf.height], 600
 		mov word[di + BootConf.depth], 32
 		mov dword[di + BootConf.lfb], 0x00000
-		mov dword[di + BootConf.kernel_base], 0x00100000	; 1 MiB Point
-		mov dword[di + BootConf.kernel_size], 0x00300000 	; 3 MiB Size
 		mov dword[di + BootConf.next_ptable_frame], FIRST_PTABLE_FRAME
 		mov dword[di + BootConf.next_frame], FIRST_FRAME
 	.epilogue:
@@ -186,16 +184,6 @@ parse_boot_config:
 		jmp .finished_key_value
 	.default_background:
 		call check_default_background
-		jc .kernel_base
-		nop
-		jmp .finished_key_value
-	.kernel_base:
-		call check_kernel_base
-		jc .kernel_size
-		nop
-		jmp .finished_key_value
-	.kernel_size:
-		call check_kernel_size
 		jc .finished_key_value
 		nop
 		jmp .finished_key_value
@@ -334,56 +322,6 @@ check_screen_height:
 		ret
 	.key:
 		db "screen-height"
-
-;;
-;; Check for and handle a specified kernel base address
-;;
-check_kernel_base:
-	.main:
-		mov si, parse_boot_config.key_buffer
-		mov di, .key
-		mov cx, 10
-		rep cmpsb
-		jne .failed
-		nop
-	.parse_value:
-		mov si, parse_boot_config.value_buffer
-		call hex_to_num
-		mov di, BOOT_CONFIG
-		mov dword[di + BootConf.kernel_base], eax
-	.done:
-		clc
-		ret
-	.failed:
-		stc
-		ret
-	.key:
-		db "kernel-base"
-
-;;
-;; Check for and handle a specified kernel size address
-;;
-check_kernel_size:
-	.main:
-		mov si, parse_boot_config.key_buffer
-		mov di, .key
-		mov cx, 10
-		rep cmpsb
-		jne .failed
-		nop
-	.parse_value:
-		mov si, parse_boot_config.value_buffer
-		call hex_to_num
-		mov di, BOOT_CONFIG
-		mov dword[di + BootConf.kernel_size], eax
-	.done:
-		clc
-		ret
-	.failed:
-		stc
-		ret
-	.key:
-		db "kernel-size"
 
 ;;
 ;; Check for and handle a default background key-value
