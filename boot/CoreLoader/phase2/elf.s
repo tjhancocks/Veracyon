@@ -89,7 +89,6 @@ _elf_load:
 		call _elf_parse_phdr
 		add esp, 4
 	.launch:
-		xchg bx, bx
 		mov esi, [ebp + 8]
 		mov eax, [esi + ELFHdr.e_entry]
 		call eax

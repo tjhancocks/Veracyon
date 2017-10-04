@@ -42,8 +42,7 @@ void outb(unsigned short port, unsigned char value)
 void kserial_send(const char *str)
 {
 	while (*str) {
-		while (inb(0x3fd) & 0x20)
-			__asm__ __volatile__("nop");
+		while ((inb(0x3f8 + 5) & 0x20) == 0);
 		outb(0x3f8, *str++);
 	}
 }
