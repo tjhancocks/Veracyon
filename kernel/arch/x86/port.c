@@ -20,39 +20,23 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <arch/arch.h>
+#include <arch/x86/port.h>
 
-void kserial_send(const char *str)
+void outb(uint16_t port, uint8_t value)
 {
-	while (*str) {
-		while ((inb(0x3f8 + 5) & 0x20) == 0);
-		outb(0x3f8, *str++);
-	}
+	__asm__ __volatile__(
+		"outb %1, %0"
+		:: "dN"(port), "a"(value)
+	);
 }
 
-__attribute__((noreturn)) void kwork(void)
+uint8_t inb(uint16_t port)
 {
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
-
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	kserial_send("\n\nHello from vkernel!\n");
-	
-	__asm__ __volatile__("xchgw %bx, %bx");
-	if (config->vesa_mode == vesa_mode_text) {
-		kserial_send(" > Preparing text mode\n");
-	}
-	else {
-		kserial_send(" > Preparing graphics mode\n");
-	}
-
-	kwork();
+	uint8_t result = 0;
+	__asm__ __volatile__(
+		"inb %1, %0"
+		: "=a"(result)
+		: "dN"(port)
+	);
+	return result;
 }
