@@ -19,9 +19,11 @@
 # SOFTWARE.
 
 C-KERNEL-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
-C-KERNEL-OBJS := $(addsuffix .o, $(basename $(C-KERNEL-SRCS)))
+C-KERNEL-OBJS-TMP := $(addsuffix .o, $(basename $(C-KERNEL-SRCS)))
+C-KERNEL-OBJS := $(addprefix ../build, $(C-KERNEL-OBJS-TMP:$(CURDIR)%=%))
 S-KERNEL-SRCS := $(shell find $(CURDIR) -type f \( -name "*.s" \))
-S-KERNEL-OBJS := $(addsuffix .s.o, $(basename $(S-KERNEL-SRCS)))
+S-KERNEL-OBJS-TMP := $(addsuffix .s.o, $(basename $(S-KERNEL-SRCS)))
+S-KERNEL-OBJS := $(addprefix ../build, $(S-KERNEL-OBJS-TMP:$(CURDIR)%=%))
 
 # Bad form... declaring environment tools here...
 CC := i586-elf-gcc
@@ -41,12 +43,12 @@ LIBGCC := $(shell i586-elf-gcc -print-file-name=libgcc.a)
 # vkernel-elf
 .PHONY: vkernel-elf
 vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC)
+	echo $(C-KERNEL-OBJS-TMP)
 	$(LD) -T./kernel.ld $(LDFLAGS) -o ../build/vkernel $^
 
-
 # Helpers
-%.s.o: %.s
+../build/%.s.o: %.s
 	$(AS) -felf -o $@ $<
 
-%.o: %.c
+../build/%.o: %.c
 	$(CC) $(CCFLAGS) -o $@ -c $<
