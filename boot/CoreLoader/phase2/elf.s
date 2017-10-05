@@ -91,6 +91,7 @@ _elf_load:
 	.launch:
 		mov esi, [ebp + 8]
 		mov eax, [esi + ELFHdr.e_entry]
+		push BOOT_CONFIG
 		call eax
 	.epilogue:
 		mov esp, ebp

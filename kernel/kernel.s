@@ -31,8 +31,11 @@
 ;;
 section .text
 start:
+	.capture_coreloader_info:
+		mov eax, [esp + 4]				; Fetch the BootConfig structure.
 	.main:
 		mov esp, stack + 0x4000
+		push eax
 		call kmain
 		cli
 		hlt

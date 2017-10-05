@@ -110,11 +110,15 @@ STRUC BootConf
 	.y					resd 1
 	.gdt_size			resw 1
 	.gdt_base			resd 1
+	.idt_size			resw 1
+	.idt_base			resd 1
 	.lower_memory		resw 1
 	.upper_memory		resd 1
+	.mmap				resd 1
 	.mmap_count			resw 1
 	.next_ptable_frame	resd 1
 	.next_frame			resd 1
+	.root_page_dir		resd 1
 ENDSTRUC
 
 ;;
@@ -227,6 +231,7 @@ STRUC FDCData
 	.irq_received		resb 1
 	.cmd_result			resb 1
 	.mode				resb 1
+	.last_cylinder		resd 1
 ENDSTRUC
 
 ;;

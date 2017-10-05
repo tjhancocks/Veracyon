@@ -29,7 +29,7 @@ LD := i586-elf-gcc
 AS := nasm
 
 # Flags
-CCFLAGS := -I./kernel/include -ffreestanding -Wall -Wextra\
+CCFLAGS := -I./include -I../boot/includes -ffreestanding -Wall -Wextra\
             -nostdlib -nostdinc -fno-builtin -fno-stack-protector\
             -nostartfiles -nodefaultlibs -m32 -finline-functions -std=c99\
             -O0 -fstrength-reduce -fomit-frame-pointer

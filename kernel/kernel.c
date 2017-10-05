@@ -20,6 +20,8 @@
  SOFTWARE.
 */
 
+#include <boot_config.h>
+
 unsigned char inb(unsigned short port)
 {
 	unsigned char value = 0;
@@ -57,8 +59,18 @@ __attribute__((noreturn)) void kwork(void)
 	}
 }
 
-__attribute__((noreturn)) void kmain(void)
-{
-	kserial_send("Hello from vkernel!\n");
+__attribute__((noreturn)) void kmain(
+	struct boot_config *config
+) {
+	kserial_send("\n\nHello from vkernel!\n");
+	
+	__asm__ __volatile__("xchgw %bx, %bx");
+	if (config->vesa_mode == vesa_mode_text) {
+		kserial_send(" > Preparing text mode\n");
+	}
+	else {
+		kserial_send(" > Preparing graphics mode\n");
+	}
+
 	kwork();
 }

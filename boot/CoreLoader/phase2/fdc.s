@@ -825,6 +825,9 @@ _fdc_read_sectors:
 		push 0							; [ebp - 16] *cylinder
 		push 0							; [ebp - 20] lba
 	.prepare:
+		mov esi, DISK_DRIVER
+		mov eax, [esi + FDCData.last_cylinder]
+		mov [ebp - 4], eax
 		mov eax, [ebp + 8]				; Fetch the specified sector and use it
 		mov [ebp - 20], eax				; as the LBA.
 	.next_sector:
@@ -870,6 +873,9 @@ _fdc_read_sectors:
 		cmp ecx, 0						; Have we got any sectors left?
 		jg .next_sector
 	.epilogue:
+		mov esi, DISK_DRIVER
+		mov eax, [ebp - 4]
+		mov [esi + FDCData.last_cylinder], eax
 		mov esp, ebp
 		pop ebp
 		ret
