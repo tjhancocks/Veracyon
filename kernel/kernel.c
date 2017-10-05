@@ -21,7 +21,6 @@
 */
 
 #include <boot_config.h>
-#include <arch/arch.h>
 #include <serial.h>
 
 __attribute__((noreturn)) void kwork(void)
@@ -38,7 +37,7 @@ __attribute__((noreturn)) void kmain(
 	struct boot_config *config __attribute__((unused))
 ) {
 	kputs_serial("\n\nVKERNEL VERSION 0.1\n");
-	kputs_serial("Copyright (c) 2017 Tom Hancocks. MIT License.\n");
+	kputs_serial("Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
 
 	kwork();
 }

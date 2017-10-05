@@ -24,7 +24,7 @@
 #define __VKERNEL_NULL__
 
 #ifndef NULL
-#	define NULL ((void *)&0x00)
+#	define NULL ((void *)0x00)
 #endif
 
 #endif

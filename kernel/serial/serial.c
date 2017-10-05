@@ -23,6 +23,7 @@
 #include <kern_types.h>
 #include <null.h>
 #include <serial.h>
+#include <arch/arch.h>
 
 #define COM1_PORT 0x3F8
 
