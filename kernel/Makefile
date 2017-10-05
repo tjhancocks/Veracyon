@@ -48,7 +48,9 @@ vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC)
 
 # Helpers
 ../build/%.s.o: %.s
+	-mkdir -p $(dir $@)
 	$(AS) -felf -o $@ $<
 
 ../build/%.o: %.c
+	-mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS) -o $@ -c $<
