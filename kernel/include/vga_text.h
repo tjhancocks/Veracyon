@@ -20,31 +20,13 @@
  SOFTWARE.
 */
 
+#ifndef __VKERNEL_VGA_TEXT__
+#define __VKERNEL_VGA_TEXT__
+
 #include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
 
-__attribute__((noreturn)) void kwork(void)
-{
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
+void vga_text_prepare(struct boot_config *config);
+void kputc_vga_text(const char c);
+void kputs_vga_text(const char *restrict str);
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	kputs_serial("\n\nVKERNEL VERSION 0.1\n");
-	kputs_serial("Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
-
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-		kputs_vga_text("VERACYON OS VERSION 0.1 - vkernel\n");
-		kputs_vga_text("Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
-	}
-
-	kwork();
-}
+#endif
