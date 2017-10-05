@@ -25,6 +25,14 @@ The kernel relies on the state left by CoreLoader for operation. It adopts the G
 
 Other aspects such as Paging however, will be migrated by the Kernel. It will reconstruct paging structures and entities and bring its own Physical Memory Manager and Virtual Memory Manager. These concepts are too critical and central to the kernel to leave for the boot loader to manage.
 
+### Building
+Currently the build system for Veracyon is hard coded and not configurable. This will be changed at some point, though I don't really consider it a priority currently. In order to build everything you'll need the following:
+
+- A freestanding GCC 4.9.0 or later toolchain.
+- NASM
+- imgtool (See my [imgtool repo](https://github.com/tjhancocks/imgtool))
+- BOCHS
+
 ##License
 
     Copyright (c) 2017 Tom Hancocks
