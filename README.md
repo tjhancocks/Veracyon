@@ -33,7 +33,8 @@ Currently the build system for Veracyon is hard coded and not configurable. This
 - imgtool (See my [imgtool repo](https://github.com/tjhancocks/imgtool))
 - BOCHS
 
-##License
+
+## License
 
     Copyright (c) 2017 Tom Hancocks
 
