@@ -20,25 +20,10 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <arch/arch.h>
-#include <serial.h>
+#ifndef __VKERNEL_SERIAL_COM1__
+#define __VKERNEL_SERIAL_COM1__
 
-__attribute__((noreturn)) void kwork(void)
-{
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
+void kputc_serial(const char str);
+void kputs_serial(const char *restrict str);
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config __attribute__((unused))
-) {
-	kputs_serial("\n\nVKERNEL VERSION 0.1\n");
-	kputs_serial("Copyright (c) 2017 Tom Hancocks. MIT License.\n");
-
-	kwork();
-}
+#endif

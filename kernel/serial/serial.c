@@ -20,25 +20,25 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <arch/arch.h>
+#include <kern_types.h>
+#include <null.h>
 #include <serial.h>
 
-__attribute__((noreturn)) void kwork(void)
+#define COM1_PORT 0x3F8
+
+int serial_fifo_ready()
 {
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
+	return (inb(COM1_PORT + 5) & 0x20);
 }
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config __attribute__((unused))
-) {
-	kputs_serial("\n\nVKERNEL VERSION 0.1\n");
-	kputs_serial("Copyright (c) 2017 Tom Hancocks. MIT License.\n");
+void kputc_serial(const char c)
+{
+	while (serial_fifo_ready() == 0);
+	outb(COM1_PORT, c);
+}
 
-	kwork();
+void kputs_serial(const char *restrict str)
+{
+	while (str && *str)
+		kputc_serial(*str++);
 }
