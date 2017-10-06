@@ -26,6 +26,8 @@
 #include <serial.h>
 #include <ascii.h>
 
+#define TAB_WIDTH 4
+
 static struct {
 	uint16_t *buffer;
 	uint8_t cols;
@@ -47,6 +49,11 @@ void vga_text_clear(uint8_t attribute)
 	vga_text.x = 0;
 	vga_text.y = 0;
 	vga_text.attribute = attribute;
+}
+
+void vga_text_scroll()
+{
+
 }
 
 void vga_text_prepare(struct boot_config *config)
@@ -77,10 +84,17 @@ void vga_text_prepare(struct boot_config *config)
 void vga_text_control_code(const char c)
 {
 	switch (c) {
+		case ASCII_HT:
+			vga_text.x = (vga_text.x + TAB_WIDTH) & ~(TAB_WIDTH - 1);
+			break;
+		case ASCII_BS:
+			if (vga_text.x)
+				vga_text.x--;
+			break;
 		case ASCII_LF:
-			vga_text.x = 0;
-		case ASCII_CR:
 			++vga_text.y;
+		case ASCII_CR:
+			vga_text.x = 0;
 			break;
 		default:
 			break;
@@ -98,6 +112,18 @@ void kputc_vga_text(const char c __attribute__((unused)))
 		uint32_t offset = (vga_text.y * vga_text.cols) + vga_text.x;
 		vga_text.buffer[offset] = (vga_text.attribute << 8) | c;
 		++vga_text.x;
+	}
+
+	// If we've gone off the edge of the screen then wrap to the following line.
+	if (vga_text.x >= vga_text.cols) {
+		vga_text.x = 0;
+		vga_text.y++;
+	}
+
+	// If we've gone off the end of the screen then scroll the contents up so
+	// we're back on screen.
+	if (vga_text.y >= vga_text.rows) {
+		vga_text_scroll();
 	}
 }
 
