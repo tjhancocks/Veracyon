@@ -25,6 +25,7 @@
 #include <vga_text.h>
 #include <serial.h>
 #include <ascii.h>
+#include <memory.h>
 
 #define TAB_WIDTH 4
 
@@ -39,12 +40,10 @@ static struct {
 
 void vga_text_clear(uint8_t attribute)
 {
-	register uint16_t *buf = vga_text.buffer;
-	register uint32_t len = vga_text.cols * vga_text.rows;
-	register uint16_t cell = (attribute << 8) | ' ';
+	uint32_t len = vga_text.cols * vga_text.rows;
+	uint16_t cell = (attribute << 8) | ' ';
 
-	while (len--)
-		*buf++ = cell;
+	memsetw(vga_text.buffer, cell, len);
 
 	vga_text.x = 0;
 	vga_text.y = 0;
@@ -53,7 +52,20 @@ void vga_text_clear(uint8_t attribute)
 
 void vga_text_scroll()
 {
-
+	if (vga_text.y >= vga_text.rows) {
+		uint16_t tmp = vga_text.y - vga_text.rows + 1;
+		memcpy(
+			vga_text.buffer, 
+			vga_text.buffer + tmp * vga_text.cols, 
+			(vga_text.rows - tmp) * vga_text.cols * sizeof(uint16_t)
+		);
+		memsetw(
+			vga_text.buffer + (vga_text.rows - tmp) * vga_text.cols,
+			(vga_text.attribute << 8) | ' ',
+			vga_text.cols
+		);
+		vga_text.y = vga_text.rows - 1;
+	}
 }
 
 void vga_text_prepare(struct boot_config *config)
