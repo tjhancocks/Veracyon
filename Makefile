@@ -23,13 +23,31 @@
 clean:
 	-rm -rf build
 
+################################################################################
 # FAT12
-.PHONY: fat12
-fat12: clean build/fat12.img
+
+.PHONY: fat12 fat12-text fat12-vesa
+fat12: fat12-text
 	@echo
 
-.PHONY: fat12-bochs
-fat12-bochs: clean fat12
+fat12-text: build/fat12-text.img
+	mv $^ build/fat12.img
+
+fat12-vesa: build/fat12-vesa.img
+	mv $^ build/fat12.img
+
+################################################################################
+# BOCHS
+
+.PHONY: fat12-bochs fat12-text-bochs fat12-vesa-bochs bochs
+
+fat12-text-bochs: clean fat12-text fat12-bochs
+	@echo
+
+fat12-vesa-bochs: clean fat12-vesa fat12-bochs
+	@echo
+
+fat12-bochs: build/fat12.img
 	-mkdir -p debug
 	bochs -q "boot:a" "floppya: 1_44=build/fat12.img, status=inserted" \
 			 "debug: action=ignore, floppy=report" \
@@ -39,12 +57,19 @@ fat12-bochs: clean fat12
 			 "memory: guest=512, host=256"
 			 # "clock: sync=realtime"
 
+################################################################################
+# IMAGES
 
-
-# FAT12 Boot Sector
-build/fat12.img:
+build/fat12-vesa.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader
 	make -C kernel vkernel-elf
-	imgtool -s support/imgtool/fat12.imgscript
+	imgtool -s support/imgtool/fat12.vesa.imgscript
+
+build/fat12-text.img:
+	-mkdir -p build
+	make -C boot fat12-bootsector
+	make -C boot core-loader
+	make -C kernel vkernel-elf
+	imgtool -s support/imgtool/fat12.text.imgscript

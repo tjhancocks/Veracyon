@@ -61,7 +61,6 @@ void vga_text_prepare(struct boot_config *config)
 		vga_text.buffer = (uint16_t *)0xb8000;
 	}
 	else {
-		__asm__ __volatile__("xchgw %bx, %bx");
 		// We have a config, so take the required values.
 		vga_text.cols = config->screen_width;
 		vga_text.rows = config->screen_height;
