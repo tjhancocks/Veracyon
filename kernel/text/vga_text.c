@@ -26,6 +26,7 @@
 #include <serial.h>
 #include <ascii.h>
 #include <memory.h>
+#include <device/io/file.h>
 
 #define TAB_WIDTH 4
 
@@ -70,11 +71,14 @@ void vga_text_scroll()
 
 void vga_text_prepare(struct boot_config *config)
 {
-	kputs_serial("Preparing vga text mode for kernel use...");
+	devio_puts(dbgout, "Preparing vga text mode for kernel use...");
 
 	// Make sure the configuration is valid/supplied, otherwise assume defaults.
 	if (config == NULL) {
-		kputs_serial("No valid boot config supplied. Assuming 80x25 screen.\n");
+		devio_puts(
+			dbgout, 
+			"No valid boot config supplied. Assuming 80x25 screen.\n"
+		);
 		vga_text.cols = 80;
 		vga_text.rows = 25;
 		vga_text.buffer = (uint16_t *)0xb8000;
@@ -90,7 +94,10 @@ void vga_text_prepare(struct boot_config *config)
 	// light grey text color.
 	vga_text_clear(0x07);
 
-	kputs_serial("done.\n");
+	devio_bind_putc(krnout, kputc_vga_text);
+	devio_bind_puts(krnout, kputs_vga_text);
+
+	devio_puts(dbgout, "done.\n");
 }
 
 void vga_text_control_code(const char c)

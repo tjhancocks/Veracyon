@@ -20,33 +20,38 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
 #include <device/io/file.h>
 
-__attribute__((noreturn)) void kwork(void)
+static struct {
+	void (*putc)(const char);
+	void (*puts)(const char *restrict);
+} devio_bindings[32];
+
+void devio_bind_putc(uint32_t handle, void(*fn)(const char))
 {
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
+	for (uint8_t b = 0; b < 32; ++b)
+		if (handle & (1 << b))
+			devio_bindings[b].putc = fn;
 }
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	serial_prepare();
+void devio_bind_puts(uint32_t handle, void(*fn)(const char *restrict))
+{
+	for (uint8_t b = 0; b < 32; ++b)
+		if (handle & (1 << b))
+			devio_bindings[b].puts = fn;
+}
 
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-	}
 
-	devio_puts(dbgout, "\n\n");
-	devio_puts(allout, "VERACYON VERSION 0.1\n");
-	devio_puts(allout, " Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
+void devio_putc(uint32_t handle, const char c)
+{
+	for (uint8_t b = 0; b < 32; ++b)
+		if (handle & (1 << b))
+			!devio_bindings[b].putc ?(0): devio_bindings[b].putc(c); 
+}
 
-	kwork();
+void devio_puts(uint32_t handle, const char *restrict str)
+{
+	for (uint8_t b = 0; b < 32; ++b)
+		if (handle & (1 << b))
+			!devio_bindings[b].puts ?(0): devio_bindings[b].puts(str); 
 }

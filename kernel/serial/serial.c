@@ -24,6 +24,7 @@
 #include <null.h>
 #include <serial.h>
 #include <arch/arch.h>
+#include <device/io/file.h>
 
 #define COM1_PORT 0x3F8
 
@@ -42,4 +43,12 @@ void kputs_serial(const char *restrict str)
 {
 	while (str && *str)
 		kputc_serial(*str++);
+}
+
+void serial_prepare()
+{
+	kputs_serial("Preparing serial port for Kernel... ");
+	devio_bind_putc(dbgout, kputc_serial);
+	devio_bind_puts(dbgout, kputs_serial);
+	devio_puts(dbgout, "done.\n");
 }

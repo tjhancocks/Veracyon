@@ -20,33 +20,24 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
-#include <device/io/file.h>
+#ifndef __VKERNEL_DEVICE_IO_FILE__
+#define __VKERNEL_DEVICE_IO_FILE__
 
-__attribute__((noreturn)) void kwork(void)
-{
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
+#include <kern_types.h>
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	serial_prepare();
+// Kernel Console
+#define krnout	(0x1 << 1)
 
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-	}
+// Debug Serial Port
+#define dbgout	(0x1 << 2)
 
-	devio_puts(dbgout, "\n\n");
-	devio_puts(allout, "VERACYON VERSION 0.1\n");
-	devio_puts(allout, " Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
+// Kernel Console & Debug Serial Port
+#define allout 	(krnout | dbgout)
 
-	kwork();
-}
+void devio_bind_putc(uint32_t handle, void(*fn)(const char));
+void devio_bind_puts(uint32_t handle, void(*fn)(const char *restrict));
+
+void devio_putc(uint32_t handle, const char c);
+void devio_puts(uint32_t handle, const char *restrict str);
+
+#endif
