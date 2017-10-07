@@ -43,8 +43,8 @@ start:
 
 ;;
 ;; Kernel stack. This is a reserved region of known memory that can be used by
-;; the kernel for the default stack. This is 16KiB in size.
+;; the kernel for the default stack. This is 65KiB in size.
 ;;
 section	.bss
 align	4
-stack:	resb	0x4000
+stack:	resb	0x10000

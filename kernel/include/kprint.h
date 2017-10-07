@@ -20,34 +20,15 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
-#include <device/io/file.h>
-#include <kprint.h>
+#ifndef __VKERNEL_KPRINT__
+#define __VKERNEL_KPRINT__
 
-__attribute__((noreturn)) void kwork(void)
-{
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
+#include <va_args.h>
+#include <kern_types.h>
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	serial_prepare();
+void kprint(const char *restrict fmt, ...);
+void kdprint(uint32_t handle, const char *restrict fmt, ...);
 
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-	}
+void kdprintv(uint32_t handle, const char *restrict fmt, va_list va);
 
-	kdprint(dbgout, "\n\n");
-	kprint("VERACYON VERSION 0.1\n");
-	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
-
-	kwork();
-}
+#endif
