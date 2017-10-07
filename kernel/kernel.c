@@ -44,10 +44,15 @@ __attribute__((noreturn)) void kmain(
 	if (config->vesa_mode == vesa_mode_text) {
 		vga_text_prepare(config);
 	}
-
-	kdprint(dbgout, "\n\n");
+	
 	kprint("VERACYON VERSION 0.1\n");
 	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
+
+	kprint("string test: \"%s\"\n", "Hello, World");
+	kprint("signed test: %i/%i\n", -56, 1289);
+	kprint("unsigned test: %u\n", 340);
+	kprint("hex test: %02x\n", 0xF);
+	kprint("pointer test: %p\n", config);
 
 	kwork();
 }

@@ -27,6 +27,7 @@
 #include <ascii.h>
 #include <memory.h>
 #include <device/io/file.h>
+#include <kprint.h>
 
 #define TAB_WIDTH 4
 
@@ -49,6 +50,8 @@ void vga_text_clear(uint8_t attribute)
 	vga_text.x = 0;
 	vga_text.y = 0;
 	vga_text.attribute = attribute;
+
+	kdprint(dbgout, "\n-- CLEARED VGA TEXT SCREEN --\n\n");
 }
 
 void vga_text_scroll()
@@ -71,11 +74,11 @@ void vga_text_scroll()
 
 void vga_text_prepare(struct boot_config *config)
 {
-	devio_puts(dbgout, "Preparing vga text mode for kernel use...");
+	kdprint(dbgout, "Preparing vga text mode for kernel use...\n");
 
 	// Make sure the configuration is valid/supplied, otherwise assume defaults.
 	if (config == NULL) {
-		devio_puts(
+		kdprint(
 			dbgout, 
 			"No valid boot config supplied. Assuming 80x25 screen.\n"
 		);
@@ -90,14 +93,16 @@ void vga_text_prepare(struct boot_config *config)
 		vga_text.buffer = config->linear_frame_buffer;
 	}
 
-	// We're ready to clear the screen for future use. Black background with a
-	// light grey text color.
-	vga_text_clear(0x07);
-
 	devio_bind_putc(krnout, kputc_vga_text);
 	devio_bind_puts(krnout, kputs_vga_text);
 
-	devio_puts(dbgout, "done.\n");
+	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
+		vga_text.cols, vga_text.rows);
+	kdprint(dbgout, "VGA text buffer located at: %p\n", vga_text.buffer);
+
+	// We're ready to clear the screen for future use. Black background with a
+	// light grey text color.
+	vga_text_clear(0x07);
 }
 
 void vga_text_control_code(const char c)
