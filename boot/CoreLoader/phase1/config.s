@@ -31,11 +31,25 @@ prepare_boot_configuration_defaults:
 		pusha
 		push es
 	.clear:
-		mov di, BOOT_CONFIG + 1			; First byte was set by bootsector.
-		mov cx, 0x100
+		mov di, BOOT_CONFIG
+		mov eax, dword[di + BootConf.upper_memory]
+		push eax
+		mov eax, dword[di + BootConf.mmap]
+		push eax
+		movzx eax, word[di + BootConf.mmap_count]
+		push eax
+		add	di, 1						; First byte was set by bootsector. 
+		mov cx, 0xFF
 		xor ax, ax
 		mov es, ax
 		rep stosb
+		mov di, BOOT_CONFIG
+		pop eax
+		mov word[di + BootConf.mmap_count], ax
+		pop eax
+		mov dword[di + BootConf.mmap], eax
+		pop eax
+		mov dword[di + BootConf.upper_memory], eax
 	.fill:
 		mov di, BOOT_CONFIG
 		mov byte[di + BootConf.vesa_mode], 0x01

@@ -102,6 +102,7 @@ read_memory_map:
 	.e820f:
 		mov si, BOOT_CONFIG
 		mov [ds:si + BootConf.mmap_count], bp
+		mov dword[ds:si + BootConf.mmap], MEMORY_MAP
 		clc
 		jmp .epilogue
 	.failed:
