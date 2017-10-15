@@ -47,4 +47,12 @@ start:
 ;;
 section	.bss
 align	4
-stack:	resb	0x10000
+stack:	
+	resb	0x10000
+
+;;
+;; We need some space to use as working memory so that the kernel is able to to
+;; initially do its job.
+;;
+working_memory:
+	resb 	0x800000
