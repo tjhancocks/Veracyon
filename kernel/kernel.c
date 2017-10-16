@@ -26,6 +26,7 @@
 #include <device/io/file.h>
 #include <kprint.h>
 #include <physical.h>
+#include <virtual.h>
 
 __attribute__((noreturn)) void kwork(void)
 {
@@ -56,6 +57,7 @@ __attribute__((noreturn)) void kmain(
 	kprint("pointer test: %p\n", config);
 
 	physical_memory_prepare(config);
+	virtual_memory_prepare(config);
 
 	kwork();
 }
