@@ -26,9 +26,12 @@
 #include <kern_types.h>
 #include <boot_config.h>
 
+uintptr_t kernel_end_address();
+uintptr_t reserve_kernel_working_memory(uint32_t length);
+
 void physical_memory_prepare(struct boot_config *config);
 
-uintptr_t kalloc_frame();
-void kfree_frame(uintptr_t frame);
+uintptr_t kframe_alloc();
+void kframe_free(uintptr_t frame);
 
 #endif

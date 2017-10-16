@@ -30,12 +30,12 @@ extern uintptr_t *kernel_end;
 extern uintptr_t *kernel_start;
 static uintptr_t kernel_end_addr = (uintptr_t)&kernel_end;
 
-// Working memory begins 8MiB from the end of the Kernel.
 static uintptr_t working_memory = 0;
-static uint32_t frame_size = 0x1000; // 4 KiB
+
+static const uint32_t frame_size = 0x1000; // 4 KiB Frames
 static uint32_t frame_total = 0;
-static uint32_t frame_free = 0;
-static uint32_t *available_frame = NULL;
+static uint32_t free_frame_count = 0;
+static uint32_t *free_frame_stack = NULL;
 
 enum mmap_entry_type
 {
@@ -54,6 +54,34 @@ struct mmap_entry
 	uint32_t attributes;
 } __attribute__((packed));
 
+uintptr_t kernel_end_address()
+{
+	return kernel_end_addr;
+}
+
+uintptr_t reserve_kernel_working_memory(uint32_t length)
+{
+	if ((working_memory + length) > kernel_end_address()) {
+		struct panic_info info = (struct panic_info) {
+			panic_memory,
+			"UNABLE TO ALLOCATE WORKING MEMORY",
+			"The Kernel has been unable to allocate working memory to itself."
+		};
+		panic(&info);
+	}
+
+	kprint("Reserving %d bytes of kernel working memory at %p\n",
+		length, working_memory);
+	
+	uintptr_t address = working_memory;
+	working_memory += length;
+
+	kprint("There is now %d bytes of kernel working memory remaining.\n",
+		kernel_end_address() - working_memory);
+
+	return address;
+}
+
 static void frame_stack_prepare(struct boot_config *config)
 {
 	kprint("Setting up stack for free/available frames (");
@@ -62,15 +90,15 @@ static void frame_stack_prepare(struct boot_config *config)
 	frame_total = config->upper_memory / 4;
 	kprint("%d)\n", frame_total);
 
-	available_frame = (uint32_t *)working_memory;
-	available_frame += frame_total;
-	kprint("available_frame stack bottom: %p\n", available_frame);
+	free_frame_stack = (uint32_t *)reserve_kernel_working_memory(frame_total);
+	free_frame_stack += frame_total;
+	kprint("free_frame_stack stack bottom: %p\n", free_frame_stack);
 }
 
 static void push_free_frame(uint32_t frame __attribute__((unused)))
 {
-	*available_frame-- = frame;
-	frame_free++;
+	*free_frame_stack-- = frame;
+	free_frame_count++;
 }
 
 static void push_free_frames(uint32_t first, uint32_t last)
@@ -79,8 +107,8 @@ static void push_free_frames(uint32_t first, uint32_t last)
 	for (uint32_t n = first; n < last; n += frame_size)
 		push_free_frame(n);
 
-	kprint("\tavailable_frame is now: %p\n", available_frame);
-	kprint("\tframe_free is %d\n", frame_free);
+	kprint("\tfree_frame_stack is now: %p\n", free_frame_stack);
+	kprint("\tfree_frame_count is %d\n", free_frame_count);
 }
 
 static void search_physical_frames(struct boot_config *config)
@@ -126,14 +154,14 @@ static void search_physical_frames(struct boot_config *config)
 		push_free_frames(first_free_frame, last_frame);
 	}
 
-	kprint("Total number of free/available frames: %d\n", frame_free);
+	kprint("Total number of free/available frames: %d\n", free_frame_count);
 }
 
 void physical_memory_prepare(struct boot_config *config)
 {
 	kprint("Preparing Physical Memory Manager...\n");
 
-	working_memory = kernel_end_addr - 0x800000;
+	working_memory = kernel_end_addr - (16 * 1024 * 1024);
 	kprint("End of kernel is located at: %p\n", kernel_end_addr);
 	kprint("Working memory is located at: %p\n", working_memory);
 
@@ -141,9 +169,9 @@ void physical_memory_prepare(struct boot_config *config)
 	search_physical_frames(config);
 }
 
-uintptr_t kalloc_frame()
+uintptr_t kframe_alloc()
 {
-	if (frame_free == 0) {
+	if (free_frame_count == 0) {
 		struct panic_info info = (struct panic_info) {
 			panic_memory,
 			"PHYSICAL MEMORY EXHAUSTED",
@@ -153,16 +181,16 @@ uintptr_t kalloc_frame()
 		panic(&info);
 	}
 
-	available_frame++;
-	frame_free--;
+	free_frame_stack++;
+	free_frame_count--;
 
 	kprint("Allocated physical frame: %p (%d)\n",
-		*available_frame, frame_free - 1);
+		*free_frame_stack, free_frame_count - 1);
 
-	return *available_frame;
+	return *free_frame_stack;
 }
 
-void kfree_frame(uintptr_t frame)
+void kframe_free(uintptr_t frame)
 {
 	// TODO: There should really be some verification about frame validity here.
 	push_free_frame(frame);

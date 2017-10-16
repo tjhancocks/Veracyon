@@ -58,6 +58,9 @@ _enable_paging:
 		mov eax, cr0
 		or eax, 0x80000001
 		mov cr0, eax
+	.add_to_config:
+		mov edi, BOOT_CONFIG
+		mov dword[edi + BootConf.root_page_dir], PAGE_DIR
 	.epilogue:
 		mov esp, ebp
 		pop ebp
