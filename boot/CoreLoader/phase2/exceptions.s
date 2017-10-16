@@ -87,7 +87,8 @@ _panic:
 		mov eax, [esi]					; Load the panic handler pointer.
 		or eax, eax						; Check to see if it is NULL.
 		jz .report						; If NULL, proceed to basic reporter.
-		jmp eax							; It's not NULL so jump to the handler.
+		call eax						; It's not NULL so jump to the handler.
+        jmp .hang
 	.report:
 		push .message
 		call _send_serial_bytes
