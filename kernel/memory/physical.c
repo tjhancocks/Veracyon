@@ -24,6 +24,7 @@
 #include <kprint.h>
 #include <device/io/file.h>
 #include <null.h>
+#include <panic.h>
 
 extern uintptr_t *kernel_end;
 extern uintptr_t *kernel_start;
@@ -143,9 +144,13 @@ void physical_memory_prepare(struct boot_config *config)
 uintptr_t kalloc_frame()
 {
 	if (frame_free == 0) {
-		kprint("No more allocatable frames available.\n");
-		while (1)
-			__asm__ __volatile__("cli; hlt;");
+		struct panic_info info = (struct panic_info) {
+			panic_memory,
+			"PHYSICAL MEMORY EXHAUSTED",
+			"The system has run out of physical page frames to allocate,"
+			"and must therefore terminate."
+		};
+		panic(&info);
 	}
 
 	available_frame++;
