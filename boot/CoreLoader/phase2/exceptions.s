@@ -47,6 +47,8 @@ _install_cpu_exceptions:
 		add edx, _cpu_exp_1 - _cpu_exp_0; Move to the next handler.
 		loop .L0
 	.prepare_default_panic_handler:
+        mov edi, BOOT_CONFIG
+        mov dword[edi + BootConf.panic_handler], PANIC_FN_PTR
 		mov edi, PANIC_FN_PTR			; Location of the panic handler pointer.
 		xor eax, eax
 		stosd 							; Set the pointer to NULL.

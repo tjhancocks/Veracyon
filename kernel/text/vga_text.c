@@ -28,6 +28,8 @@
 #include <memory.h>
 #include <device/io/file.h>
 #include <kprint.h>
+#include <panic.h>
+#include <arch/x86/port.h>
 
 #define TAB_WIDTH 4
 
@@ -52,6 +54,17 @@ void vga_text_clear(uint8_t attribute)
 	vga_text.attribute = attribute;
 
 	kdprint(dbgout, "\n-- CLEARED VGA TEXT SCREEN --\n\n");
+}
+
+void vga_text_setpos(uint8_t x, uint8_t y)
+{
+	vga_text.x = x;
+	vga_text.y = y;
+}
+
+void vga_text_setattr(uint8_t attribute)
+{
+	vga_text.attribute = attribute;
 }
 
 void vga_text_scroll()
@@ -99,6 +112,14 @@ void vga_text_prepare(struct boot_config *config)
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
 		vga_text.cols, vga_text.rows);
 	kdprint(dbgout, "VGA text buffer located at: %p\n", vga_text.buffer);
+
+	prepare_text_panic(config);
+
+	// Disable text blinking in VGA Text Mode, so that bright backgrounds can
+	// be used.
+	(void)inb(0x3da);
+	outb(0x3c0, 0x30);
+	outb(0x3c0, inb(0x3c1) & 0xF7);
 
 	// We're ready to clear the screen for future use. Black background with a
 	// light grey text color.

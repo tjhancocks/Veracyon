@@ -20,18 +20,34 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_VGA_TEXT__
-#define __VKERNEL_VGA_TEXT__
-
-#include <boot_config.h>
+#include <panic.h>
 #include <kern_types.h>
+#include <kprint.h>
+#include <device/io/file.h>
 
-void vga_text_prepare(struct boot_config *config);
-void kputc_vga_text(const char c);
-void kputs_vga_text(const char *restrict str);
+static uintptr_t *panic_handler = NULL;
 
-void vga_text_setpos(uint8_t x, uint8_t y);
-void vga_text_setattr(uint8_t attribute);
-void vga_text_clear(uint8_t attribute);
+void register_panic_handler(
+	struct boot_config *config,
+	void(*handler)(struct panic_info *)
+) {
+	panic_handler = config->panic_handler;
+	*panic_handler = (uintptr_t)handler;
+	kdprint(dbgout, "Registered panic handler %p at %p\n", 
+		handler, panic_handler);
+}
 
-#endif
+__attribute__((noreturn)) void panic(
+	struct panic_info *info
+) {
+	void(*handler)(struct panic_info *) = (void *)(*panic_handler);
+
+	if (handler)
+		handler(info);
+
+	// Report the panic to the serial console and halt the system.
+	kdprint(dbgout, "Kernel panic occurred. Halting system now.\n");
+
+	while (1)
+		__asm__ __volatile__("cli; hlt");
+}

@@ -119,6 +119,7 @@ STRUC BootConf
 	.next_ptable_frame	resd 1
 	.next_frame			resd 1
 	.root_page_dir		resd 1
+	.panic_handler		resd 1
 ENDSTRUC
 
 ;;

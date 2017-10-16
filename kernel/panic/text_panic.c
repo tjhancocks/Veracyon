@@ -20,18 +20,26 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_VGA_TEXT__
-#define __VKERNEL_VGA_TEXT__
-
-#include <boot_config.h>
+#include <panic.h>
 #include <kern_types.h>
+#include <kprint.h>
+#include <vga_text.h>
+#include <device/io/file.h>
 
-void vga_text_prepare(struct boot_config *config);
-void kputc_vga_text(const char c);
-void kputs_vga_text(const char *restrict str);
+void kpanic_text(struct panic_info *info) 
+{
+	vga_text_clear(0x8F);
+	
+	vga_text_setpos(2, 1);
+	kprint(info->title);
 
-void vga_text_setpos(uint8_t x, uint8_t y);
-void vga_text_setattr(uint8_t attribute);
-void vga_text_clear(uint8_t attribute);
+	vga_text_setattr(0x87);
+	vga_text_setpos(2, 2);
+	kprint(info->message);
+}
 
-#endif
+void prepare_text_panic(struct boot_config *config)
+{
+	kdprint(dbgout, "Setting up text mode panic handler.\n");
+	register_panic_handler(config, kpanic_text);
+}

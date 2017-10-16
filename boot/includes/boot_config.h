@@ -68,6 +68,7 @@ struct boot_config
     unsigned int next_page_table_frame;
     unsigned int next_frame;
     void *root_page_directory;
+    void *panic_handler;
 } __attribute__((packed));
 
 #endif
