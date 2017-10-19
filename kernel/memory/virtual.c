@@ -322,7 +322,6 @@ void prepare_kernel_address_space()
 
 void virtual_memory_prepare(struct boot_config *config)
 {
-	install_page_fault_handler(config);
 	validate_kernel_address_space(config);
 	prepare_kernel_address_space();
 }
