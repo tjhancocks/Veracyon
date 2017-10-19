@@ -13,7 +13,7 @@ This document is intended to make suggestions on where these data structures sho
 
 ### Memory Regions
 
-It is *generally* standard for BIOS to load the bootsector to the memory address `0x07c0:0x0000` (Linear: `0x00007c00`), and begin executing from there. It will also only load 512 bytes from the boot disk.
+It is *generally* standard for BIOS to load the bootsector to the memory address `0x07c0:0x0000` (Linear: `0x00007c00`), and begin executing from there. It will also only load a single sector (512 Bytes) from the boot disk.
 
 This document assumes the above to be true. If this is not the case on a given system, then the contents of this document should be considered to be *undefined behaviour*.
 
@@ -29,20 +29,18 @@ This document assumes the above to be true. If this is not the case on a given s
 	- 0x10800 - 0x10805		Global Descriptor Table Pointer (6B)
 	- 0x11000 - 0x117FF		Interrupt Descriptor Table (2KiB)
 	- 0x11800 - 0x11805		Interrupt Descriptor Table Pointer
-	- 0x11806 - 0x1180A     Panic function pointer `void panic(registers_t reg)`
+	- 0x11806 - 0x1180A     Panic function pointer `void panic(struct panic_info *)`
 	- 0x11900 - 0x11D00		Custom Interrupt Handlers (1KiB)
 	- 0x12000 - 0x12FFF		Root Page Directory (4KiB)
-	- 0x13000 - 0x13FFF		Lower 4MiB Identity Mapping Page Table (4KiB/4MiB)
-	- 0x14000 - 0x14FFF		Kernel Address Mapping Page Table (4KiB/4MiB)
-	- 0x15000 - 0x15FFF		Reserved
-	- 0x16000 - 0x16FFF		Reserved
-	- 0x17000 - 0x17FFF		VESA Linear Frame Buffer Page Table (4KiB/4MiB)
-	- 0x18000 - 0x18FFF		Reserved
-	- 0x19000 - 0x19FFF		Reserved
-	- 0x1A000 - 0x1AFFF		Reserved
+	- 0x13000 - 0x13FFF		Lower 4MiB Identity Mapping Page Table
 	- 0x20000 - 0x2FFFF		Assigned DMA Buffer (64KiB)
 	- 0x30000 - 0x3FFFF		File Buffer (64KiB)
 	- 0x40000 - 0x401FF		Disk Driver Data (512B)
+	- 0x48000 - 0x4F1FF		Disk Driver Interface
+	- 0x50000 - 0x501FF		File System Driver (512B)
+	- 0x50200 - 0x50FFF		File System Interface
+	- 0x51000 - 0x5FFFF		File System Buffer
+	- 0x60000 - 0x6FFFF		Page Tables (64KiB)
 	- 0x70000 - 0x7FFFF		Memory Map (64KiB)
 
 ### Boot Configuration
@@ -62,7 +60,7 @@ but maybe accessed by the Kernel. This is not recommended however! The following
 	- 0xFE31 [DWord]	Bytes Per Pixel
 	- 0xFE35 [DWord]	Bytes Per Line
 	- 0xFE39 [Dword]	Screen Size
-	- 0xFE3F [DWord]	X Max
+	- 0xFE3D [DWord]	X Max
 	- 0xFE41 [DWord]	Y Max
 	- 0xFE45 [DWord]	X
 	- 0xFE49 [DWord]	Y
@@ -70,3 +68,9 @@ but maybe accessed by the Kernel. This is not recommended however! The following
 	- 0xFE4F [DWord]	GDT Base
 	- 0xFE53 [Word]		Lower Memory (Unit: KiB)
 	- 0xFE55 [DWord]	Upper Memory (Unit: KiB)
+	- 0xFE59 [DWord] 	Memory Map
+	- 0xFE5D [Word]		Memory Map Entry Count
+	- 0xFE5F [DWord]	Next page table frame
+	- 0xFE63 [DWord]	Next frame
+	- 0xFE67 [DWord]	Root Page Directory
+	- 0xFE6B [Dword]	Panic Handler Function
