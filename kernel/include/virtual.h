@@ -26,6 +26,29 @@
 #include <kern_types.h>
 #include <boot_config.h>
 
+// TODO: This structure needs to be fully/correctly laid out
+struct page {
+    uint32_t present: 1;
+    uint32_t readwrite: 1;
+    uint32_t unused: 10;
+    uint32_t frame: 20;
+} __attribute__((packed));
+
+// TODO: This structure needs to be fully/correctly laid out
+struct page_table {
+    uint32_t present: 1;
+    uint32_t readwrite: 1;
+    uint32_t unused: 10;
+    uint32_t frame: 20;
+} __attribute__((packed));
+
+struct virtual_address_space {
+    uintptr_t directory_frame;
+    uintptr_t directory_address;
+    uintptr_t next_page_table;
+    uintptr_t page_table_address[1024];
+};
+
 void virtual_memory_prepare(struct boot_config *config);
 
 #endif
