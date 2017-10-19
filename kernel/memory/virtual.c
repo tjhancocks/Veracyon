@@ -188,7 +188,7 @@ void kpage_table_alloc(uintptr_t address)
 	kprint("Installing page table %d with frame %p\n", page_table, pt_frame);
 	directory[page_table].frame = pt_frame >> 12;
 	directory[page_table].present = 1;
-	directory[page_table].readwrite = 2;
+	directory[page_table].readwrite = 1;
 
 	__asm__ __volatile__(
 		"movl %%cr3, %%eax\n"
@@ -198,15 +198,47 @@ void kpage_table_alloc(uintptr_t address)
 	kprint("Page table %d is now installed!\n", page_table);
 }
 
-void kpage_alloc(uintptr_t address)
+int kpage_alloc(uintptr_t address)
 {
 	kprint("Attempting to allocate page for linear address %p\n", address);
+
+	// Check to see if the page is already allocated in some capacity
+	int result = is_page_allocated(address);
+	if (result == kPAGE_ALLOCATED)
+		return kPAGE_ALLOC_ERROR;
+
+	// Check to see if we need to allocate the appropriate page table for the
+	// address.
+	if (result == kNO_PAGE_TABLE_ALLOCATED)
+		kpage_table_alloc(address);
+
+	// At this point we can safely allocate a frame to the page. 
+	uintptr_t frame_address = kframe_alloc();
+
+	uint32_t page_table = page_table_for_address(address);
+	uint32_t page = page_for_address(address);
+
+	struct virtual_address_space *address_space = kernel_address_space;
+	struct page_table *directory = (void *)(address_space->directory_address);
+	struct page *table = (void *)(
+		address_space->page_table_address[page_table]
+	);
+	table[page].frame = frame_address >> 12;
+	table[page].present = 1;
+	table[page].readwrite = 1;
+
+	// Finally invalidate the page in the TLB.
+	__asm__ __volatile__("invlpg (%0)" :: "r"(address) : "memory");
+
+	kprint("Page for %p has been allocated frame %p.\n", 
+		address, frame_address);
 }
 
 void kpage_free(uintptr_t address)
 {
 	kprint("Freeing page for linear address %p\n", address);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -290,6 +322,7 @@ void prepare_kernel_address_space()
 
 void virtual_memory_prepare(struct boot_config *config)
 {
+	install_page_fault_handler(config);
 	validate_kernel_address_space(config);
 	prepare_kernel_address_space();
 }

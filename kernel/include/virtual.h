@@ -26,6 +26,9 @@
 #include <kern_types.h>
 #include <boot_config.h>
 
+#define kPAGE_ALLOC_OK      1
+#define kPAGE_ALLOC_ERROR   0
+
 // TODO: This structure needs to be fully/correctly laid out
 struct page {
     uint32_t present: 1;
@@ -50,5 +53,10 @@ struct virtual_address_space {
 };
 
 void virtual_memory_prepare(struct boot_config *config);
+
+uintptr_t first_available_kernel_page();
+
+int kpage_alloc(uintptr_t address);
+void kpage_free(uintptr_t address);
 
 #endif
