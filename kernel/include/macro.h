@@ -65,7 +65,7 @@ static uint32_t __kregister_read(const char *restrict name)
 #define _TO_STR(s) __TO_STR(s)
 #define __TO_STR(s)	#s
 
-#define REGISTER(_name) __kregister_read(_TO_STR(_name));
+#define REGISTER(_name) __kregister_read(_TO_STR(_name))
 
 #define BOCHS_BREAK_POINT __asm__ __volatile__("xchgw %bx, %bx");
 
