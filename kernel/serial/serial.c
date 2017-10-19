@@ -48,7 +48,7 @@ void kputs_serial(const char *restrict str)
 void serial_prepare()
 {
 	kputs_serial("Preparing serial port for Kernel... ");
-	devio_bind_putc(dbgout, kputc_serial);
-	devio_bind_puts(dbgout, kputs_serial);
-	devio_puts(dbgout, "done.\n");
+	devio_bind_putc(__kDBGOUT, kputc_serial);
+	devio_bind_puts(__kDBGOUT, kputs_serial);
+	devio_puts(__kDBGOUT, "done.\n");
 }

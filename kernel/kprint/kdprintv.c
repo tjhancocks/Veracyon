@@ -30,6 +30,10 @@
 static uint32_t __kd_usn_to_str(char *restrict, uint32_t, uint8_t);
 static uint32_t __kd_sn_to_str(char *restrict, int32_t, uint8_t);
 
+const uint32_t krnout = __kKRNOUT;
+const uint32_t dbgout = __kDBGOUT;
+const uint32_t allout = __kALLOUT;
+
 enum token 
 {
 	token_align_left = 1 << 1,

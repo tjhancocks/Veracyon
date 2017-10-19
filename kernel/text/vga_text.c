@@ -106,8 +106,8 @@ void vga_text_prepare(struct boot_config *config)
 		vga_text.buffer = config->linear_frame_buffer;
 	}
 
-	devio_bind_putc(krnout, kputc_vga_text);
-	devio_bind_puts(krnout, kputs_vga_text);
+	devio_bind_putc(__kKRNOUT, kputc_vga_text);
+	devio_bind_puts(__kKRNOUT, kputs_vga_text);
 
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
 		vga_text.cols, vga_text.rows);

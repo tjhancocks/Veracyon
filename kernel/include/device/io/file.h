@@ -26,13 +26,13 @@
 #include <kern_types.h>
 
 // Kernel Console
-#define krnout	(0x1 << 1)
+#define __kKRNOUT	(0x1 << 1)
 
 // Debug Serial Port
-#define dbgout	(0x1 << 2)
+#define __kDBGOUT	(0x1 << 2)
 
 // Kernel Console & Debug Serial Port
-#define allout 	(krnout | dbgout)
+#define __kALLOUT 	(__kKRNOUT | __kDBGOUT)
 
 void devio_bind_putc(uint32_t handle, void(*fn)(const char));
 void devio_bind_puts(uint32_t handle, void(*fn)(const char *restrict));
