@@ -52,7 +52,7 @@ stack:
 
 ;;
 ;; We need some space to use as working memory so that the kernel is able to to
-;; initially do its job. This reserves 16MiB of memory for the kernel.
+;; initially do its job. This reserves 4MiB of memory for the kernel.
 ;;
 working_memory:
-	resb 	16 * 1024 * 1024
+	resb 	4 * 1024 * 1024

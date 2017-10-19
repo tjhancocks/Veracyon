@@ -161,7 +161,7 @@ void physical_memory_prepare(struct boot_config *config)
 {
 	kprint("Preparing Physical Memory Manager...\n");
 
-	working_memory = kernel_end_addr - (16 * 1024 * 1024);
+	working_memory = kernel_end_addr - (4 * 1024 * 1024);
 	kprint("End of kernel is located at: %p\n", kernel_end_addr);
 	kprint("Working memory is located at: %p\n", working_memory);
 
