@@ -20,45 +20,24 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
-#include <kprint.h>
-#include <physical.h>
-#include <virtual.h>
-#include <kheap.h>
+#ifndef __VKERNEL_KHEAP__
+#define __VKERNEL_KHEAP__
 
-__attribute__((noreturn)) void kwork(void)
-{
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
+#include <kern_types.h>
 
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	serial_prepare();
+#define kHEAP_ALLOC_MAGIC	0xA110CA7E
+#define kHEAP_AVAIL_MAGIC	0xF7EEF7EE
 
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-	}
+struct kheap_block  {
+	uint32_t magic;
+	struct kheap_block *prev;
+	struct kheap_block *next;
+	uint32_t size;
+} __attribute__((packed));
 
-	kprint("VERACYON VERSION 0.1\n");
-	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
+void kheap_prepare();
 
-	kprint("string test: \"%s\"\n", "Hello, World");
-	kprint("signed test: %i/%i\n", -56, 1289);
-	kprint("unsigned test: %u\n", 340);
-	kprint("hex test: %02x\n", 0xF);
-	kprint("pointer test: %p\n", config);
+void *kalloc(uint32_t length);
+void kfree(void *ptr);
 
-	physical_memory_prepare(config);
-	virtual_memory_prepare(config);
-	kheap_prepare();
-
-	kwork();
-}
+#endif

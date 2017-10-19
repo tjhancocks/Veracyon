@@ -93,7 +93,6 @@ uintptr_t first_available_kernel_page()
 	) {
 		switch (is_page_allocated(address)) {
 		case kPAGE_ALLOCATED:
-			kprint("Kernel address %p is already allocated!\n", address);
 			break;
 
 		case kNO_PAGE_TABLE_ALLOCATED:
@@ -232,6 +231,8 @@ int kpage_alloc(uintptr_t address)
 
 	kprint("Page for %p has been allocated frame %p.\n", 
 		address, frame_address);
+
+	return kPAGE_ALLOC_OK;
 }
 
 void kpage_free(uintptr_t address)
