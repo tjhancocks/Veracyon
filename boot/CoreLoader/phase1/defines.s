@@ -120,6 +120,7 @@ STRUC BootConf
 	.next_frame			resd 1
 	.root_page_dir		resd 1
 	.panic_handler		resd 1
+	.interrupt_handlers	resd 1
 ENDSTRUC
 
 ;;

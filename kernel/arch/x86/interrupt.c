@@ -20,52 +20,13 @@
  SOFTWARE.
 */
 
-#include <boot_config.h>
-#include <serial.h>
-#include <vga_text.h>
-#include <kprint.h>
-#include <physical.h>
-#include <virtual.h>
-#include <kheap.h>
 #include <arch/x86/interrupt.h>
+#include <kprint.h>
 
-__attribute__((noreturn)) void kwork(void)
+static uintptr_t *idt_handlers = 0;
+
+void interrupt_handlers_prepare(struct boot_config *config)
 {
-	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
-	}
-}
-
-__attribute__((noreturn)) void kmain(
-	struct boot_config *config
-) {
-	serial_prepare();
-
-	if (config->vesa_mode == vesa_mode_text) {
-		vga_text_prepare(config);
-	}
-
-	kprint("VERACYON VERSION 0.1\n");
-	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
-
-	kprint("string test: \"%s\"\n", "Hello, World");
-	kprint("signed test: %i/%i\n", -56, 1289);
-	kprint("unsigned test: %u\n", 340);
-	kprint("hex test: %02x\n", 0xF);
-	kprint("pointer test: %p\n", config);
-
-	// Get the memory management of the system/kernel up and running. This will
-	// be needed by a lot of the later functionality.
-	physical_memory_prepare(config);
-	virtual_memory_prepare(config);
-	kheap_prepare();
-
-	// Take control of the interrupts system, and get some basic interrupts
-	// installed.
-	interrupt_handlers_prepare(config);
-
-	kwork();
+	idt_handlers = (uintptr_t *)config->interrupt_handlers;
+	kprint("Interrupt Handlers table is located at %p\n", idt_handlers);
 }

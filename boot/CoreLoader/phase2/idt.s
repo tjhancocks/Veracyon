@@ -45,6 +45,11 @@ _prepare_idt:
 	.load_idt:
 		mov eax, IDT_PTR
 		lidt [eax]
+	.update_configuration:
+		mov edi, BOOT_CONFIG
+		mov dword[edi + BootConf.interrupt_handlers], INT_HANDLERS
+		mov word[edi + BootConf.idt_size], 0x200
+		mov dword[edi + BootConf.idt_base], IDT_BASE
 	.epilogue:
 		mov esp, ebp
 		pop ebp
