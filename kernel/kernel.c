@@ -27,7 +27,7 @@
 #include <physical.h>
 #include <virtual.h>
 #include <kheap.h>
-#include <arch/x86/interrupt.h>
+#include <arch/arch.h>
 
 __attribute__((noreturn)) void kwork(void)
 {

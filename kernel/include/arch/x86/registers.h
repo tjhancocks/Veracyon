@@ -20,26 +20,31 @@
  SOFTWARE.
 */
 
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/registers.h>
-#include <kprint.h>
+#ifndef __VKERNEL_X86_REGISTERS__
+#define __VKERNEL_X86_REGISTERS__
 
-typedef void(*interrupt_handler_t)(struct registers *);
-static interrupt_handler_t *idt_handlers = 0;
+#include <kern_types.h>
 
-static void ps2_keypress_handler(struct registers *registers)
-{
-	uint8_t scancode = inb(0x60);
-	kprint("keypress (scancode = %02x)\n", scancode);
-}
+struct registers {
+	uint32_t gs;
+	uint32_t fs;
+	uint32_t es;
+	uint32_t ds;
+	uint32_t edi;
+	uint32_t esi;
+	uint32_t ebp;
+	uint32_t esp;
+	uint32_t ebx;
+	uint32_t edx;
+	uint32_t ecx;
+	uint32_t eax;
+	uint32_t interrupt;
+	uint32_t error_code;
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+	uint32_t user_esp;
+	uint32_t ss;
+} __attribute__((packed));
 
-void interrupt_handlers_prepare(struct boot_config *config)
-{
-	idt_handlers = (interrupt_handler_t *)config->interrupt_handlers;
-	kprint("Interrupt Handlers table is located at %p\n", idt_handlers);
-
-	// Install the test key handler
-	idt_handlers[0x21] = ps2_keypress_handler;
-	kdprint(krnout, "  0x21 -> %p\n", idt_handlers[0x21]);
-}
+#endif

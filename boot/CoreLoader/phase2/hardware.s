@@ -77,21 +77,25 @@ _handle_hardware_interrupt:
 		jmp .find_irq_handler
 	.handle_keyboard_irq:
 		in al, 0x64
-		and al, 0x02
-		jz .finish_keyboard_irq
+		test al, 0x01
+		jnz .finish_keyboard_irq
 		nop
 		jmp .handle_keyboard_irq
 	.finish_keyboard_irq:
-		in al, 0x60
+		movzx eax, byte[esp + 32]
+		add eax, 0x20
+		mov esi, INT_HANDLERS
+		mov eax, [esi + eax * 4]
+		cmp eax, 0
+		jz .acknowledge_irq
+		nop
+		call eax
 		jmp .acknowledge_irq
 	.find_irq_handler:
 		movzx eax, byte[esp + 32]
-		mov ebx, 4
-		mul ebx
-		add eax, (0x20 * 4)
-		add eax, INT_HANDLERS
-		mov esi, eax
-		mov eax, [esi]
+		add eax, 0x20
+		mov esi, INT_HANDLERS
+		mov eax, [esi + eax * 4]
 	.check_handler:
 		cmp eax, 0
 		jz .acknowledge_irq
