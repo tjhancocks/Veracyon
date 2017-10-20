@@ -25,21 +25,17 @@
 #include <arch/x86/registers.h>
 #include <kprint.h>
 
-typedef void(*interrupt_handler_t)(struct registers *);
 static interrupt_handler_t *idt_handlers = 0;
-
-static void ps2_keypress_handler(struct registers *registers)
-{
-	uint8_t scancode = inb(0x60);
-	kprint("keypress (scancode = %02x)\n", scancode);
-}
 
 void interrupt_handlers_prepare(struct boot_config *config)
 {
 	idt_handlers = (interrupt_handler_t *)config->interrupt_handlers;
 	kprint("Interrupt Handlers table is located at %p\n", idt_handlers);
+}
 
-	// Install the test key handler
-	idt_handlers[0x21] = ps2_keypress_handler;
-	kdprint(krnout, "  0x21 -> %p\n", idt_handlers[0x21]);
+void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler)
+{
+	kprint("Installing interrupt handler %p for interrupt %02x (%d)\n", 
+		handler, interrupt, interrupt);
+	idt_handlers[interrupt] = handler;
 }

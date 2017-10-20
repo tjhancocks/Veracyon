@@ -26,6 +26,9 @@
 #include <boot_config.h>
 #include <kern_types.h>
 
+typedef void(*interrupt_handler_t)(struct registers *);
+
 void interrupt_handlers_prepare(struct boot_config *config);
+void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler);
 
 #endif
