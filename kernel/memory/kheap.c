@@ -111,6 +111,9 @@ void kheap_divide_block(struct kheap_block *block, uint32_t size)
 	new_block->size = block->size - (size + sizeof(*block));
 	block->size = size;
 
+	if (kheap_last_block == block)
+		kheap_last_block = new_block;
+
 	kprint("Kernel heap block (%p) has been divided into two blocks\n", block);
 }
 
@@ -128,6 +131,8 @@ void kheap_coalesce_free_blocks()
 	// can be merged into the last block.
 	uint32_t merge_count = 0;
 	struct kheap_block *block = kheap_last_block->prev;
+	kprint("Starting at block: %p\n", block);
+	kprint("  (%p --> %p)\n", kheap_first_block, kheap_last_block);
 	while (block) {
 
 		// Check conditions for the block being included in the merge.
@@ -202,7 +207,10 @@ struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
 
 		// Does the block have at least the minimum space mentioned plus the 
 		// twice the size of the block header?
-		if (block->size >= minimum && block->size < required) {
+		if (block->size >= required) {
+			goto ALLOCATE_OVERSIZED_BLOCK;
+		}
+		else if (block->size >= minimum && block->size < required) {
 			kheap_allocate_block(block);
 			return block;
 		}
@@ -223,6 +231,8 @@ struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
 
 	// The last block in the heap is now large enough...
 	block = kheap_last_block;
+
+ALLOCATE_OVERSIZED_BLOCK:
 	kheap_divide_block(block, minimum);
 	kheap_allocate_block(block);
 
@@ -248,7 +258,26 @@ void *kalloc(uint32_t length)
 
 void kfree(void *ptr)
 {
+	if (!ptr)
+		return;
 
+	// Check to ensure the ptr is for a valid block on the heap.
+	struct kheap_block *block = (struct kheap_block *)(
+		(uintptr_t)ptr - sizeof(*block)
+	);
+	if (block->magic != kHEAP_ALLOC_MAGIC) {
+		struct panic_info info = (struct panic_info) {
+			panic_memory,
+			"ATTEMPT TO FREE ILLEGAL KERNEL HEAP MEMORY",
+			"The memory that was attempted to be free'd was not a valid "
+			"allocation on the kernel heap."
+		};
+		panic(&info);
+	}
+
+	// Mark as free and then coalesce memory.
+	block->magic = kHEAP_AVAIL_MAGIC;
+	kheap_coalesce_free_blocks();
 }
 
 
@@ -262,9 +291,4 @@ void kheap_prepare()
 	kheap_start = kheap_end = first_available_kernel_page();
 	kprint("Kernel heap starting at %p\n", kheap_start);
 	kprint("Kernel heap finishes at %p\n", kheap_end);
-
-	void *memory = kalloc(12 * 1024);
-	kprint("Allocated memory at %p\n", memory);
-
-	kheap_describe();
 }
