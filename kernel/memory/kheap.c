@@ -28,11 +28,13 @@
 
 static uintptr_t kheap_start = 0;
 static uintptr_t kheap_end = 0;
-// static struct kheap_block *kheap_first_block = NULL;
+static struct kheap_block *kheap_first_block = NULL;
 static struct kheap_block *kheap_last_block = NULL;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void kheap_coalesce_free_blocks();
 
 void kheap_expand_by_single_page()
 {
@@ -62,8 +64,60 @@ void kheap_expand_by_single_page()
 
 	block->prev->next = block;
 
-	// The last block is now this new one.
+	// The last block is now this new one. Also set the first block if
+	// appropriate.
 	kheap_last_block = block;
+	kheap_first_block = kheap_first_block ?: block;
+}
+
+void kheap_expand_by_required_length(uint32_t length)
+{
+	uint32_t required_pages = (length / 0x1000) + 1;
+	kprint("Expanding kernel heap by %d page(s)\n", required_pages);
+
+	// Allocate all the required pages.
+	for (uint32_t n = 0; n < required_pages; ++n)
+		kheap_expand_by_single_page();
+	
+	kheap_coalesce_free_blocks();
+	kprint("Kernel heap expanded.\n");
+}
+
+void kheap_divide_block(struct kheap_block *block, uint32_t size)
+{
+	kprint("Dividing kernel heap block into two smaller blocks\n");
+
+	uint32_t required = (size + (sizeof(*block) * 2));
+	if (block->size < required) {
+		struct panic_info info = (struct panic_info) {
+			panic_memory,
+			"HEAP BLOCK TOO SMALL",
+			"Attempted to divide a kernel block heap that was too small to be "
+			"divided."
+		};
+		panic(&info);
+	}
+
+	// Determine where the next block is actually going to start, and then
+	// configure it.
+	struct kheap_block *new_block = (void *)(
+		(uintptr_t)block + size + sizeof(*block)
+	);
+	new_block->magic = kHEAP_AVAIL_MAGIC;
+	new_block->next = block->next;
+	block->next->prev = new_block;
+	block->next = new_block;
+	new_block->prev = block;
+	new_block->size = block->size - (size + sizeof(*block));
+	block->size = size;
+
+	kprint("Kernel heap block (%p) has been divided into two blocks\n", block);
+}
+
+void kheap_allocate_block(struct kheap_block *block)
+{
+	kprint("Marking kernel heap block %p as allocated.\n", block);
+	block->magic = kHEAP_ALLOC_MAGIC;
 }
 
 void kheap_coalesce_free_blocks()
@@ -134,6 +188,72 @@ void kheap_describe()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
+{
+	// Calculate how space is actually going to be needed for the block
+	// entry.
+	struct kheap_block *block = kheap_first_block;
+	uint32_t required = (minimum + (sizeof(*block) * 2));
+	while (block) {
+
+		// Is the block available?
+		if (block->magic != kHEAP_AVAIL_MAGIC)
+			goto CHECK_SIZE_OF_NEXT_BLOCK;
+
+		// Does the block have at least the minimum space mentioned plus the 
+		// twice the size of the block header?
+		if (block->size >= minimum && block->size < required) {
+			kheap_allocate_block(block);
+			return block;
+		}
+		else if (block->size < minimum) {
+			goto CHECK_SIZE_OF_NEXT_BLOCK;
+		}
+
+		// We've found a suitable block. 
+		return block;
+
+	CHECK_SIZE_OF_NEXT_BLOCK:
+		block = block->next;
+	}
+
+	// If we've reach this point then we've exhausted all available blocks in
+	// the heap, and will need more!
+	kheap_expand_by_required_length(required);
+
+	// The last block in the heap is now large enough...
+	block = kheap_last_block;
+	kheap_divide_block(block, minimum);
+	kheap_allocate_block(block);
+
+	// Return the final block to the caller.
+	return block;
+}
+
+void *kalloc(uint32_t length)
+{
+	struct kheap_block *block = kheap_find_block_of_size(length);
+	if (!block) {
+		struct panic_info info = (struct panic_info) {
+			panic_memory,
+			"UNABLE TO ALLOCATE MEMORY ON KERNEL HEAP",
+			"Was unable to allocate memory on the kernel heap."
+		};
+		panic(&info);
+	}
+
+	uintptr_t memory_address = (uintptr_t)block + sizeof(*block);
+	return (void *)memory_address;
+}
+
+void kfree(void *ptr)
+{
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void kheap_prepare()
 {
 	kprint("Preparing kernel heap.\n");
@@ -142,4 +262,9 @@ void kheap_prepare()
 	kheap_start = kheap_end = first_available_kernel_page();
 	kprint("Kernel heap starting at %p\n", kheap_start);
 	kprint("Kernel heap finishes at %p\n", kheap_end);
+
+	void *memory = kalloc(12 * 1024);
+	kprint("Allocated memory at %p\n", memory);
+
+	kheap_describe();
 }
