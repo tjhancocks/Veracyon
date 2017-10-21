@@ -111,7 +111,7 @@ uintptr_t first_available_kernel_page()
 		"The kernel has exhausted all of the address space assigned to it. "
 		"No more memory can be allocated to the kernel."
 	};
-	panic(&info);
+	panic(&info, NULL);
 
 	// Keep the compiler happy.
 	return 0;
@@ -141,7 +141,7 @@ void kpage_table_alloc(uintptr_t address)
 			"The specified address space has exhausted all memory reserved for "
 			"page table allocation."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	uintptr_t pt_linear = address_space->next_page_table;
@@ -154,7 +154,7 @@ void kpage_table_alloc(uintptr_t address)
 			"Unable to allocate a new page table due to bad management of the "
 			"address space."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	// We also need to request a physical frame for the page table.
@@ -218,7 +218,6 @@ int kpage_alloc(uintptr_t address)
 	uint32_t page = page_for_address(address);
 
 	struct virtual_address_space *address_space = kernel_address_space;
-	struct page_table *directory = (void *)(address_space->directory_address);
 	struct page *table = (void *)(
 		address_space->page_table_address[page_table]
 	);
@@ -253,7 +252,7 @@ void validate_kernel_address_space(struct boot_config *config)
 			"The bootloader has incorrectly setup the paging environment. "
 			"Unable to continue."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 }
 

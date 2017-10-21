@@ -29,7 +29,7 @@ static uintptr_t *panic_handler = NULL;
 
 void register_panic_handler(
 	struct boot_config *config,
-	void(*handler)(struct panic_info *)
+	void(*handler)(struct panic_info *, struct registers *)
 ) {
 	panic_handler = config->panic_handler;
 	*panic_handler = (uintptr_t)handler;
@@ -38,12 +38,14 @@ void register_panic_handler(
 }
 
 __attribute__((noreturn)) void panic(
-	struct panic_info *info
+	struct panic_info *info, struct registers *registers
 ) {
-	void(*handler)(struct panic_info *) = (void *)(*panic_handler);
+	void(*handler)(struct panic_info *, struct registers *) = (void *)(
+		*panic_handler
+	);
 
 	if (handler)
-		handler(info);
+		handler(info, registers);
 
 	// Report the panic to the serial console and halt the system.
 	kdprint(dbgout, "Kernel panic occurred. Halting system now.\n");

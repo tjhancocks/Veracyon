@@ -67,7 +67,7 @@ uintptr_t reserve_kernel_working_memory(uint32_t length)
 			"UNABLE TO ALLOCATE WORKING MEMORY",
 			"The Kernel has been unable to allocate working memory to itself."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	kprint("Reserving %d bytes of kernel working memory at %p\n",
@@ -178,7 +178,7 @@ uintptr_t kframe_alloc()
 			"The system has run out of physical page frames to allocate,"
 			"and must therefore terminate."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	free_frame_stack++;

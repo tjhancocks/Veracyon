@@ -25,17 +25,24 @@
 #include <kprint.h>
 #include <vga_text.h>
 #include <device/io/file.h>
+#include <arch/x86/registers.h>
 
-void kpanic_text(struct panic_info *info) 
+void kpanic_text(struct panic_info *info, struct registers *registers) 
 {
+	if (registers)
+		kprint("\nPANIC: %02x (at: %p)\n", 
+			registers->interrupt, registers->eip);
+	
 	vga_text_clear(0x8F);
 	
-	vga_text_setpos(2, 1);
-	kprint(info->title);
-
-	vga_text_setattr(0x87);
-	vga_text_setpos(2, 2);
-	kprint(info->message);
+	if (info) {
+		vga_text_setpos(2, 1);
+		kprint(info->title);
+	
+		vga_text_setattr(0x87);
+		vga_text_setpos(2, 2);
+		kprint(info->message);
+	}
 }
 
 void prepare_text_panic(struct boot_config *config)

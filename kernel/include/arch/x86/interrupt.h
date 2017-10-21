@@ -25,6 +25,7 @@
 
 #include <boot_config.h>
 #include <kern_types.h>
+#include <arch/x86/registers.h>
 
 typedef void(*interrupt_handler_t)(struct registers *);
 

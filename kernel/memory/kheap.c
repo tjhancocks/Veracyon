@@ -48,7 +48,7 @@ void kheap_expand_by_single_page()
 			"UNABLE TO EXPAND KERNEL HEAP",
 			"The kernel heap could not be expanded correctly."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	// We can get the ending address by asking for the next available address.
@@ -95,7 +95,7 @@ void kheap_divide_block(struct kheap_block *block, uint32_t size)
 			"Attempted to divide a kernel block heap that was too small to be "
 			"divided."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	// Determine where the next block is actually going to start, and then
@@ -249,7 +249,7 @@ void *kalloc(uint32_t length)
 			"UNABLE TO ALLOCATE MEMORY ON KERNEL HEAP",
 			"Was unable to allocate memory on the kernel heap."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	uintptr_t memory_address = (uintptr_t)block + sizeof(*block);
@@ -272,7 +272,7 @@ void kfree(void *ptr)
 			"The memory that was attempted to be free'd was not a valid "
 			"allocation on the kernel heap."
 		};
-		panic(&info);
+		panic(&info, NULL);
 	}
 
 	// Mark as free and then coalesce memory.

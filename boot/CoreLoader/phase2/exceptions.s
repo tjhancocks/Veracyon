@@ -66,9 +66,22 @@ _install_cpu_exceptions:
 ;;
 _handle_exception:
 		pushad
+        push ds
+        push es
+        push fs
+        push gs
+        mov ax, 0x10
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
 	.unsafe_finish:
-		call _panic 					; We're in an unsafe state! Panic!
+		jmp _panic 					; We're in an unsafe state! Panic!
 	.safe_finish:
+        pop gs
+        pop fs
+        pop es
+        pop ds
 		popad
 		add esp, 8
 		iret
@@ -87,7 +100,11 @@ _panic:
 		mov eax, [esi]					; Load the panic handler pointer.
 		or eax, eax						; Check to see if it is NULL.
 		jz .report						; If NULL, proceed to basic reporter.
+        push esp
+        push 0
 		call eax						; It's not NULL so jump to the handler.
+        add esp, 4
+        pop esp
         jmp .hang
 	.report:
 		push .message
@@ -97,7 +114,7 @@ _panic:
 		hlt
 		jmp .hang
 	.message:
-		db "System Panic!", 0xA,
+		db 0xA, "System Panic!", 0xA,
 		db "To prevent damage or data corruption, the system is halting now.",
 		db 0x0
 

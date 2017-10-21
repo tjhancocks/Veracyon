@@ -24,6 +24,7 @@
 #define __VKERNEL_PANIC__
 
 #include <boot_config.h>
+#include <arch/x86/registers.h>
 
 enum panic_type
 {
@@ -43,9 +44,9 @@ void prepare_text_panic(struct boot_config *config);
 
 void register_panic_handler(
 	struct boot_config *config,
-	void(*handler)(struct panic_info *)
+	void(*handler)(struct panic_info *, struct registers *)
 );
 
-void panic(struct panic_info *info);
+void panic(struct panic_info *info, struct registers *registers);
 
 #endif
