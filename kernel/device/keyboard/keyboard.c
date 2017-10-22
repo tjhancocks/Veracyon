@@ -30,7 +30,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define KEYBOARD_BUFFER	1024
+#define KEYBOARD_BUFFER	64
 
 struct raw_key_event;
 struct raw_key_event {
@@ -55,10 +55,16 @@ uint32_t keyboard_buffer_has_items()
 uint8_t keyboard_buffer_dequeue()
 {
 	struct raw_key_event *event = keyboard_buffer_first;
-	keyboard_buffer_first = event->next;
-	keyboard_buffer_count--;
+	
+	if (event == NULL)
+		return 0;
+
 	uint8_t scancode = event->scancode;
+
+	--keyboard_buffer_count;
+	keyboard_buffer_first = event->next;
 	kfree(event);
+
 	return scancode;
 }
 
@@ -66,16 +72,23 @@ void keyboard_buffer_enqueue(uint8_t raw_code)
 {
 	if (keyboard_buffer_count >= KEYBOARD_BUFFER)
 		return;
+	if (keyboard_buffer_last && keyboard_buffer_last->scancode == raw_code)
+		return;
 
 	struct raw_key_event *event = kalloc(sizeof(*event));
 	event->scancode = raw_code;
+	event->next = NULL;
 
-	if (keyboard_buffer_last)
+	if (keyboard_buffer_last) {
 		keyboard_buffer_last->next = event;
-
+	}
 	keyboard_buffer_last = event;
-	keyboard_buffer_first = keyboard_buffer_first ?: event;
-	keyboard_buffer_count++;
+
+	if (!keyboard_buffer_first) {
+		keyboard_buffer_first = event;
+	}
+
+	++keyboard_buffer_count;
 }
 
 
