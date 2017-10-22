@@ -28,6 +28,7 @@
 #include <virtual.h>
 #include <kheap.h>
 #include <arch/arch.h>
+#include <device/keyboard/keyboard.h>
 
 __attribute__((noreturn)) void kwork(void)
 {
@@ -66,6 +67,9 @@ __attribute__((noreturn)) void kmain(
 	// Take control of the interrupts system, and get some basic interrupts
 	// installed.
 	interrupt_handlers_prepare(config);
+
+	// Attempt to install each of the integral device drivers.
+	keyboard_driver_prepare();
 
 	kwork();
 }
