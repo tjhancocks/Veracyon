@@ -28,4 +28,6 @@
 void keyboard_driver_prepare();
 void keyboard_received_scancode(uint8_t raw_code);
 
+uint8_t keyboard_get_key();
+
 #endif

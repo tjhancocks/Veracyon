@@ -43,7 +43,7 @@ struct raw_key_event {
 static uint8_t keyboard_modifier_state = 0;
 struct raw_key_event *keyboard_buffer_first = NULL;
 struct raw_key_event *keyboard_buffer_last = NULL;
-uint32_t keyboard_buffer_count = 0;
+static uint32_t keyboard_buffer_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +52,7 @@ uint32_t keyboard_buffer_has_items()
 	return keyboard_buffer_count;
 }
 
-uint8_t keyboard_buffer_deque()
+uint8_t keyboard_buffer_dequeue()
 {
 	struct raw_key_event *event = keyboard_buffer_first;
 	keyboard_buffer_first = event->next;
@@ -62,16 +62,17 @@ uint8_t keyboard_buffer_deque()
 	return scancode;
 }
 
-void keyboard_buffer_enque(uint8_t raw_code)
+void keyboard_buffer_enqueue(uint8_t raw_code)
 {
 	if (keyboard_buffer_count >= KEYBOARD_BUFFER)
 		return;
-	
+
 	struct raw_key_event *event = kalloc(sizeof(*event));
 	event->scancode = raw_code;
 
 	if (keyboard_buffer_last)
 		keyboard_buffer_last->next = event;
+
 	keyboard_buffer_last = event;
 	keyboard_buffer_first = keyboard_buffer_first ?: event;
 	keyboard_buffer_count++;
@@ -88,14 +89,14 @@ void keyboard_driver_prepare()
 
 void keyboard_received_scancode(uint8_t raw_code)
 {
-	keyboard_buffer_enque(raw_code);
+	keyboard_buffer_enqueue(raw_code);
 }
 
 struct scancode_info keyboard_consume_key_event()
 {
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
-	if (keyboard_buffer_has_items() > 0)
+	if (keyboard_buffer_has_items() == 0)
 		return (struct scancode_info) {
 			.index = 0xFF,
 			.scancode = 0x00,
@@ -104,7 +105,7 @@ struct scancode_info keyboard_consume_key_event()
 			.modifier = 0
 		};
 
-	uint8_t raw_code = keyboard_buffer_deque();
+	uint8_t raw_code = keyboard_buffer_dequeue();
 	struct scancode_info info = scancode_info_make(raw_code);
 
 	// Check for modifier codes to begin with.
@@ -117,4 +118,17 @@ struct scancode_info keyboard_consume_key_event()
 	}
 
 	return info;
+}
+
+uint8_t keyboard_get_key()
+{
+	// Wait for input from the keyboard. Halt until we're awoken by hardware.
+	while (keyboard_buffer_has_items() == 0)
+		__asm__ __volatile__(
+			"nop\n"
+			"hlt"
+		);
+
+	struct scancode_info info = keyboard_consume_key_event();
+	return translate_scancode(info, keyboard_modifier_state);
 }

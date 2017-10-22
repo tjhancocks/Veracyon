@@ -33,10 +33,8 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		__asm__ __volatile(
-			"hlt\n"
-			"nop\n"
-		);
+		char c = keyboard_get_key();
+		kprint("Key press: %c\n", c);
 	}
 }
 

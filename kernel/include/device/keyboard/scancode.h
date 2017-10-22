@@ -58,5 +58,6 @@ struct scancode_translation_unit
 };
 
 struct scancode_info scancode_info_make(uint8_t raw_code);
+uint8_t translate_scancode(struct scancode_info info, uint8_t modifiers);
 
 #endif

@@ -83,7 +83,7 @@ int is_page_allocated(uintptr_t address)
 
 uintptr_t first_available_kernel_page()
 {
-	kprint("Searching for first available kernel page\n");
+	kdprint(dbgout, "Searching for first available kernel page\n");
 
 	// Step through kernel pages to try and find the first available one.
 	for (
@@ -96,9 +96,10 @@ uintptr_t first_available_kernel_page()
 			break;
 
 		case kNO_PAGE_TABLE_ALLOCATED:
-			kprint("Kernel address %p requires new page table\n", address);
+			kdprint(dbgout, "Kernel address %p requires new page table\n", 
+				address);
 		case kNO_PAGE_ALLOCATED:
-			kprint("Kernel address %p is available!\n", address);
+			kdprint(dbgout, "Kernel address %p is available!\n", address);
 			return address;
 		}
 	}
@@ -127,7 +128,8 @@ void kpage_table_alloc(uintptr_t address)
 		return;
 
 	uint32_t page_table = page_table_for_address(address);
-	kprint("Preparing to allocate page table %d in virtual address space\n",
+	kdprint(dbgout, 
+		"Preparing to allocate page table %d in virtual address space\n",
 		page_table);
 
 	struct virtual_address_space *address_space = kernel_address_space;
@@ -159,7 +161,7 @@ void kpage_table_alloc(uintptr_t address)
 
 	// We also need to request a physical frame for the page table.
 	uintptr_t pt_frame = kframe_alloc();
-	kprint("Allocating page table %d at %p with frame %p\n", 
+	kdprint(dbgout, "Allocating page table %d at %p with frame %p\n", 
 		page_table, pt_linear, pt_frame);
 
 	// Setup the page table mapping so that we can find the association of the
@@ -184,7 +186,8 @@ void kpage_table_alloc(uintptr_t address)
 	memset((void *)pt_linear, 0, page_size);
 
 	// Install the page table and then flush the entire TLB.
-	kprint("Installing page table %d with frame %p\n", page_table, pt_frame);
+	kdprint(dbgout, "Installing page table %d with frame %p\n", 
+		page_table, pt_frame);
 	directory[page_table].frame = pt_frame >> 12;
 	directory[page_table].present = 1;
 	directory[page_table].readwrite = 1;
@@ -194,12 +197,13 @@ void kpage_table_alloc(uintptr_t address)
 		"movl %%eax, %%cr3"
 		::: "%eax"
 	);
-	kprint("Page table %d is now installed!\n", page_table);
+	kdprint(dbgout, "Page table %d is now installed!\n", page_table);
 }
 
 int kpage_alloc(uintptr_t address)
 {
-	kprint("Attempting to allocate page for linear address %p\n", address);
+	kdprint(dbgout, "Attempting to allocate page for linear address %p\n", 
+		address);
 
 	// Check to see if the page is already allocated in some capacity
 	int result = is_page_allocated(address);
@@ -228,7 +232,7 @@ int kpage_alloc(uintptr_t address)
 	// Finally invalidate the page in the TLB.
 	__asm__ __volatile__("invlpg (%0)" :: "r"(address) : "memory");
 
-	kprint("Page for %p has been allocated frame %p.\n", 
+	kdprint(dbgout, "Page for %p has been allocated frame %p.\n", 
 		address, frame_address);
 
 	return kPAGE_ALLOC_OK;
@@ -236,7 +240,7 @@ int kpage_alloc(uintptr_t address)
 
 void kpage_free(uintptr_t address)
 {
-	kprint("Freeing page for linear address %p\n", address);
+	kdprint(dbgout, "Freeing page for linear address %p\n", address);
 }
 
 
@@ -262,7 +266,7 @@ void prepare_kernel_address_space()
 	// required information populated.
 	// All of this information _should_ be identity mapped, and should be 
 	// assumed to be so.
-	kprint("Preparing kernel address space\n");
+	kdprint(dbgout, "Preparing kernel address space\n");
 
 	kernel_address_space = (void *)reserve_kernel_working_memory(
 		sizeof(*kernel_address_space)
@@ -280,7 +284,7 @@ void prepare_kernel_address_space()
 			continue;
 
 		kernel_address_space->page_table_address[n] = directory[n].frame << 12;
-		kprint("  Page table %d has an address of %p\n", 
+		kdprint(dbgout, "  Page table %d has an address of %p\n", 
 			n, kernel_address_space->page_table_address[n]);
 	}
 
@@ -289,7 +293,7 @@ void prepare_kernel_address_space()
 	first_available_kernel_address = first_kernel_address = (
 		(kernel_end_address() + page_size) & ~(page_size - 1)
 	);
-	kprint("First available kernel space address is %p\n", 
+	kdprint(dbgout, "First available kernel space address is %p\n", 
 		first_available_kernel_address);
 
 	// The next job is to reserve enough space for the page tables to be 
@@ -300,8 +304,8 @@ void prepare_kernel_address_space()
 	kernel_address_space->next_page_table = first_page_table_address;
 	first_available_kernel_address += page_size * total_page_tables;
 	last_page_table_address = first_available_kernel_address - page_size;
-	kprint("Reserved 4MiB for virtual address space page tables\n");
-	kprint("Revised first available kernel space address is %p\n", 
+	kdprint(dbgout, "Reserved 4MiB for virtual address space page tables\n");
+	kdprint(dbgout, "Revised first available kernel space address is %p\n", 
 		first_available_kernel_address);
 
 	// Check to see if we need to allocate any page tables for reserved memory.
@@ -314,7 +318,7 @@ void prepare_kernel_address_space()
 		}
 	}
 
-	kprint("Kernel virtual address space is now ready for use.\n");
+	kdprint(dbgout, "Kernel virtual address space is now ready for use.\n");
 }
 
 

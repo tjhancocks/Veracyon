@@ -70,13 +70,14 @@ uintptr_t reserve_kernel_working_memory(uint32_t length)
 		panic(&info, NULL);
 	}
 
-	kprint("Reserving %d bytes of kernel working memory at %p\n",
+	kdprint(dbgout, "Reserving %d bytes of kernel working memory at %p\n",
 		length, working_memory);
 	
 	uintptr_t address = working_memory;
 	working_memory += length;
 
-	kprint("There is now %d bytes of kernel working memory remaining.\n",
+	kdprint(dbgout, 
+		"There is now %d bytes of kernel working memory remaining.\n",
 		kernel_end_address() - working_memory);
 
 	return address;
@@ -84,15 +85,15 @@ uintptr_t reserve_kernel_working_memory(uint32_t length)
 
 static void frame_stack_prepare(struct boot_config *config)
 {
-	kprint("Setting up stack for free/available frames (");
-	kprint("%dKiB, ", config->upper_memory);
+	kdprint(dbgout, "Setting up stack for free/available frames (");
+	kdprint(dbgout, "%dKiB, ", config->upper_memory);
 
 	frame_total = config->upper_memory / 4;
-	kprint("%d)\n", frame_total);
+	kdprint(dbgout, "%d)\n", frame_total);
 
 	free_frame_stack = (uint32_t *)reserve_kernel_working_memory(frame_total);
 	free_frame_stack += frame_total;
-	kprint("free_frame_stack stack bottom: %p\n", free_frame_stack);
+	kdprint(dbgout, "free_frame_stack stack bottom: %p\n", free_frame_stack);
 }
 
 static void push_free_frame(uint32_t frame __attribute__((unused)))
@@ -103,31 +104,31 @@ static void push_free_frame(uint32_t frame __attribute__((unused)))
 
 static void push_free_frames(uint32_t first, uint32_t last)
 {
-	kprint("\tpush_free_frames(%08x, %08x)\n", first, last);
+	kdprint(dbgout, "\tpush_free_frames(%08x, %08x)\n", first, last);
 	for (uint32_t n = first; n < last; n += frame_size)
 		push_free_frame(n);
 
-	kprint("\tfree_frame_stack is now: %p\n", free_frame_stack);
-	kprint("\tfree_frame_count is %d\n", free_frame_count);
+	kdprint(dbgout, "\tfree_frame_stack is now: %p\n", free_frame_stack);
+	kdprint(dbgout, "\tfree_frame_count is %d\n", free_frame_count);
 }
 
 static void search_physical_frames(struct boot_config *config)
 {
-	kprint("Searching for frames allocated by bootloader...\n");
+	kdprint(dbgout, "Searching for frames allocated by bootloader...\n");
 
 	// The bootloader should have passed us information about all the frames
 	// it has allocated. The next_frame field should therefore be the first
 	// available frame to us.
 	unsigned int first_free_frame = config->next_frame;
-	kprint("first unused frame: %08x\n", first_free_frame);
+	kdprint(dbgout, "first unused frame: %08x\n", first_free_frame);
 
 	// We need to work through the memory map in order to determine what holes
 	// are present in physical memory. From this we can know how what regions
 	// are available.
 	struct mmap_entry *entry = config->mmap;
-	kprint("mmap_count = %d\n", config->mmap_count);
+	kdprint(dbgout, "mmap_count = %d\n", config->mmap_count);
 	for (unsigned short n = 0; n < config->mmap_count; entry++, ++n) {
-		kprint("%p | %p (%08x), present: %d\n", 
+		kdprint(dbgout, "%p | %p (%08x), present: %d\n", 
 			(uint32_t)entry->offset, 
 			(uint32_t)(entry->offset + entry->size), 
 			(uint32_t)entry->size,
@@ -154,16 +155,17 @@ static void search_physical_frames(struct boot_config *config)
 		push_free_frames(first_free_frame, last_frame);
 	}
 
-	kprint("Total number of free/available frames: %d\n", free_frame_count);
+	kdprint(dbgout, "Total number of free/available frames: %d\n", 
+		free_frame_count);
 }
 
 void physical_memory_prepare(struct boot_config *config)
 {
-	kprint("Preparing Physical Memory Manager...\n");
+	kdprint(dbgout, "Preparing Physical Memory Manager...\n");
 
 	working_memory = kernel_end_addr - (4 * 1024 * 1024);
-	kprint("End of kernel is located at: %p\n", kernel_end_addr);
-	kprint("Working memory is located at: %p\n", working_memory);
+	kdprint(dbgout, "End of kernel is located at: %p\n", kernel_end_addr);
+	kdprint(dbgout, "Working memory is located at: %p\n", working_memory);
 
 	frame_stack_prepare(config);
 	search_physical_frames(config);
@@ -184,7 +186,7 @@ uintptr_t kframe_alloc()
 	free_frame_stack++;
 	free_frame_count--;
 
-	kprint("Allocated physical frame: %p (%d)\n",
+	kdprint(dbgout, "Allocated physical frame: %p (%d)\n",
 		*free_frame_stack, free_frame_count - 1);
 
 	return *free_frame_stack;
@@ -194,5 +196,5 @@ void kframe_free(uintptr_t frame)
 {
 	// TODO: There should really be some verification about frame validity here.
 	push_free_frame(frame);
-	kprint("Freed physical frame: %p\n", frame);
+	kdprint(dbgout, "Freed physical frame: %p\n", frame);
 }

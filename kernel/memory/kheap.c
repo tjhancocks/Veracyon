@@ -38,7 +38,7 @@ void kheap_coalesce_free_blocks();
 
 void kheap_expand_by_single_page()
 {
-	kprint("Expanding kernel heap by a single page.\n");
+	kdprint(dbgout, "Expanding kernel heap by a single page.\n");
 
 	// Make sure we have the first page allocated.
 	uintptr_t address = (kheap_end == kheap_start) ? kheap_end : kheap_end + 1;
@@ -53,7 +53,7 @@ void kheap_expand_by_single_page()
 
 	// We can get the ending address by asking for the next available address.
 	kheap_end = first_available_kernel_page() - 1;
-	kprint("Kernel heap now finishes at %p\n", kheap_end);
+	kdprint(dbgout, "Kernel heap now finishes at %p\n", kheap_end);
 
 	// Ensure that the page is marked as "free".
 	struct kheap_block *block = (struct kheap_block *)address;
@@ -73,19 +73,19 @@ void kheap_expand_by_single_page()
 void kheap_expand_by_required_length(uint32_t length)
 {
 	uint32_t required_pages = (length / 0x1000) + 1;
-	kprint("Expanding kernel heap by %d page(s)\n", required_pages);
+	kdprint(dbgout, "Expanding kernel heap by %d page(s)\n", required_pages);
 
 	// Allocate all the required pages.
 	for (uint32_t n = 0; n < required_pages; ++n)
 		kheap_expand_by_single_page();
 	
 	kheap_coalesce_free_blocks();
-	kprint("Kernel heap expanded.\n");
+	kdprint(dbgout, "Kernel heap expanded.\n");
 }
 
 void kheap_divide_block(struct kheap_block *block, uint32_t size)
 {
-	kprint("Dividing kernel heap block into two smaller blocks\n");
+	kdprint(dbgout, "Dividing kernel heap block into two smaller blocks\n");
 
 	uint32_t required = (size + (sizeof(*block) * 2));
 	if (block->size < required) {
@@ -114,25 +114,27 @@ void kheap_divide_block(struct kheap_block *block, uint32_t size)
 	if (kheap_last_block == block)
 		kheap_last_block = new_block;
 
-	kprint("Kernel heap block (%p) has been divided into two blocks\n", block);
+	kdprint(dbgout, "Kernel heap block (%p) has been divided into two blocks\n", 
+		block);
 }
 
 void kheap_allocate_block(struct kheap_block *block)
 {
-	kprint("Marking kernel heap block %p as allocated.\n", block);
+	kdprint(dbgout, "Marking kernel heap block %p as allocated.\n", block);
 	block->magic = kHEAP_ALLOC_MAGIC;
 }
 
 void kheap_coalesce_free_blocks()
 {
-	kprint("Searching for contiguous free blocks in the kernel heap...\n");
+	kdprint(dbgout, 
+		"Searching for contiguous free blocks in the kernel heap...\n");
 
 	// We need to start with the second to last block (it it exists) as nothing
 	// can be merged into the last block.
 	uint32_t merge_count = 0;
 	struct kheap_block *block = kheap_last_block->prev;
-	kprint("Starting at block: %p\n", block);
-	kprint("  (%p --> %p)\n", kheap_first_block, kheap_last_block);
+	kdprint(dbgout, "Starting at block: %p\n", block);
+	kdprint(dbgout, "  (%p --> %p)\n", kheap_first_block, kheap_last_block);
 	while (block) {
 
 		// Check conditions for the block being included in the merge.
@@ -172,15 +174,16 @@ void kheap_coalesce_free_blocks()
 		block = block->prev;
 	}
 
-	kprint("Kernel heap coalesce completed with %d merge(s)\n", merge_count);
+	kdprint(dbgout, "Kernel heap coalesce completed with %d merge(s)\n", 
+		merge_count);
 }
 
 void kheap_describe()
 {
-	kprint("KERNEL HEAP:\n");
+	kdprint(dbgout, "KERNEL HEAP:\n");
 	struct kheap_block *block = (struct kheap_block *)kheap_start;
 	while (block) {
-		kprint("  %p:: %08x | %p | %p | %d bytes\n",
+		kdprint(dbgout, "  %p:: %08x | %p | %p | %d bytes\n",
 			block,
 			block->magic,
 			block->prev,
@@ -285,10 +288,10 @@ void kfree(void *ptr)
 
 void kheap_prepare()
 {
-	kprint("Preparing kernel heap.\n");
+	kdprint(dbgout, "Preparing kernel heap.\n");
 
 	// Get the starting point of the kernel heap.
 	kheap_start = kheap_end = first_available_kernel_page();
-	kprint("Kernel heap starting at %p\n", kheap_start);
-	kprint("Kernel heap finishes at %p\n", kheap_end);
+	kdprint(dbgout, "Kernel heap starting at %p\n", kheap_start);
+	kdprint(dbgout, "Kernel heap finishes at %p\n", kheap_end);
 }

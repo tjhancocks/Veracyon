@@ -776,3 +776,38 @@ struct scancode_info scancode_info_make(uint8_t raw_code)
 		.modifier = keyboard_mod_none,
 	};
 }
+
+uint8_t translate_scancode(struct scancode_info info, uint8_t modifiers)
+{
+	uint32_t default_translation_count = (uint32_t)(
+		sizeof(default_translation) / sizeof(struct scancode_translation_unit)
+	);
+
+	// If we're using an invalid scancode then just return NULL.
+	if (info.index >= default_translation_count)
+		return 0x0;
+	
+	// Fetch the appropriate translation unit.
+	struct scancode_translation_unit translation = default_translation[
+		info.index
+	];
+
+	kprint("Translating: %02x\n", info.scancode);
+
+	// Is a modifier in effect? If not just return the base code.
+	if (modifiers & keyboard_mod_left_shift)
+		return translation.left_shift;
+	else if (modifiers & keyboard_mod_right_shift)
+		return translation.right_shift;
+	else if (modifiers & keyboard_mod_left_control)
+		return translation.left_control;
+	else if (modifiers & keyboard_mod_right_control)
+		return translation.right_control;
+	else if (modifiers & keyboard_mod_left_alt)
+		return translation.left_alt;
+	else if (modifiers & keyboard_mod_right_alt)
+		return translation.right_alt;
+	else
+		return translation.base;
+}
+
