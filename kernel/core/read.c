@@ -20,15 +20,27 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_KEYBOARD__
-#define __VKERNEL_KEYBOARD__
+#include <device/keyboard/keyboard.h>
+#include <device/keyboard/scancode.h>
+#include <read.h>
 
-#include <kern_types.h>
+char read_char()
+{
 
-void keyboard_driver_prepare();
-void keyboard_received_scancode(uint8_t raw_code);
-uint8_t keyboard_modifier_flags();
+	// Wait for any form of input from the keyboard. Once input is received
+	// filter it so that modifier keys/special keys are ignored.
+	struct scancode_info info = { 0 };
+	uint8_t modifiers = 0;
+	uint8_t ascii = 0;
+	do {
+		info = keyboard_get_scancode();
+		modifiers = keyboard_modifier_flags();
+		ascii = translate_scancode(info, modifiers);
 
-struct scancode_info keyboard_get_scancode();
+		if (info.modifier == keyboard_mod_none && ascii)
+			break;
 
-#endif
+	} while (1); // Loop forever, or until we have a valid key at least.
+
+	return ascii;
+}

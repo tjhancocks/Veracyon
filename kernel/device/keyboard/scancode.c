@@ -792,8 +792,6 @@ uint8_t translate_scancode(struct scancode_info info, uint8_t modifiers)
 		info.index
 	];
 
-	kprint("Translating: %02x\n", info.scancode);
-
 	// Is a modifier in effect? If not just return the base code.
 	if (modifiers & keyboard_mod_left_shift)
 		return translation.left_shift;

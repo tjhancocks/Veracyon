@@ -20,15 +20,9 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_KEYBOARD__
-#define __VKERNEL_KEYBOARD__
+#ifndef __VKERNEL_READ__
+#define __VKERNEL_READ__
 
-#include <kern_types.h>
-
-void keyboard_driver_prepare();
-void keyboard_received_scancode(uint8_t raw_code);
-uint8_t keyboard_modifier_flags();
-
-struct scancode_info keyboard_get_scancode();
+char read_char();
 
 #endif

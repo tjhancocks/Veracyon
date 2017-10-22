@@ -92,6 +92,11 @@ void keyboard_received_scancode(uint8_t raw_code)
 	keyboard_buffer_enqueue(raw_code);
 }
 
+uint8_t keyboard_modifier_flags()
+{
+	return keyboard_modifier_state;
+}
+
 struct scancode_info keyboard_consume_key_event()
 {
 	// Check if there are any items in the keyboard buffer. If there are not
@@ -120,7 +125,7 @@ struct scancode_info keyboard_consume_key_event()
 	return info;
 }
 
-uint8_t keyboard_get_key()
+struct scancode_info keyboard_get_scancode()
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
 	while (keyboard_buffer_has_items() == 0)
@@ -130,5 +135,5 @@ uint8_t keyboard_get_key()
 		);
 
 	struct scancode_info info = keyboard_consume_key_event();
-	return translate_scancode(info, keyboard_modifier_state);
+	return info;
 }

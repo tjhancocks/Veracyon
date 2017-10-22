@@ -29,11 +29,12 @@
 #include <kheap.h>
 #include <arch/arch.h>
 #include <device/keyboard/keyboard.h>
+#include <read.h>
 
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		char c = keyboard_get_key();
+		char c = read_char();
 		kprint("Key press: %c\n", c);
 	}
 }
