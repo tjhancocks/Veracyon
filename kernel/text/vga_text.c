@@ -51,6 +51,7 @@ void vga_text_clear(uint8_t attribute)
 
 	vga_text.x = 0;
 	vga_text.y = 0;
+	vga_update_cursor();
 	vga_text.attribute = attribute;
 
 	kdprint(dbgout, "\n-- CLEARED VGA TEXT SCREEN --\n\n");
@@ -60,6 +61,15 @@ void vga_text_setpos(uint8_t x, uint8_t y)
 {
 	vga_text.x = x;
 	vga_text.y = y;
+}
+
+void vga_update_cursor()
+{
+	uint16_t pos = (vga_text.cols * vga_text.y) + vga_text.x;
+	outb(0x3d4, 0x0f);
+	outb(0x3d5, (uint8_t)(pos & 0xFF));
+	outb(0x3d4, 0x0e);
+	outb(0x3d5, (uint8_t)((pos >> 8) & 0xFF));
 }
 
 void vga_text_setattr(uint8_t attribute)
@@ -176,4 +186,5 @@ void kputs_vga_text(const char *restrict str)
 {
 	while (str && *str)
 		kputc_vga_text(*str++);
+	vga_update_cursor();
 }

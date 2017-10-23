@@ -35,7 +35,8 @@ __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
 		char c = read_char();
-		kprint("Key press: %c\n", c);
+		if (c != NULL)
+			kprint("%c", c);
 	}
 }
 
