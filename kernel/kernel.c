@@ -34,13 +34,8 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
+		kprint("\n> ");
 		const char *input = read_user_input();
-
-		if (input)
-			kprint("got: \"%s\"\n", input);
-		else
-			kprint("cancelled!\n");
-		
 		kfree(input);
 	}
 }
@@ -57,12 +52,6 @@ __attribute__((noreturn)) void kmain(
 	kprint("VERACYON VERSION 0.1\n");
 	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
 
-	kprint("string test: \"%s\"\n", "Hello, World");
-	kprint("signed test: %i/%i\n", -56, 1289);
-	kprint("unsigned test: %u\n", 340);
-	kprint("hex test: %02x\n", 0xF);
-	kprint("pointer test: %p\n", config);
-
 	// Get the memory management of the system/kernel up and running. This will
 	// be needed by a lot of the later functionality.
 	physical_memory_prepare(config);
@@ -76,5 +65,6 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 
+	// Launch a debug kernel shell.
 	kwork();
 }

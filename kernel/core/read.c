@@ -74,13 +74,13 @@ const char *read_user_input()
 			if (event->keycode == kKC_ANSI_BACKSPACE) {
 				if (ptr >= buffer) {
 					// Flush an update now with the last character cleared.
-					*ptr = ' ';
+					*(ptr - 1) = ' ';
 					term_set_cursor(cursor_x, cursor_y);
 					devio_puts(__kKRNOUT, buffer);
 
 					// Set the null buffer and continue.
 					if (ptr > buffer)
-						*ptr-- = 0;
+						*(--ptr) = 0;
 					else
 						*ptr = 0;
 				}
