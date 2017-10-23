@@ -23,8 +23,6 @@
 #include <device/keyboard/keyboard.h>
 #include <device/keyboard/scancode.h>
 #include <device/ps2/keyboard.h>
-#include <kprint.h>
-#include <panic.h>
 #include <arch/arch.h>
 #include <kheap.h>
 
@@ -62,6 +60,8 @@ struct keyevent *keyboard_buffer_dequeue()
 
 	--buffer_count;
 	buffer_first = item->next;
+	if (buffer_count == 0)
+		buffer_last = NULL;
 	kfree(item);
 
 	return event;
