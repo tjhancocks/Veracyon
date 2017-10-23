@@ -32,63 +32,67 @@
 
 #define KEYBOARD_BUFFER	64
 
-struct raw_key_event;
-struct raw_key_event {
-	struct raw_key_event *next;
-	uint8_t scancode;	
+struct buffer_item;
+struct buffer_item {
+	struct buffer_item *next;
+	struct keyevent *event;	
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static uint8_t keyboard_modifier_state = 0;
-struct raw_key_event *keyboard_buffer_first = NULL;
-struct raw_key_event *keyboard_buffer_last = NULL;
-static uint32_t keyboard_buffer_count = 0;
+static struct buffer_item *buffer_first = NULL;
+static struct buffer_item *buffer_last = NULL;
+static uint32_t buffer_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 uint32_t keyboard_buffer_has_items()
 {
-	return keyboard_buffer_count;
+	return buffer_count;
 }
 
-uint8_t keyboard_buffer_dequeue()
+struct keyevent *keyboard_buffer_dequeue()
 {
-	struct raw_key_event *event = keyboard_buffer_first;
+	struct buffer_item *item = buffer_first;
 	
-	if (event == NULL)
-		return 0;
+	if (item == NULL)
+		return NULL;
 
-	uint8_t scancode = event->scancode;
+	struct keyevent *event = item->event;
 
-	--keyboard_buffer_count;
-	keyboard_buffer_first = event->next;
-	kfree(event);
+	--buffer_count;
+	buffer_first = item->next;
+	kfree(item);
 
-	return scancode;
+	return event;
 }
 
-void keyboard_buffer_enqueue(uint8_t raw_code)
+void keyboard_buffer_enqueue(struct keyevent *event)
 {
-	if (keyboard_buffer_count >= KEYBOARD_BUFFER)
+	if (buffer_count >= KEYBOARD_BUFFER) {
 		return;
-	if (keyboard_buffer_last && keyboard_buffer_last->scancode == raw_code)
-		return;
-
-	struct raw_key_event *event = kalloc(sizeof(*event));
-	event->scancode = raw_code;
-	event->next = NULL;
-
-	if (keyboard_buffer_last) {
-		keyboard_buffer_last->next = event;
 	}
-	keyboard_buffer_last = event;
-
-	if (!keyboard_buffer_first) {
-		keyboard_buffer_first = event;
+	if (buffer_count >= KEYBOARD_BUFFER ||
+		(buffer_last && buffer_last->event && event &&
+		 buffer_last->event->keycode == event->keycode)
+	) {
+		return;
 	}
 
-	++keyboard_buffer_count;
+	struct buffer_item *item = kalloc(sizeof(*item));
+	item->event = event;
+	item->next = NULL;
+
+	if (buffer_last) {
+		buffer_last->next = item;
+	}
+	buffer_last = item;
+
+	if (!buffer_first) {
+		buffer_first = item;
+	}
+
+	++buffer_count;
 }
 
 
@@ -100,45 +104,23 @@ void keyboard_driver_prepare()
 	ps2_keyboard_initialise();
 }
 
-void keyboard_received_scancode(uint8_t raw_code)
+void keyboard_received_scancode(uint8_t scancode)
 {
-	keyboard_buffer_enqueue(raw_code);
+	struct keyevent *event = keyevent_make(scancode);
+	keyboard_buffer_enqueue(event);
 }
 
-uint8_t keyboard_modifier_flags()
-{
-	return keyboard_modifier_state;
-}
-
-struct scancode_info keyboard_consume_key_event()
+struct keyevent *keyboard_consume_key_event()
 {
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
 	if (keyboard_buffer_has_items() == 0)
-		return (struct scancode_info) {
-			.index = 0xFF,
-			.scancode = 0x00,
-			.name = NULL,
-			.pressed = 0,
-			.modifier = 0
-		};
+		return NULL;
 
-	uint8_t raw_code = keyboard_buffer_dequeue();
-	struct scancode_info info = scancode_info_make(raw_code);
-
-	// Check for modifier codes to begin with.
-	if ((info.modifier & keyboard_mod_none) == 0 && info.modifier > 1) {
-		// This is a modifier scancode.
-		if (info.pressed)
-			keyboard_modifier_state |= info.modifier;
-		else
-			keyboard_modifier_state &= ~info.modifier;
-	}
-
-	return info;
+	return keyboard_buffer_dequeue();
 }
 
-struct scancode_info keyboard_get_scancode()
+struct keyevent *keyboard_wait_for_keyevent()
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
 	while (keyboard_buffer_has_items() == 0)
@@ -147,6 +129,5 @@ struct scancode_info keyboard_get_scancode()
 			"hlt"
 		);
 
-	struct scancode_info info = keyboard_consume_key_event();
-	return info;
+	return keyboard_consume_key_event();
 }

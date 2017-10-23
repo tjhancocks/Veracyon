@@ -24,11 +24,11 @@
 #define __VKERNEL_KEYBOARD__
 
 #include <kern_types.h>
+#include <device/keyboard/scancode.h>
 
 void keyboard_driver_prepare();
-void keyboard_received_scancode(uint8_t raw_code);
-uint8_t keyboard_modifier_flags();
+void keyboard_received_scancode(uint8_t scancode);
 
-struct scancode_info keyboard_get_scancode();
+struct keyevent *keyboard_wait_for_keyevent();
 
 #endif

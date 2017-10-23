@@ -35,8 +35,9 @@ void ps2_keybaord_wait()
 		__asm__("nop");
 }
 
-void ps2_keyboard_interrupt_handler(struct registers *registers)
-{
+void ps2_keyboard_interrupt_handler(
+	struct registers *registers __attribute__((unused))
+) {
 	ps2_keybaord_wait();
 	uint8_t raw_code = inb(0x60);
 	keyboard_received_scancode(raw_code);

@@ -22,25 +22,28 @@
 
 #include <device/keyboard/keyboard.h>
 #include <device/keyboard/scancode.h>
+#include <device/keyboard/keycode.h>
+#include <ascii.h>
 #include <read.h>
+#include <null.h>
+#include <kheap.h>
 
 char read_char()
 {
+	struct keyevent *event = NULL;
 
-	// Wait for any form of input from the keyboard. Once input is received
-	// filter it so that modifier keys/special keys are ignored.
-	struct scancode_info info = { 0 };
-	uint8_t modifiers = 0;
-	uint8_t ascii = 0;
 	do {
-		info = keyboard_get_scancode();
-		modifiers = keyboard_modifier_flags();
-		ascii = translate_scancode(info, modifiers);
+		// Wait for an event from the keyboard, and if we receive a NULL event
+		// then reset. If we receive a keyevent for a released key then ignore
+		// it.
+		if (event)
+			kfree(event);
 
-		if (info.modifier == keyboard_mod_none && ascii)
-			break;
+		event = keyboard_wait_for_keyevent();
+	}
+	while (event == NULL || event->pressed == 0);
 
-	} while (1); // Loop forever, or until we have a valid key at least.
-
-	return ascii;
+	// Convert the keycode into an ASCII code.
+	char c = keycode_to_ascii(event->keycode, event->modifiers);
+	return c;
 }

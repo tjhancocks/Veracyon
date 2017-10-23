@@ -25,39 +25,41 @@
 
 #include <kern_types.h>
 
-enum keyboard_modifier
+enum key_modifiers 
 {
-	keyboard_mod_none = 1 << 0,
-	keyboard_mod_left_shift = 1 << 1,
-	keyboard_mod_right_shift = 1 << 2,
-	keyboard_mod_left_control = 1 << 3,
-	keyboard_mod_right_control = 1 << 4,
-	keyboard_mod_left_alt = 1 << 5,
-	keyboard_mod_right_alt = 1 << 6,
-	keyboard_mod_capslock = 1<< 7
+	key_modifier_left_shift = 1 << 1,
+	key_modifier_right_shift = 1 << 2,
+	key_modifier_left_control = 1 << 3,
+	key_modifier_right_control = 1 << 4,
+	key_modifier_left_alt = 1 << 5,
+	key_modifier_right_alt = 1 << 6,
+};
+
+enum key_state
+{
+	key_state_caps_lock = 1 << 1,
+	key_state_num_lock = 1 << 2,
+	key_state_scroll_lock = 1 << 3
 };
 
 struct scancode_info
 {
-	uint8_t index;
-	uint8_t scancode;
+	uint8_t raw_code;
+	uint8_t keycode;
+	uint8_t state;
+	uint8_t set_state;
 	const char *name;
-	uint8_t pressed;
-	enum keyboard_modifier modifier;
 };
 
-struct scancode_translation_unit
+struct keyevent
 {
-	uint8_t base;
-	uint8_t left_shift;
-	uint8_t right_shift;
-	uint8_t left_control;
-	uint8_t right_control;
-	uint8_t left_alt;
-	uint8_t right_alt;
+	uint8_t keycode;
+	uint8_t pressed;
+	enum key_modifiers modifiers;
+	enum key_state state;
 };
 
-struct scancode_info scancode_info_make(uint8_t raw_code);
-uint8_t translate_scancode(struct scancode_info info, uint8_t modifiers);
+struct keyevent *keyevent_make(uint8_t scancode);
+void keyevent_free(struct keyevent *event);
 
 #endif
