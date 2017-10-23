@@ -23,7 +23,6 @@
 #include <panic.h>
 #include <kern_types.h>
 #include <kprint.h>
-#include <device/io/file.h>
 
 static uintptr_t *panic_handler = NULL;
 

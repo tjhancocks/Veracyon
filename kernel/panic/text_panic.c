@@ -24,7 +24,7 @@
 #include <kern_types.h>
 #include <kprint.h>
 #include <vga_text.h>
-#include <device/io/file.h>
+#include <term.h>
 #include <arch/x86/registers.h>
 
 void kpanic_text(struct panic_info *info, struct registers *registers) 

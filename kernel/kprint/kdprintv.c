@@ -22,17 +22,13 @@
 
 #include <kprint.h>
 #include <memory.h>
-#include <device/io/file.h>
+#include <term.h>
 
 #define BUFFER_LEN 1024
 #define DIGIT_SOURCE "0123456789ABCDEF"
 
 static uint32_t __kd_usn_to_str(char *restrict, uint32_t, uint8_t);
 static uint32_t __kd_sn_to_str(char *restrict, int32_t, uint8_t);
-
-const uint32_t krnout = __kKRNOUT;
-const uint32_t dbgout = __kDBGOUT;
-const uint32_t allout = __kALLOUT;
 
 enum token 
 {
@@ -195,7 +191,7 @@ void kdprintv(uint32_t handle, const char *restrict fmt, va_list args)
 	}
 
 	// Finished constructing the output. Send it to the requested device.
-	devio_puts(handle, buffer);
+	term_puts(handle, buffer);
 }
 
 static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)

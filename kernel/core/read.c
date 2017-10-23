@@ -28,7 +28,6 @@
 #include <null.h>
 #include <kheap.h>
 #include <term.h>
-#include <device/io/file.h>
 
 char read_char()
 {
@@ -61,7 +60,7 @@ const char *read_user_input()
 
 	// Get current terminal state so that we can render and handle the input
 	// correctly.
-	term_get_cursor(&cursor_x, &cursor_y);
+	term_get_cursor(krnout, &cursor_x, &cursor_y);
 	
 	// Start listening for key events, exiting only on an exit code or enter.
 	do {
@@ -75,8 +74,8 @@ const char *read_user_input()
 				if (ptr >= buffer) {
 					// Flush an update now with the last character cleared.
 					*(ptr - 1) = ' ';
-					term_set_cursor(cursor_x, cursor_y);
-					devio_puts(__kKRNOUT, buffer);
+					term_set_cursor(krnout, cursor_x, cursor_y);
+					term_puts(krnout, buffer);
 
 					// Set the null buffer and continue.
 					if (ptr > buffer)
@@ -98,8 +97,8 @@ const char *read_user_input()
 			}
 
 			// Draw the input to the console/terminal.
-			term_set_cursor(cursor_x, cursor_y);
-			devio_puts(__kKRNOUT, buffer);
+			term_set_cursor(krnout, cursor_x, cursor_y);
+			term_puts(krnout, buffer);
 		}
 
 		// Control codes should only occur on key release.
@@ -111,7 +110,7 @@ const char *read_user_input()
 				event->keycode == kKC_ANSI_C && 
 				event->modifiers & control_mask
 			) {
-				devio_puts(__kKRNOUT, "^C");
+				term_puts(krnout, "^C");
 				goto CANCEL_INPUT;
 			}
 		}
@@ -120,14 +119,14 @@ const char *read_user_input()
 
 CANCEL_INPUT:
 	// The user cancelled the input.
-	devio_puts(__kKRNOUT, "\n");
+	term_puts(krnout, "\n");
 	kfree(event);
 	kfree(buffer);
 	return NULL;
 
 COMPLETE_INPUT:
 	// The user successfully completed the input.
-	devio_puts(__kKRNOUT, "\n");
+	term_puts(krnout, "\n");
 	kfree(event);
 	return buffer;
 }

@@ -26,7 +26,6 @@
 #include <serial.h>
 #include <ascii.h>
 #include <memory.h>
-#include <device/io/file.h>
 #include <kprint.h>
 #include <panic.h>
 #include <arch/x86/port.h>
@@ -61,7 +60,6 @@ void vga_text_setpos(uint32_t x, uint32_t y)
 
 	vga_text.x = (uint8_t)(x & 0xFF);
 	vga_text.y = (uint8_t)(y & 0xFF);
-	kdprint(dbgout, "setting x: %d, y: %d\n", vga_text.x, vga_text.y);
 	vga_update_cursor();
 }
 
@@ -124,11 +122,10 @@ void vga_text_prepare(struct boot_config *config)
 		vga_text.buffer = config->linear_frame_buffer;
 	}
 
-	devio_bind_putc(__kKRNOUT, kputc_vga_text);
-	devio_bind_puts(__kKRNOUT, kputs_vga_text);
-
-	term_bind_get_cursor(vga_text_getpos);
-	term_bind_set_cursor(vga_text_setpos);
+	term_bind_putc(krnout, kputc_vga_text);
+	term_bind_puts(krnout, kputs_vga_text);
+	term_bind_get_cursor(krnout, vga_text_getpos);
+	term_bind_set_cursor(krnout, vga_text_setpos);
 
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
 		vga_text.cols, vga_text.rows);

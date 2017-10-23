@@ -22,25 +22,103 @@
 
 #include <term.h>
 
-static void(*_term_set_cursor)(uint32_t, uint32_t);
-static void(*_term_get_cursor)(uint32_t *, uint32_t *);
+const uint32_t krnout = 0x00000001;
+const uint32_t dbgout = 0x00000002;
+const uint32_t allout = 0xFFFFFFFF; 
 
-void term_bind_set_cursor(void(*fn)(uint32_t, uint32_t))
+#define kMAX_TERM_BINDINGS	32
+
+static struct {
+	void(*set_cursor)(uint32_t, uint32_t);
+	void(*get_cursor)(uint32_t *, uint32_t *);
+	void(*puts)(const char *restrict);
+	void(*putc)(const char);
+	void(*clear)();
+	void(*set_attribute)(uint8_t);
+} term_bindings[kMAX_TERM_BINDINGS];
+
+void term_bind_set_cursor(uint32_t handle, void(*fn)(uint32_t, uint32_t))
 {
-	_term_set_cursor = fn;
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].set_cursor = fn;
 }
 
-void term_bind_get_cursor(void(*fn)(uint32_t *, uint32_t *))
+void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *))
 {
-	_term_get_cursor = fn;
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].get_cursor = fn;
 }
 
-void term_set_cursor(uint32_t x, uint32_t y)
+void term_bind_puts(uint32_t handle, void(*fn)(const char *restrict))
 {
-	!_term_set_cursor ? (0) : _term_set_cursor(x, y);
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].puts = fn;
 }
 
-void term_get_cursor(uint32_t *x, uint32_t *y)
+void term_bind_putc(uint32_t handle, void(*fn)(const char))
 {
-	!_term_get_cursor ? (0) : _term_get_cursor(x, y);
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].putc = fn;
 }
+
+void term_bind_clear(uint32_t handle, void(*fn)())
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].clear = fn;
+}
+
+void term_bind_set_attribute(uint32_t handle, void(*fn)(uint8_t))
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].set_attribute = fn;
+}
+
+
+void term_set_cursor(uint32_t handle, uint32_t x, uint32_t y)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].set_cursor)
+			term_bindings[n].set_cursor(x, y);
+}
+
+void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].get_cursor)
+			term_bindings[n].get_cursor(x, y);
+}
+
+void term_puts(uint32_t handle, const char *restrict str)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].puts)
+			term_bindings[n].puts(str);
+}
+
+void term_putc(uint32_t handle, const char c)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].putc)
+			term_bindings[n].putc(c);
+}
+
+void term_clear(uint32_t handle)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].clear)
+			term_bindings[n].clear();
+}
+
+void term_set_attribute(uint32_t handle, uint8_t attribute)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].set_attribute)
+			term_bindings[n].set_attribute(attribute);
+}
+

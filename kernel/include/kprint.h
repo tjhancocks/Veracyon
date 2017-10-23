@@ -25,10 +25,7 @@
 
 #include <va_args.h>
 #include <kern_types.h>
-
-extern const uint32_t krnout;
-extern const uint32_t dbgout;
-extern const uint32_t allout;
+#include <term.h>
 
 void kprint(const char *restrict fmt, ...);
 void kdprint(uint32_t handle, const char *restrict fmt, ...);
