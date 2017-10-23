@@ -34,9 +34,14 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		char c = read_char();
-		if (c != NULL)
-			kprint("%c", c);
+		const char *input = read_user_input();
+
+		if (input)
+			kprint("got: \"%s\"\n", input);
+		else
+			kprint("cancelled!\n");
+		
+		kfree(input);
 	}
 }
 
