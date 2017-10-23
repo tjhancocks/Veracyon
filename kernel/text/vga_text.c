@@ -30,6 +30,7 @@
 #include <kprint.h>
 #include <panic.h>
 #include <arch/x86/port.h>
+#include <term.h>
 
 #define TAB_WIDTH 4
 
@@ -49,18 +50,25 @@ void vga_text_clear(uint8_t attribute)
 
 	memsetw(vga_text.buffer, cell, len);
 
-	vga_text.x = 0;
-	vga_text.y = 0;
-	vga_update_cursor();
+	vga_text_setpos(0, 0);
 	vga_text.attribute = attribute;
 
 	kdprint(dbgout, "\n-- CLEARED VGA TEXT SCREEN --\n\n");
 }
 
-void vga_text_setpos(uint8_t x, uint8_t y)
+void vga_text_setpos(uint32_t x, uint32_t y)
 {
-	vga_text.x = x;
-	vga_text.y = y;
+
+	vga_text.x = (uint8_t)(x & 0xFF);
+	vga_text.y = (uint8_t)(y & 0xFF);
+	kdprint(dbgout, "setting x: %d, y: %d\n", vga_text.x, vga_text.y);
+	vga_update_cursor();
+}
+
+void vga_text_getpos(uint32_t *x, uint32_t *y)
+{
+	if (x) *x = vga_text.x;
+	if (y) *y = vga_text.y;
 }
 
 void vga_update_cursor()
@@ -118,6 +126,9 @@ void vga_text_prepare(struct boot_config *config)
 
 	devio_bind_putc(__kKRNOUT, kputc_vga_text);
 	devio_bind_puts(__kKRNOUT, kputs_vga_text);
+
+	term_bind_get_cursor(vga_text_getpos);
+	term_bind_set_cursor(vga_text_setpos);
 
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
 		vga_text.cols, vga_text.rows);

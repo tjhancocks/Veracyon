@@ -20,19 +20,15 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_VGA_TEXT__
-#define __VKERNEL_VGA_TEXT__
+#ifndef __VKERNEL_TERM__
+#define __VKERNEL_TERM__
 
-#include <boot_config.h>
 #include <kern_types.h>
 
-void vga_text_prepare(struct boot_config *config);
-void kputc_vga_text(const char c);
-void kputs_vga_text(const char *restrict str);
+void term_bind_set_cursor(void(*fn)(uint32_t, uint32_t));
+void term_bind_get_cursor(void(*fn)(uint32_t *, uint32_t *));
 
-void vga_text_setpos(uint32_t x, uint32_t y);
-void vga_text_setattr(uint8_t attribute);
-void vga_text_clear(uint8_t attribute);
-void vga_update_cursor();
+void term_set_cursor(uint32_t x, uint32_t y);
+void term_get_cursor(uint32_t *x, uint32_t *y);
 
 #endif
