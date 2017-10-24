@@ -30,6 +30,8 @@
 #include <arch/arch.h>
 #include <device/keyboard/keyboard.h>
 #include <read.h>
+#include <panic.h>
+#include <macro.h>
 
 __attribute__((noreturn)) void kwork(void)
 {
@@ -43,12 +45,23 @@ __attribute__((noreturn)) void kwork(void)
 __attribute__((noreturn)) void kmain(
 	struct boot_config *config
 ) {
+	// We need the debug serial port to be enabled before anything else so that
+	// we can get debug logs for the kernel.
 	serial_prepare();
 
+	// Get the appropriate display driver in place.
 	if (config->vesa_mode == vesa_mode_text) {
 		vga_text_prepare(config);
 	}
 
+	// Make sure we have a panic handler in place before starting on the meat of
+	// the kernel.
+	prepare_panic_handler(config);
+
+	BOCHS_BREAK_POINT;
+	*((uint32_t *)0x7fffffff) = 0xDEADBEEF;
+
+	// Some basic information to be shown to the user.
 	kprint("VERACYON VERSION 0.1\n");
 	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
 

@@ -49,8 +49,8 @@ static uint32_t __kregister_read(const char *restrict name)
 		__asm__ __volatile("movl %%ebp, %0" : "=r"(value));
 	else if (strcmp(name, "cr0") == 0) 
 		__asm__ __volatile("movl %%cr0, %0" : "=r"(value));
-	else if (strcmp(name, "cr1") == 0) 
-		__asm__ __volatile("movl %%cr1, %0" : "=r"(value));
+	else if (strcmp(name, "cr4") == 0) 
+		__asm__ __volatile("movl %%cr4, %0" : "=r"(value));
 	else if (strcmp(name, "cr2") == 0) 
 		__asm__ __volatile("movl %%cr2, %0" : "=r"(value));
 	else if (strcmp(name, "cr3") == 0) 

@@ -33,14 +33,14 @@ void term_bind_set_cursor(uint32_t handle, void(*fn)(uint32_t, uint32_t));
 void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *));
 void term_bind_puts(uint32_t handle, void(*fn)(const char *restrict));
 void term_bind_putc(uint32_t handle, void(*fn)(const char));
-void term_bind_clear(uint32_t handle, void(*fn)());
+void term_bind_clear(uint32_t handle, void(*fn)(uint8_t));
 void term_bind_set_attribute(uint32_t handle, void(*fn)(uint8_t));
 
 void term_set_cursor(uint32_t handle, uint32_t x, uint32_t y);
 void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y);
 void term_puts(uint32_t handle, const char *restrict str);
 void term_putc(uint32_t handle, const char c);
-void term_clear(uint32_t handle);
+void term_clear(uint32_t handle, uint8_t attribute);
 void term_set_attribute(uint32_t handle, uint8_t attribute);
 
 #endif

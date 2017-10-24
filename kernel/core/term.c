@@ -33,7 +33,7 @@ static struct {
 	void(*get_cursor)(uint32_t *, uint32_t *);
 	void(*puts)(const char *restrict);
 	void(*putc)(const char);
-	void(*clear)();
+	void(*clear)(uint8_t);
 	void(*set_attribute)(uint8_t);
 } term_bindings[kMAX_TERM_BINDINGS];
 
@@ -65,7 +65,7 @@ void term_bind_putc(uint32_t handle, void(*fn)(const char))
 			term_bindings[n].putc = fn;
 }
 
-void term_bind_clear(uint32_t handle, void(*fn)())
+void term_bind_clear(uint32_t handle, void(*fn)(uint8_t))
 {
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n))
@@ -108,11 +108,11 @@ void term_putc(uint32_t handle, const char c)
 			term_bindings[n].putc(c);
 }
 
-void term_clear(uint32_t handle)
+void term_clear(uint32_t handle, uint8_t attribute)
 {
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n) && term_bindings[n].clear)
-			term_bindings[n].clear();
+			term_bindings[n].clear(attribute);
 }
 
 void term_set_attribute(uint32_t handle, uint8_t attribute)

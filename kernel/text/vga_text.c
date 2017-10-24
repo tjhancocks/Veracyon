@@ -27,8 +27,7 @@
 #include <ascii.h>
 #include <memory.h>
 #include <kprint.h>
-#include <panic.h>
-#include <arch/x86/port.h>
+#include <arch/arch.h>
 #include <term.h>
 
 #define TAB_WIDTH 4
@@ -126,12 +125,12 @@ void vga_text_prepare(struct boot_config *config)
 	term_bind_puts(krnout, kputs_vga_text);
 	term_bind_get_cursor(krnout, vga_text_getpos);
 	term_bind_set_cursor(krnout, vga_text_setpos);
+	term_bind_set_attribute(krnout, vga_text_setattr);
+	term_bind_clear(krnout, vga_text_clear);
 
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 
 		vga_text.cols, vga_text.rows);
 	kdprint(dbgout, "VGA text buffer located at: %p\n", vga_text.buffer);
-
-	prepare_text_panic(config);
 
 	// Disable text blinking in VGA Text Mode, so that bright backgrounds can
 	// be used.

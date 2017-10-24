@@ -23,32 +23,141 @@
 #include <panic.h>
 #include <kern_types.h>
 #include <kprint.h>
+#include <term.h>
+#include <macro.h>
+
+static const char *exception_name[] = {
+	"Divide-by-zero Error",
+	"Debug",
+	"Non-maskable Interrupt",
+	"Breakpoint",
+	"Overflow",
+	"Bound Range Exceeded",
+	"Invalid Opcode",
+	"Device Not Available",
+	"Double Fault",
+	"Coprocessor Segment Overrun",
+	"Invalid TSS",
+	"Segment Not Present",
+	"Stack-Segment Fault",
+	"General Protection Fault",
+	"Page Fault",
+	"Reserved",
+	"x87 Floating-Point Exception",
+	"Alignment Check",
+	"Machine Check",
+	"SIMD Floating-Point Exception",
+	"Virtualization Exception",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Security Exception",
+	"Reserved"
+};
 
 static uintptr_t *panic_handler = NULL;
 
-void register_panic_handler(
-	struct boot_config *config,
-	void(*handler)(struct panic_info *, struct registers *)
-) {
-	panic_handler = config->panic_handler;
-	*panic_handler = (uintptr_t)handler;
-	kdprint(dbgout, "Registered panic handler %p at %p\n", 
-		handler, panic_handler);
+////////////////////////////////////////////////////////////////////////////////
+
+void render_register(const char *name, uint32_t value, uint32_t x, uint32_t y)
+{
+	term_set_cursor(krnout, x, y);
+	term_set_attribute(krnout, 0x3B);
+	kprint("%8s: ", name);
+	term_set_attribute(krnout, 0x3F);
+	kprint("%08x\n", value);
 }
 
 __attribute__((noreturn)) void panic(
 	struct panic_info *info, struct registers *registers
 ) {
-	void(*handler)(struct panic_info *, struct registers *) = (void *)(
-		*panic_handler
-	);
+	
+	// If there is no info structure, then we need to construct one.
+	if (!info && registers && registers->interrupt < 0x20) {
+		struct panic_info default_info = (struct panic_info) {
+			panic_error,
+			exception_name[registers->interrupt],
+			"An unrecoverable exception occured in the CPU. "
+			"Halting system immediately."
+		};
+		info = &default_info;
+	}
 
-	if (handler)
-		handler(info, registers);
+	// We need to clear the screen and get back into a basic terminal 
+	// presentation.
+	term_clear(krnout, 0x3B);
 
-	// Report the panic to the serial console and halt the system.
-	kdprint(dbgout, "Kernel panic occurred. Halting system now.\n");
+	// The title of the panic needs to be a slightly different text colour.
+	term_set_attribute(krnout, 0x3F);
+	term_set_cursor(krnout, 2, 1);
 
+	if (registers && registers->interrupt < 0x20)
+		kprint("CPU Exception: ");
+	kprint("%s\n", info->title);
+
+	// The message is the next bit of information to be displayed. This needs
+	// be printed so that it can word wrap to subsequent in a clean way.
+	// TODO: Word wrapping.
+	term_set_attribute(krnout, 0x3B);
+	term_set_cursor(krnout, 2, 2);
+	kprint("%s\n", info->message);
+
+	// Finally we want to start displaying register information. This will help
+	// with debugging and knowing state.
+	if (registers) {
+		uint32_t y = 0;
+		term_get_cursor(krnout, NULL, &y);
+
+		render_register("EAX", registers->eax, 2 + (18 * 0), y+2);
+		render_register("EBX", registers->ebx, 2 + (18 * 1), y+2);
+		render_register("ECX", registers->ecx, 2 + (18 * 2), y+2);
+		render_register("EDX", registers->edx, 2 + (18 * 3), y+2);
+
+		render_register("ESI", registers->esi, 2 + (18 * 0), y+3);
+		render_register("EDI", registers->edi, 2 + (18 * 1), y+3);
+		render_register("ESP", registers->esp, 2 + (18 * 2), y+3);
+		render_register("EBP", registers->ebp, 2 + (18 * 3), y+3);
+
+		uint32_t cr0 = REGISTER(cr0);
+		uint32_t cr2 = REGISTER(cr2);
+		uint32_t cr3 = REGISTER(cr3);
+		uint32_t cr4 = REGISTER(cr4);
+		render_register("CR0", cr0, 2 + (18 * 0), y+5);
+		render_register("CR2", cr2, 2 + (18 * 1), y+5);
+		render_register("CR3", cr3, 2 + (18 * 2), y+5);
+		render_register("CR4", cr4, 2 + (18 * 3), y+5);
+
+		render_register("GS", registers->gs, 2 + (18 * 0), y+6);
+		render_register("FS", registers->fs, 2 + (18 * 1), y+6);
+		render_register("ES", registers->es, 2 + (18 * 2), y+6);
+		render_register("DS", registers->ds, 2 + (18 * 3), y+6);
+
+		render_register("SS", registers->ss, 2 + (18 * 0), y+7);
+		render_register("CS", registers->cs, 2 + (18 * 1), y+7);
+
+		render_register("EIP", registers->eip, 2 + (18 * 0), y+9);
+		render_register("EFLAGS", registers->eflags, 2 + (18 * 1), y+9);
+	}
+	
+
+	// Make sure we don't return or process anything further.
 	while (1)
 		__asm__ __volatile__("cli; hlt");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void prepare_panic_handler(
+	struct boot_config *config
+) {
+	panic_handler = config->panic_handler;
+	*panic_handler = (uintptr_t)panic;
+	kdprint(dbgout, "Registered panic handler %p at %p\n", 
+		*panic_handler, panic_handler);
 }
