@@ -121,6 +121,12 @@ void vga_text_prepare(struct boot_config *config)
 		vga_text.buffer = config->linear_frame_buffer;
 	}
 
+	// Make sure the KRNOUT mode of the terminal is going to be parsing ANSI
+	// escape codes.
+	term_use_ansi(krnout, 1);
+
+	// Bind all interface functions so that the terminal can drive the VGA Text
+	// display.
 	term_bind_putc(krnout, kputc_vga_text);
 	term_bind_puts(krnout, kputs_vga_text);
 	term_bind_get_cursor(krnout, vga_text_getpos);

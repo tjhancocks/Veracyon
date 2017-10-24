@@ -25,9 +25,21 @@
 
 #include <kern_types.h>
 
+struct term_interface {
+	uint8_t use_ansi;
+	void(*set_cursor)(uint32_t, uint32_t);
+	void(*get_cursor)(uint32_t *, uint32_t *);
+	void(*puts)(const char *restrict);
+	void(*putc)(const char);
+	void(*clear)(uint8_t);
+	void(*set_attribute)(uint8_t);
+};
+
 extern const uint32_t krnout;
 extern const uint32_t dbgout;
 extern const uint32_t allout;
+
+void term_use_ansi(uint32_t handle, uint8_t use_ansi);
 
 void term_bind_set_cursor(uint32_t handle, void(*fn)(uint32_t, uint32_t));
 void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *));

@@ -31,7 +31,6 @@
 #include <device/keyboard/keyboard.h>
 #include <read.h>
 #include <panic.h>
-#include <macro.h>
 
 __attribute__((noreturn)) void kwork(void)
 {

@@ -28,6 +28,7 @@
 #include <null.h>
 #include <kheap.h>
 #include <term.h>
+#include <memory.h>
 
 char read_char()
 {

@@ -20,28 +20,14 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_PANIC__
-#define __VKERNEL_PANIC__
+#ifndef __VKERNEL_ANSI__
+#define __VKERNEL_ANSI__
 
-#include <boot_config.h>
-#include <arch/x86/registers.h>
+#include <term.h>
 
-enum panic_type
-{
-	panic_general,
-	panic_memory,
-	panic_error,
-};
-
-struct panic_info
-{
-	enum panic_type type;
-	const char *title;
-	const char *message;
-};
-
-void prepare_panic_handler(struct boot_config *config);
-
-void panic(struct panic_info *info, struct registers *registers);
+void ansi_parse_and_display_string(
+	struct term_interface *term, 
+	const char *restrict str
+);
 
 #endif

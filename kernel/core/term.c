@@ -21,6 +21,7 @@
 */
 
 #include <term.h>
+#include <ansi.h>
 
 const uint32_t krnout = 0x00000001;
 const uint32_t dbgout = 0x00000002;
@@ -28,14 +29,14 @@ const uint32_t allout = 0xFFFFFFFF;
 
 #define kMAX_TERM_BINDINGS	32
 
-static struct {
-	void(*set_cursor)(uint32_t, uint32_t);
-	void(*get_cursor)(uint32_t *, uint32_t *);
-	void(*puts)(const char *restrict);
-	void(*putc)(const char);
-	void(*clear)(uint8_t);
-	void(*set_attribute)(uint8_t);
-} term_bindings[kMAX_TERM_BINDINGS];
+static struct term_interface term_bindings[kMAX_TERM_BINDINGS];
+
+void term_use_ansi(uint32_t handle, uint8_t use_ansi)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].use_ansi = use_ansi;
+}
 
 void term_bind_set_cursor(uint32_t handle, void(*fn)(uint32_t, uint32_t))
 {
@@ -96,9 +97,14 @@ void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y)
 
 void term_puts(uint32_t handle, const char *restrict str)
 {
-	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
-		if (handle & (1 << n) && term_bindings[n].puts)
-			term_bindings[n].puts(str);
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n) {
+		if (handle & (1 << n) && term_bindings[n].puts) {
+			if (term_bindings[n].use_ansi)
+				ansi_parse_and_display_string(&term_bindings[n], str);
+			else
+				term_bindings[n].puts(str);
+		}
+	}
 }
 
 void term_putc(uint32_t handle, const char c)
