@@ -52,6 +52,13 @@ void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *))
 			term_bindings[n].get_cursor = fn;
 }
 
+void term_bind_update_cursor(uint32_t handle, void(*fn)())
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].update_cursor = fn;
+}
+
 void term_bind_puts(uint32_t handle, void(*fn)(const char *restrict))
 {
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
@@ -80,6 +87,29 @@ void term_bind_set_attribute(uint32_t handle, void(*fn)(uint8_t))
 			term_bindings[n].set_attribute = fn;
 }
 
+void term_bind_get_attribute(uint32_t handle, void(*fn)(uint8_t *))
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].get_attribute = fn;
+}
+
+void term_bind_set_default_attribute(uint32_t handle, void(*fn)(uint8_t))
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].set_default_attribute = fn;
+}
+
+void term_bind_restore_default_attribute(uint32_t handle, void(*fn)())
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n))
+			term_bindings[n].restore_default_attribute = fn;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 void term_set_cursor(uint32_t handle, uint32_t x, uint32_t y)
 {
@@ -93,6 +123,13 @@ void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y)
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n) && term_bindings[n].get_cursor)
 			term_bindings[n].get_cursor(x, y);
+}
+
+void term_update_cursor(uint32_t handle)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].update_cursor)
+			term_bindings[n].update_cursor();
 }
 
 void term_puts(uint32_t handle, const char *restrict str)
@@ -126,5 +163,26 @@ void term_set_attribute(uint32_t handle, uint8_t attribute)
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n) && term_bindings[n].set_attribute)
 			term_bindings[n].set_attribute(attribute);
+}
+
+void term_get_attribute(uint32_t handle, uint8_t *attribute)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].get_attribute)
+			term_bindings[n].get_attribute(attribute);
+}
+
+void term_set_default_attribute(uint32_t handle, uint8_t attribute)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].set_default_attribute)
+			term_bindings[n].set_default_attribute(attribute);
+}
+
+void term_restore_default_attribute(uint32_t handle)
+{
+	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
+		if (handle & (1 << n) && term_bindings[n].restore_default_attribute)
+			term_bindings[n].restore_default_attribute();
 }
 

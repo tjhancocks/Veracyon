@@ -37,6 +37,7 @@ static struct {
 	uint8_t cols;
 	uint8_t rows;
 	uint8_t attribute;
+	uint8_t default_attribute;
 	uint8_t x;
 	uint8_t y; 
 } vga_text;
@@ -50,6 +51,7 @@ void vga_text_clear(uint8_t attribute)
 
 	vga_text_setpos(0, 0);
 	vga_text.attribute = attribute;
+	vga_text.default_attribute = attribute;
 
 	kdprint(dbgout, "\n-- CLEARED VGA TEXT SCREEN --\n\n");
 }
@@ -80,6 +82,21 @@ void vga_update_cursor()
 void vga_text_setattr(uint8_t attribute)
 {
 	vga_text.attribute = attribute;
+}
+
+void vga_text_getattr(uint8_t *attribute)
+{
+	if (attribute) *attribute = vga_text.attribute;
+}
+
+void vga_text_set_default_attribute(uint8_t attribute)
+{
+	vga_text.default_attribute = attribute;
+}
+
+void vga_text_restore_default_attribute()
+{
+	vga_text.attribute = vga_text.default_attribute;
 }
 
 void vga_text_scroll()
@@ -131,7 +148,13 @@ void vga_text_prepare(struct boot_config *config)
 	term_bind_puts(krnout, kputs_vga_text);
 	term_bind_get_cursor(krnout, vga_text_getpos);
 	term_bind_set_cursor(krnout, vga_text_setpos);
+	term_bind_update_cursor(krnout, vga_update_cursor);
 	term_bind_set_attribute(krnout, vga_text_setattr);
+	term_bind_get_attribute(krnout, vga_text_getattr);
+	term_bind_set_default_attribute(krnout, vga_text_set_default_attribute);
+	term_bind_restore_default_attribute(
+		krnout, vga_text_restore_default_attribute
+	);
 	term_bind_clear(krnout, vga_text_clear);
 
 	kdprint(dbgout, "VGA text screen resolution: %dx%d\n", 

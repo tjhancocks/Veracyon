@@ -29,10 +29,14 @@ struct term_interface {
 	uint8_t use_ansi;
 	void(*set_cursor)(uint32_t, uint32_t);
 	void(*get_cursor)(uint32_t *, uint32_t *);
+	void(*update_cursor)();
 	void(*puts)(const char *restrict);
 	void(*putc)(const char);
 	void(*clear)(uint8_t);
 	void(*set_attribute)(uint8_t);
+	void(*get_attribute)(uint8_t *);
+	void(*set_default_attribute)(uint8_t);
+	void(*restore_default_attribute)();
 };
 
 extern const uint32_t krnout;
@@ -43,16 +47,24 @@ void term_use_ansi(uint32_t handle, uint8_t use_ansi);
 
 void term_bind_set_cursor(uint32_t handle, void(*fn)(uint32_t, uint32_t));
 void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *));
+void term_bind_update_cursor(uint32_t handle, void(*fn)());
 void term_bind_puts(uint32_t handle, void(*fn)(const char *restrict));
 void term_bind_putc(uint32_t handle, void(*fn)(const char));
 void term_bind_clear(uint32_t handle, void(*fn)(uint8_t));
 void term_bind_set_attribute(uint32_t handle, void(*fn)(uint8_t));
+void term_bind_get_attribute(uint32_t handle, void(*fn)(uint8_t *));
+void term_bind_set_default_attribute(uint32_t handle, void(*fn)(uint8_t));
+void term_bind_restore_default_attribute(uint32_t handle, void(*fn)());
 
 void term_set_cursor(uint32_t handle, uint32_t x, uint32_t y);
 void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y);
+void term_update_cursor(uint32_t handle);
 void term_puts(uint32_t handle, const char *restrict str);
 void term_putc(uint32_t handle, const char c);
 void term_clear(uint32_t handle, uint8_t attribute);
 void term_set_attribute(uint32_t handle, uint8_t attribute);
+void term_get_attribute(uint32_t handle, uint8_t *attribute);
+void term_set_default_attribute(uint32_t handle, uint8_t attribute);
+void term_restore_default_attribute(uint32_t handle);
 
 #endif

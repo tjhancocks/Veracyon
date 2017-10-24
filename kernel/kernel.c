@@ -58,8 +58,8 @@ __attribute__((noreturn)) void kmain(
 	prepare_panic_handler(config);
 
 	// Some basic information to be shown to the user.
-	kprint("VERACYON VERSION 0.1\n");
-	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
+	kprint("\033[96mVERACYON VERSION 0.1\033[0m\n");
+	kprint("\033[90m Copyright (c) 2017 Tom Hancocks. MIT License.\033[0m\n\n");
 
 	// Get the memory management of the system/kernel up and running. This will
 	// be needed by a lot of the later functionality.
