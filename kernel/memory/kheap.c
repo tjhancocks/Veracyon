@@ -172,6 +172,7 @@ void kheap_coalesce_free_blocks()
 
 		block->size += block->next->size + sizeof(*block);
 		block->next = block->next->next;
+		block->next->prev = block;
 
 		// Increment the merge counter.
 		++merge_count;

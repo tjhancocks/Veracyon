@@ -58,9 +58,6 @@ __attribute__((noreturn)) void kmain(
 	// the kernel.
 	prepare_panic_handler(config);
 
-	BOCHS_BREAK_POINT;
-	*((uint32_t *)0x7fffffff) = 0xDEADBEEF;
-
 	// Some basic information to be shown to the user.
 	kprint("VERACYON VERSION 0.1\n");
 	kprint(" Copyright (c) 2017 Tom Hancocks. MIT License.\n\n");
