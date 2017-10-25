@@ -40,7 +40,25 @@ struct panic_info
 	const char *message;
 };
 
+/**
+ Prepares the Kernel's panic handling functionality, and overrides the panic
+ handler put in place by CoreLoader.
+
+ 	- config: A valid boot configuration structure.
+ */
 void prepare_panic_handler(struct boot_config *config);
+
+/**
+ Invoke a panic in the kernel. This is typically used as a way to escape from
+ a potentially serious or fatal situation the the kernel has gotten into.
+	
+	- info: Contains information about circumstances of the panic. Can be NULL.
+	- registers: Contains register values at the time of the panic. Can be NULL.
+
+ WARNING:
+	This is not a means of warning the user. It is a nuclear option and will
+	result in the system coming to a halt permanatly.
+ */
 void panic(struct panic_info *info, struct registers *registers);
 
 #endif

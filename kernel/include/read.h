@@ -23,6 +23,14 @@
 #ifndef __VKERNEL_READ__
 #define __VKERNEL_READ__
 
+/**
+ Wait for the user to enter keyboard input. User input will only be accepted 
+ once the user hits the enter/num-enter key. However the user can abort/quit
+ the input prompt by hitting ^C
+
+ RETURNS:
+ 	A pointer to the string buffer containing the user input.
+ */
 const char *read_user_input(void);
 
 #endif

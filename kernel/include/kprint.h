@@ -27,9 +27,33 @@
 #include <kern_types.h>
 #include <term.h>
 
+/**
+ Kernel specific print function, providing similar capabilities printf().
+ Routes output to the "allout" terminal interface.
+
+ 	- fmt: The format string with which to use.
+ */
 void kprint(const char *restrict fmt, ...);
+
+/**
+ Kernel specific print function, providing similar capabilities printf().
+ Allows the destination route (i.e. "krnout", or "dbgout") to be specified,
+ so that all output is sent to the correct/desired place.
+
+	- handle: The terminal handle/identifier in which to send output.
+ 	- fmt: The format string with which to use.
+ */
 void kdprint(uint32_t handle, const char *restrict fmt, ...);
 
+/**
+ Kernel specific print function, providing similar capabilities printf().
+ Allows the destination route (i.e. "krnout", or "dbgout") to be specified,
+ so that all output is sent to the correct/desired place.
+
+	- handle: The terminal handle/identifier in which to send output.
+ 	- fmt: The format string with which to use.
+ 	- va: The variadic arguments structure with substitution values.
+ */
 void kdprintv(uint32_t handle, const char *restrict fmt, va_list va);
 
 #endif

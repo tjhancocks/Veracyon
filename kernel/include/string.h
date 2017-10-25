@@ -25,6 +25,15 @@
 
 #include <kern_types.h>
 
+/**
+ Compare the two specified NULL terminated strings for equality.
+
+  - s0: One of the strings to compare.
+  - s1: The other string to compare.
+
+ RETURNS:
+    If the two strings are equal then the result will be 0.
+ */
 int32_t strcmp(const char *restrict s0, const char *restrict s1);
 
 #endif
