@@ -128,12 +128,10 @@ void kheap_allocate_block(struct kheap_block *block)
 
 void kheap_coalesce_free_blocks()
 {
-	if (++should_coalesce < 100)
+	if (++should_coalesce < 5)
 		return;
 	should_coalesce = 0;
 
-	kdprint(dbgout, 
-		"Searching for contiguous free blocks in the kernel heap...\n");
 
 	// We need to start with the second to last block (it it exists) as nothing
 	// can be merged into the last block.
@@ -180,9 +178,6 @@ void kheap_coalesce_free_blocks()
 	COALESCE_NEXT_BLOCK:
 		block = block->prev;
 	}
-
-	kdprint(dbgout, "Kernel heap coalesce completed with %d merge(s)\n", 
-		merge_count);
 }
 
 void kheap_describe()

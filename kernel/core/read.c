@@ -47,6 +47,7 @@ char read_char()
 
 	// Convert the keycode into an ASCII code.
 	char c = keycode_to_ascii(event->keycode, event->modifiers);
+	kfree(event);
 	return c;
 }
 
