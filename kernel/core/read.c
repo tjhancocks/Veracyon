@@ -30,28 +30,7 @@
 #include <term.h>
 #include <memory.h>
 
-char read_char()
-{
-	struct keyevent *event = NULL;
-
-	do {
-		// Wait for an event from the keyboard, and if we receive a NULL event
-		// then reset. If we receive a keyevent for a released key then ignore
-		// it.
-		if (event)
-			kfree(event);
-
-		event = keyboard_wait_for_keyevent();
-	}
-	while (event == NULL || event->pressed == 0);
-
-	// Convert the keycode into an ASCII code.
-	char c = keycode_to_ascii(event->keycode, event->modifiers);
-	kfree(event);
-	return c;
-}
-
-const char *read_user_input()
+const char *read_user_input(void)
 {
 	char *buffer = kalloc(sizeof(*buffer) * 1024);
 	memset(buffer, 0, sizeof(*buffer) * 1024);

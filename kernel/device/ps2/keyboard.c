@@ -29,7 +29,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ps2_keybaord_wait()
+void ps2_keybaord_wait(void)
 {
 	while ((inb(0x64) & 0x2) == 1)
 		__asm__("nop");
@@ -43,7 +43,7 @@ void ps2_keyboard_interrupt_handler(
 	keyboard_received_scancode(raw_code);
 }
 
-void ps2_keyboard_reset()
+void ps2_keyboard_reset(void)
 {
 	uint8_t tmp = inb(0x61);
 	outb(0x61, tmp | 0x80);
@@ -51,7 +51,7 @@ void ps2_keyboard_reset()
 	(void)inb(0x60);
 }
 
-void ps2_keyboard_initialise()
+void ps2_keyboard_initialise(void)
 {
 	kprint("Initialising PS/2 keyboard\n");
 	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);

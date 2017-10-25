@@ -81,10 +81,8 @@ int is_page_allocated(uintptr_t address)
 	return kPAGE_ALLOCATED;
 }
 
-uintptr_t first_available_kernel_page()
+uintptr_t first_available_kernel_page(void)
 {
-	// kdprint(dbgout, "Searching for first available kernel page\n");
-
 	// Step through kernel pages to try and find the first available one.
 	for (
 		uintptr_t address = first_available_kernel_address;
@@ -96,10 +94,7 @@ uintptr_t first_available_kernel_page()
 			break;
 
 		case kNO_PAGE_TABLE_ALLOCATED:
-			// kdprint(dbgout, "Kernel address %p requires new page table\n", 
-			// 	address);
 		case kNO_PAGE_ALLOCATED:
-			// kdprint(dbgout, "Kernel address %p is available!\n", address);
 			return address;
 		}
 	}
@@ -128,9 +123,6 @@ void kpage_table_alloc(uintptr_t address)
 		return;
 
 	uint32_t page_table = page_table_for_address(address);
-	// kdprint(dbgout, 
-	// 	"Preparing to allocate page table %d in virtual address space\n",
-	// 	page_table);
 
 	struct virtual_address_space *address_space = kernel_address_space;
 
@@ -161,8 +153,6 @@ void kpage_table_alloc(uintptr_t address)
 
 	// We also need to request a physical frame for the page table.
 	uintptr_t pt_frame = kframe_alloc();
-	// kdprint(dbgout, "Allocating page table %d at %p with frame %p\n", 
-	// 	page_table, pt_linear, pt_frame);
 
 	// Setup the page table mapping so that we can find the association of the
 	// linear address and frame in the future.
@@ -202,9 +192,6 @@ void kpage_table_alloc(uintptr_t address)
 
 int kpage_alloc(uintptr_t address)
 {
-	// kdprint(dbgout, "Attempting to allocate page for linear address %p\n", 
-	// 	address);
-
 	// Check to see if the page is already allocated in some capacity
 	int result = is_page_allocated(address);
 	if (result == kPAGE_ALLOCATED)
@@ -232,9 +219,6 @@ int kpage_alloc(uintptr_t address)
 	// Finally invalidate the page in the TLB.
 	__asm__ __volatile__("invlpg (%0)" :: "r"(address) : "memory");
 
-	// kdprint(dbgout, "Page for %p has been allocated frame %p.\n", 
-	// 	address, frame_address);
-
 	return kPAGE_ALLOC_OK;
 }
 
@@ -260,7 +244,7 @@ void validate_kernel_address_space(struct boot_config *config)
 	}
 }
 
-void prepare_kernel_address_space()
+void prepare_kernel_address_space(void)
 {
 	// Setup the virtual address space structure for the kernel and get all
 	// required information populated.

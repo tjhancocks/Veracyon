@@ -54,7 +54,7 @@ struct virtual_address_space {
 
 void virtual_memory_prepare(struct boot_config *config);
 
-uintptr_t first_available_kernel_page();
+uintptr_t first_available_kernel_page(void);
 
 int kpage_alloc(uintptr_t address);
 void kpage_free(uintptr_t address);

@@ -149,6 +149,18 @@ struct keycode_ascii_mapping
 	char right_alt;
 };
 
+/**
+ Translate the specified keycode and modifier keys to an ASCII character. There
+ are a number of mappings that result in NULL being return, but this is due to
+ them not being printable characters, such as kKC_ANSI_F1 or kKC_ANSI_ESC.
+
+ 	- keycode: The keycode that should be translated.
+ 	- modifiers: The contextual state of modifier keys on the keyboard at the 
+ 		time of the key event.
+
+ Returns:
+ 	A character.
+ */
 char keycode_to_ascii(
 	uint8_t keycode, 
 	enum key_modifiers modifiers

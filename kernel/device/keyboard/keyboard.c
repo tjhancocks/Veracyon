@@ -45,12 +45,12 @@ static uint32_t buffer_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint32_t keyboard_buffer_has_items()
+uint32_t keyboard_buffer_has_items(void)
 {
 	return buffer_count;
 }
 
-struct keyevent *keyboard_buffer_dequeue()
+struct keyevent *keyboard_buffer_dequeue(void)
 {
 	struct buffer_item *item = buffer_first;
 	
@@ -103,7 +103,7 @@ void keyboard_buffer_enqueue(struct keyevent *event)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void keyboard_driver_prepare()
+void keyboard_driver_prepare(void)
 {
 	ps2_keyboard_initialise();
 }
@@ -114,7 +114,7 @@ void keyboard_received_scancode(uint8_t scancode)
 	keyboard_buffer_enqueue(event);
 }
 
-struct keyevent *keyboard_consume_key_event()
+struct keyevent *keyboard_consume_key_event(void)
 {
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
@@ -124,7 +124,7 @@ struct keyevent *keyboard_consume_key_event()
 	return keyboard_buffer_dequeue();
 }
 
-struct keyevent *keyboard_wait_for_keyevent()
+struct keyevent *keyboard_wait_for_keyevent(void)
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
 	while (keyboard_buffer_has_items() == 0)

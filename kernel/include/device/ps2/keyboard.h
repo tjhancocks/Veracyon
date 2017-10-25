@@ -25,6 +25,14 @@
 
 #include <kern_types.h>
 
-void ps2_keyboard_initialise();
+/**
+ Initialises and prepares the PS/2 keyboard driver for use. This will ensure the
+ PS/2 keyboard is in a usable state.
+
+ NOTE:
+ 	This driver is rudimentary and should really be fleshed out into a full PS/2
+ 	driver that properly manages the PS/2 controller state and configuration.
+ */
+void ps2_keyboard_initialise(void);
 
 #endif

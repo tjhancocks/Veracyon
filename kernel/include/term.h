@@ -29,14 +29,14 @@ struct term_interface {
 	uint8_t use_ansi;
 	void(*set_cursor)(uint32_t, uint32_t);
 	void(*get_cursor)(uint32_t *, uint32_t *);
-	void(*update_cursor)();
+	void(*update_cursor)(void);
 	void(*puts)(const char *restrict);
 	void(*putc)(const char);
 	void(*clear)(uint8_t);
 	void(*set_attribute)(uint8_t);
 	void(*get_attribute)(uint8_t *);
 	void(*set_default_attribute)(uint8_t);
-	void(*restore_default_attribute)();
+	void(*restore_default_attribute)(void);
 };
 
 extern const uint32_t krnout;

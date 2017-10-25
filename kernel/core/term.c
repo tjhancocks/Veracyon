@@ -52,7 +52,7 @@ void term_bind_get_cursor(uint32_t handle, void(*fn)(uint32_t *, uint32_t *))
 			term_bindings[n].get_cursor = fn;
 }
 
-void term_bind_update_cursor(uint32_t handle, void(*fn)())
+void term_bind_update_cursor(uint32_t handle, void(*fn)(void))
 {
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n))
@@ -101,7 +101,7 @@ void term_bind_set_default_attribute(uint32_t handle, void(*fn)(uint8_t))
 			term_bindings[n].set_default_attribute = fn;
 }
 
-void term_bind_restore_default_attribute(uint32_t handle, void(*fn)())
+void term_bind_restore_default_attribute(uint32_t handle, void(*fn)(void))
 {
 	for (uint8_t n = 0; n < kMAX_TERM_BINDINGS; ++n)
 		if (handle & (1 << n))

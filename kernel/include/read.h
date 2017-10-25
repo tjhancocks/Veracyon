@@ -23,7 +23,6 @@
 #ifndef __VKERNEL_READ__
 #define __VKERNEL_READ__
 
-char read_char();
-const char *read_user_input();
+const char *read_user_input(void);
 
 #endif

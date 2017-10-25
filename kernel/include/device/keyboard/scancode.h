@@ -59,7 +59,18 @@ struct keyevent
 	enum key_state state;
 };
 
+/**
+ Make a new keyboard event using the specified scancode. Scancode's (or 
+ sequence's of) contain all required information to construct a keyboard event
+ that states whether the user pressed/released a key and what key was pressed.
+ Internally this function uses a state machine to keep track of scancode 
+ sequences.
+
+ 	- scancode: The scancode to be used to construct a keyboard event.
+
+ Returns:
+ 	A new keyboard event with all required contextual information to be useful.
+ */
 struct keyevent *keyevent_make(uint8_t scancode);
-void keyevent_free(struct keyevent *event);
 
 #endif

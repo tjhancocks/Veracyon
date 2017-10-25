@@ -53,7 +53,7 @@ struct mmap_entry
 	uint32_t attributes;
 } __attribute__((packed));
 
-uintptr_t kernel_end_address()
+uintptr_t kernel_end_address(void)
 {
 	return kernel_end_addr;
 }
@@ -170,7 +170,7 @@ void physical_memory_prepare(struct boot_config *config)
 	search_physical_frames(config);
 }
 
-uintptr_t kframe_alloc()
+uintptr_t kframe_alloc(void)
 {
 	if (free_frame_count == 0) {
 		struct panic_info info = (struct panic_info) {

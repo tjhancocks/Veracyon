@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_SERIAL_COM1__
 #define __VKERNEL_SERIAL_COM1__
 
-void serial_prepare();
+void serial_prepare(void);
 void kputc_serial(const char str);
 void kputs_serial(const char *restrict str);
 

@@ -24,9 +24,9 @@
 
 int32_t strcmp(const char *restrict s0, const char *restrict s1)
 {
-    while (*s0 == *s1++) {
-        if (*s0++ == '\0')
-            return 0;
-    }
-    return (*(const uint8_t *)s0 - *(const uint8_t *)(s1 - 1));
+	while (*s0 == *s1++) {
+		if (*s0++ == '\0')
+			return 0;
+	}
+	return (*(const uint8_t *)s0 - *(const uint8_t *)(s1 - 1));
 }

@@ -33,6 +33,6 @@ void kputs_vga_text(const char *restrict str);
 void vga_text_setpos(uint32_t x, uint32_t y);
 void vga_text_setattr(uint8_t attribute);
 void vga_text_clear(uint8_t attribute);
-void vga_update_cursor();
+void vga_update_cursor(void);
 
 #endif

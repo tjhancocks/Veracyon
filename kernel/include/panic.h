@@ -41,7 +41,6 @@ struct panic_info
 };
 
 void prepare_panic_handler(struct boot_config *config);
-
 void panic(struct panic_info *info, struct registers *registers);
 
 #endif

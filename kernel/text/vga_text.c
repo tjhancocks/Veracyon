@@ -70,7 +70,7 @@ void vga_text_getpos(uint32_t *x, uint32_t *y)
 	if (y) *y = vga_text.y;
 }
 
-void vga_update_cursor()
+void vga_update_cursor(void)
 {
 	uint16_t pos = (vga_text.cols * vga_text.y) + vga_text.x;
 	outb(0x3d4, 0x0f);
@@ -94,12 +94,12 @@ void vga_text_set_default_attribute(uint8_t attribute)
 	vga_text.default_attribute = attribute;
 }
 
-void vga_text_restore_default_attribute()
+void vga_text_restore_default_attribute(void)
 {
 	vga_text.attribute = vga_text.default_attribute;
 }
 
-void vga_text_scroll()
+void vga_text_scroll(void)
 {
 	if (vga_text.y >= vga_text.rows) {
 		uint16_t tmp = vga_text.y - vga_text.rows + 1;
@@ -175,16 +175,16 @@ void vga_text_prepare(struct boot_config *config)
 void vga_text_control_code(const char c)
 {
 	switch (c) {
-		case ASCII_HT:
+		case kASCII_HT:
 			vga_text.x = (vga_text.x + TAB_WIDTH) & ~(TAB_WIDTH - 1);
 			break;
-		case ASCII_BS:
+		case kASCII_BS:
 			if (vga_text.x)
 				vga_text.x--;
 			break;
-		case ASCII_LF:
+		case kASCII_LF:
 			++vga_text.y;
-		case ASCII_CR:
+		case kASCII_CR:
 			vga_text.x = 0;
 			break;
 		default:
@@ -194,7 +194,7 @@ void vga_text_control_code(const char c)
 
 void kputc_vga_text(const char c __attribute__((unused)))
 {
-	if (c <= ASCII_US || c == ASCII_DEL) {
+	if (c <= kASCII_US || c == kASCII_DEL) {
 		// This is a control code and should be treated as such.
 		vga_text_control_code(c);
 	}

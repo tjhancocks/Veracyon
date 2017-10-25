@@ -25,7 +25,22 @@
 
 #include <kern_types.h>
 
+/**
+ Write the specified byte value to the specified CPU port.
+
+ 	- port: The CPU I/O port to write to.
+ 	- value: The value to write to the port.
+ */
 void outb(uint16_t port, uint8_t value);
+
+/**
+ Read a single byte value from the specified CPU port.
+
+ 	- port: The CPU I/O port to write from.
+
+ Returns:
+ 	A single byte that was read from the CPU port.
+ */
 uint8_t inb(uint16_t port);
 
 #endif

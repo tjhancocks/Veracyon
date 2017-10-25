@@ -186,7 +186,7 @@ void ansi_parse_and_display_string(
 		char next_c = *(ptr + 1);
 
 		// Check for an escape code, followed by a '['
-		if (c == ASCII_ESC && next_c == '[') {
+		if (c == kASCII_ESC && next_c == '[') {
 			// Skip over the escap code sequence and handle the escape sequence
 			// proper.
 			ptr = ansi_determine_sequence(term, ptr + 2);

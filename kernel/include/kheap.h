@@ -35,7 +35,7 @@ struct kheap_block  {
 	uint32_t size;
 } __attribute__((packed));
 
-void kheap_prepare();
+void kheap_prepare(void);
 
 void *kalloc(uint32_t length);
 void kfree(void *ptr);

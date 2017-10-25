@@ -26,9 +26,30 @@
 #include <kern_types.h>
 #include <device/keyboard/scancode.h>
 
-void keyboard_driver_prepare();
+/**
+ Initialise all required concrete keyboard drivers (PS/2 and USB). These drivers 
+ are then responsible for establishing communication back to the virtual 
+ keyboard driver.
+ */
+void keyboard_driver_prepare(void);
+
+/**
+ Inform the virtual keyboard driver that a scancode has been received. The 
+ scancode is assumed to be part of "Scancode Set 1". The virtual keyboard driver
+ will then manage the construction of key events and buffering them.
+
+ 	- scancode: The scancode that the virtual keyboard driver should process.
+ */
 void keyboard_received_scancode(uint8_t scancode);
 
-struct keyevent *keyboard_wait_for_keyevent();
+/**
+ Receive the next keyevent from virtual keyboard driver. This is a blocking
+ function.
+
+ Returns:
+ 	A keyboard event structure with keycode information, modifier key states,
+ 	etc.
+ */
+struct keyevent *keyboard_wait_for_keyevent(void);
 
 #endif

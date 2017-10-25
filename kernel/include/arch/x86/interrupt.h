@@ -29,7 +29,28 @@
 
 typedef void(*interrupt_handler_t)(struct registers *);
 
+/**
+ Prepare the kernel for using and adding interrupt handlers. This will simply
+ check the boot configuration to determine where the interrupt handler look up
+ table is located.
+
+ 	- config: A valid boot configuration structure.
+ */
 void interrupt_handlers_prepare(struct boot_config *config);
+
+/**
+ Specify a function to be an interrupt handler for the specified interrupt.
+ Interrupts are in the range of 0x00 - 0xFF, and the handler function should
+ have the prototype:
+
+ 	void function(struct registers *);
+
+ To remove an existing interrupt handler, NULL should be passed in place of a
+ function pointer.
+
+ 	- interrupt: The interrupt number of which the handler will be for.
+ 	- handler: A function pointer to the function that will handle the interrupt
+ */
 void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler);
 
 #endif

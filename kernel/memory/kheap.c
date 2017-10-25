@@ -35,12 +35,10 @@ static uint8_t should_coalesce = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void kheap_coalesce_free_blocks();
+void kheap_coalesce_free_blocks(void);
 
-void kheap_expand_by_single_page()
+void kheap_expand_by_single_page(void)
 {
-	// kdprint(dbgout, "Expanding kernel heap by a single page.\n");
-
 	// Make sure we have the first page allocated.
 	uintptr_t address = (kheap_end == kheap_start) ? kheap_end : kheap_end + 1;
 	if (kpage_alloc(address) == kPAGE_ALLOC_ERROR) {
@@ -54,7 +52,6 @@ void kheap_expand_by_single_page()
 
 	// We can get the ending address by asking for the next available address.
 	kheap_end = first_available_kernel_page() - 1;
-	// kdprint(dbgout, "Kernel heap now finishes at %p\n", kheap_end);
 
 	// Ensure that the page is marked as "free".
 	struct kheap_block *block = (struct kheap_block *)address;
@@ -86,8 +83,6 @@ void kheap_expand_by_required_length(uint32_t length)
 
 void kheap_divide_block(struct kheap_block *block, uint32_t size)
 {
-	// kdprint(dbgout, "Dividing kernel heap block into two smaller blocks\n");
-
 	uint32_t required = (size + (sizeof(*block) * 2));
 	if (block->size < required) {
 		struct panic_info info = (struct panic_info) {
@@ -114,10 +109,6 @@ void kheap_divide_block(struct kheap_block *block, uint32_t size)
 
 	if (kheap_last_block == block)
 		kheap_last_block = new_block;
-
-	// kdprint(dbgout, 
-	// 	"Kernel heap block (%p) has been divided into two blocks\n", 
-	// 	block);
 }
 
 void kheap_allocate_block(struct kheap_block *block)
@@ -126,7 +117,7 @@ void kheap_allocate_block(struct kheap_block *block)
 	block->magic = kHEAP_ALLOC_MAGIC;
 }
 
-void kheap_coalesce_free_blocks()
+void kheap_coalesce_free_blocks(void)
 {
 	if (++should_coalesce < 5)
 		return;
@@ -137,8 +128,6 @@ void kheap_coalesce_free_blocks()
 	// can be merged into the last block.
 	uint32_t merge_count = 0;
 	struct kheap_block *block = kheap_last_block->prev;
-	// kdprint(dbgout, "Starting at block: %p\n", block);
-	// kdprint(dbgout, "  (%p --> %p)\n", kheap_first_block, kheap_last_block);
 	while (block) {
 
 		// Check conditions for the block being included in the merge.
@@ -180,7 +169,7 @@ void kheap_coalesce_free_blocks()
 	}
 }
 
-void kheap_describe()
+void kheap_describe(void)
 {
 	kdprint(dbgout, "KERNEL HEAP:\n");
 	struct kheap_block *block = (struct kheap_block *)kheap_start;
@@ -288,7 +277,7 @@ void kfree(void *ptr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void kheap_prepare()
+void kheap_prepare(void)
 {
 	kdprint(dbgout, "Preparing kernel heap.\n");
 

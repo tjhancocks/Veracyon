@@ -28,7 +28,7 @@
 
 #define COM1_PORT 0x3F8
 
-int serial_fifo_ready()
+int serial_fifo_ready(void)
 {
 	return (inb(COM1_PORT + 5) & 0x20);
 }
@@ -45,7 +45,7 @@ void kputs_serial(const char *restrict str)
 		kputc_serial(*str++);
 }
 
-void serial_prepare()
+void serial_prepare(void)
 {
 	kputs_serial("Preparing serial port for Kernel... ");
 	term_bind_putc(dbgout, kputc_serial);
