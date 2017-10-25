@@ -27,15 +27,20 @@
 #include <kprint.h>
 
 static uint8_t ansi_color_map[] = {
-	0x88,
-	0xCC,
-	0xAA,
-	0xEE,
-	0x99,
-	0xDD,
-	0xBB,
-	0xFF
+	0x88, 0xCC, 0xAA, 0xEE, 0x99, 0xDD, 0xBB, 0xFF
 };
+
+void ansi_apply_graphic_rendition(
+	struct term_interface *term, 
+	uint8_t color,
+	uint8_t mask
+) {
+	uint8_t old_mask = ((mask & 0x01) == 1) ? 0xF0 : 0x0F;
+	uint8_t attribute = 0;
+	!term->get_attribute ? (0) : term->get_attribute(&attribute);
+	attribute = (attribute & old_mask) | (ansi_color_map[color] & mask);
+	!term->set_attribute ? (0) : term->set_attribute(attribute);
+}
 
 void ansi_configure_graphic_rendition(
 	struct term_interface *term,
@@ -48,35 +53,41 @@ void ansi_configure_graphic_rendition(
 		return;
 	}
 
-	// Get the current attribute. We'll need it for updating.
-	uint8_t attribute = 0;
-	!term->get_attribute ? (0) : term->get_attribute(&attribute);
-
 	// Step through the values and parse them appropriately.
 	for (uint32_t n = 0; n < count; ++n) {
 		if (values[n] >= 30 && values[n] <= 37) {
-			// Dim Foreground Color
-			uint8_t v = ansi_color_map[values[n] - 30];
-			attribute = (attribute & 0xF0) | (v & 0x07);
+			ansi_apply_graphic_rendition(term, values[n] - 30, 0x07);
 		}
 		else if (values[n] >= 40 && values[n] <= 47) {
-			// Dim Background Color
-			uint8_t v = ansi_color_map[values[n] - 40];
-			attribute = (attribute & 0x0F) | (v & 0x70);
+			ansi_apply_graphic_rendition(term, values[n] - 40, 0x70);
 		}
 		else if (values[n] >= 90 && values[n] <= 97) {
-			// Bright Foreground Color
-			uint8_t v = ansi_color_map[values[n] - 90];
-			attribute = (attribute & 0xF0) | (v & 0x0F);
+			ansi_apply_graphic_rendition(term, values[n] - 90, 0x0F);
 		}
 		else if (values[n] >= 100 && values[n] <= 107) {
-			// Dim Background Color
-			uint8_t v = ansi_color_map[values[n] - 100];
-			attribute = (attribute & 0x0F) | (v & 0xF0);
+			ansi_apply_graphic_rendition(term, values[n] - 100, 0xF0);
 		}
 	}
+}
 
-	!term->set_attribute ? (0) : term->set_attribute(attribute);
+void ansi_erase_in_display(
+	struct term_interface *term,
+	uint32_t n
+) {
+	if (n == 0) {
+		// Clear screen from cursor to end
+	}
+	else if (n == 1) {
+		// Clear screen from cursor to start
+	}
+	else if (n == 2) {
+		// Clear entire screen and position at upper left
+		!term->clear ? (0) : term->clear(0x07);
+	}
+	else if (n == 3) {
+		// Clear entire screen and scroll back buffer and position at upper left
+		!term->clear ? (0) : term->clear(0x07);
+	}
 }
 
 const char *ansi_determine_sequence(
@@ -139,10 +150,10 @@ const char *ansi_determine_sequence(
 		// Cursor Horizontal Absolute
 		break;
 	case 'H':
-		// Cursor Position
+		!term->set_cursor ? (0) : term->set_cursor(values[0]-1, values[1]-1);
 		break;
 	case 'J':
-		// Erase Display
+		ansi_erase_in_display(term, values[0]);
 		break;
 	case 'K':
 		// Erase Line
