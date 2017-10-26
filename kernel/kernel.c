@@ -35,7 +35,7 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		kdprint(krnout, "\n> ");
+		kdprint(krnout, "> ");
 		const char *input = read_user_input();
 		kfree((void *)input);
 	}
