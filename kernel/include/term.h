@@ -173,15 +173,89 @@ void term_bind_set_default_attribute(uint32_t handle, void(*fn)(uint8_t));
  */
 void term_bind_restore_default_attribute(uint32_t handle, void(*fn)());
 
+
+/**
+ Set the position of the cursor in the specified terminal.
+
+ 	- handle: A valid terminal handle.
+ 	- x: The x position of the cursor
+ 	- y: The y position of the cursor
+ */
 void term_set_cursor(uint32_t handle, uint32_t x, uint32_t y);
+
+/**
+ Get the current position of the cursor from the specified terminal.
+
+ 	- handle: A valid terminal handle.
+ 	- x: A reference to a variable to store the x position of the cursor.
+ 	- y: A reference to a variable to store the y position of the cursor.
+ */
 void term_get_cursor(uint32_t handle, uint32_t *x, uint32_t *y);
+
+/**
+ Instruct the specified terminal to update the location of the cursor.
+
+ 	- handle: A valid terminal handle.
+ */
 void term_update_cursor(uint32_t handle);
+
+/**
+ Display the provided string in the specified terminal at the current cursor
+ position.
+
+ 	- handle: A valid terminal handle.
+ 	- str: The string to write out to the terminal.
+ */
 void term_puts(uint32_t handle, const char *restrict str);
+
+/**
+ Display the provided character in the specified terminal at the current cursor
+ position.
+
+ 	- handle: A valid terminal handle.
+ 	- c: The character to write out to the terminal.
+ */
 void term_putc(uint32_t handle, const char c);
+
+/**
+ Clear the contents of the specified terminal, changing the default attribute to
+ the one specified.
+
+ 	- handle: A valid terminal handle.
+ 	- attribute: The new default attribute to use whilst clearing the terminal.
+ */
 void term_clear(uint32_t handle, uint8_t attribute);
+
+/**
+ Set the specified terminal cursor attribute to the provided value.
+
+ 	- handle: A valid terminal handle.
+ 	- attribute: The new cursor attribute value.
+ */
 void term_set_attribute(uint32_t handle, uint8_t attribute);
+
+/**
+ Get the current cursor attribute from the specified terminal.
+
+ 	- handle: A valid terminal handle.
+ 	- attribute: A reference to a variable for the attribute to be stored in.
+ */
 void term_get_attribute(uint32_t handle, uint8_t *attribute);
+
+/**
+ Set the default cursor attribute in the specified terminal.
+	
+ 	- handle: A valid terminal handle.
+ 	- attribute: The new default attribute for the terminal.
+ */
 void term_set_default_attribute(uint32_t handle, uint8_t attribute);
+
+/**
+ Restore the current cursor attribute to the default attribute in the specified
+ terminal.
+ 
+ 	- handle: A valid terminal handle.
+ */
 void term_restore_default_attribute(uint32_t handle);
 
 #endif

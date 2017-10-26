@@ -42,6 +42,17 @@ static struct {
 	uint8_t y; 
 } vga_text;
 
+////////////////////////////////////////////////////////////////////////////////
+
+void kputc_vga_text(const char c);
+void kputs_vga_text(const char *restrict str);
+void vga_text_setpos(uint32_t x, uint32_t y);
+void vga_text_setattr(uint8_t attribute);
+void vga_text_clear(uint8_t attribute);
+void vga_update_cursor(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void vga_text_clear(uint8_t attribute)
 {
 	uint32_t len = vga_text.cols * vga_text.rows;

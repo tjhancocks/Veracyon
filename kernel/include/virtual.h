@@ -52,11 +52,38 @@ struct virtual_address_space {
     uintptr_t page_table_address[1024];
 };
 
+/**
+ Setup and configure the virtual memory manager for use. This will validate and
+ prepare the initial kernel address space.
+
+    - config: A valid boot configuration structure.
+ */
 void virtual_memory_prepare(struct boot_config *config);
 
+/**
+ Reports the address of the first available page in the kernel address space.
+
+ RETURNS:
+    An address for a page in kernel space.
+ */
 uintptr_t first_available_kernel_page(void);
 
+/**
+ Attempt to allocate the page at the specified address.
+
+    - address: Any 32-bit address.
+
+ RETURNS:
+    kPAGE_ALLOC_OK if the allocation was successful.
+    kPAGE_ALLOC_ERROR if the allocation could not be completed.
+ */
 int kpage_alloc(uintptr_t address);
+
+/**
+ Free the page at the specified address, and return it to the VMM to reallocate.
+
+    - address: Any 32-bit address
+ */
 void kpage_free(uintptr_t address);
 
 #endif
