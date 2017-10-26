@@ -92,7 +92,7 @@ _fdc_wait:
 		je .skip
 		push eax
 	.L0:
-		push 500						; 500 Milliseconds
+		push 20								; 20 Milliseconds
 		call _sleep
 		add esp, 4
 		mov esi, DISK_DRIVER
@@ -453,7 +453,7 @@ _fdc_timer:
 		push ebp
 		mov ebp, esp
 	.L0:
-		push 500						; Wait for 500ms
+		push 50									; Wait for 50ms
 		call _sleep
 		add esp, 4
 		mov esi, DISK_DRIVER
@@ -463,7 +463,7 @@ _fdc_timer:
 		jmp .epilogue
 	.L1:
 		mov eax, [esi + FDCData.ticks]
-		sub eax, 50
+		sub eax, 5
 		mov dword[esi + FDCData.ticks], eax
 		test eax, eax
 		jz .L2
@@ -750,9 +750,6 @@ _fdc_translate_lba:
 	.prologue:
 		push ebp
 		mov ebp, esp
-		push fdc_string.lba_1
-		call _send_serial_bytes
-		add esp, 4
 	.main:
 		mov eax, [ebp + 8]				; EAX = lba
 		xor edx, edx
@@ -769,42 +766,9 @@ _fdc_translate_lba:
 		mov [ebp + 16], edx				; *head = edx
 		mov [ebp + 12], eax				; *cylinder = eax
 	.epilogue:
-		push fdc_string.done
-		call _send_serial_bytes
-		add esp, 4
-		push dword[ebp + 8]
-		call _send_serial_number
-		add esp, 4
-		push .arrow
-		call _send_serial_bytes
-		add esp, 4
-		push dword[ebp + 12]
-		call _send_serial_number
-		add esp, 4
-		push .comma
-		call _send_serial_bytes
-		add esp, 4
-		push dword[ebp + 16]
-		call _send_serial_number
-		add esp, 4
-		push .comma
-		call _send_serial_bytes
-		add esp, 4
-		push dword[ebp + 20]
-		call _send_serial_number
-		add esp, 4
-		push .nl
-		call _send_serial_bytes
-		add esp, 4
 		mov esp, ebp
 		pop ebp
 		ret
-	.arrow:
-		db " => (", 0x0
-	.comma:
-		db ", ", 0x0
-	.nl:
-		db ")", 0xA, 0x0
 
 ;;
 ;; Read the specified number of sectors from the Flopy Disk, starting from the
