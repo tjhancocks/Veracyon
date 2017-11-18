@@ -29,15 +29,16 @@
 #include <kheap.h>
 #include <arch/arch.h>
 #include <device/keyboard/keyboard.h>
-#include <read.h>
 #include <panic.h>
+#include <modules/shell.h>
+
 
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		kdprint(krnout, "> ");
-		const char *input = read_user_input();
-		kfree((void *)input);
+		__asm__ __volatile__(
+			"hlt"
+		);
 	}
 }
 
@@ -74,6 +75,10 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 
-	// Launch a debug kernel shell.
+	// Launch a debug kernel shell. This is a blocking function and will prevent
+	// the kernel from launching any further until the shell has exited.
+	init_shell();
+	kprint("\n\033[31mKernel shell exited successfully.\n");
+
 	kwork();
 }
