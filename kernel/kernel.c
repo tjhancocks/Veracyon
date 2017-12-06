@@ -23,6 +23,7 @@
 #include <boot_config.h>
 #include <serial.h>
 #include <vga_text.h>
+#include <vesa_text.h>
 #include <kprint.h>
 #include <physical.h>
 #include <virtual.h>
@@ -52,6 +53,9 @@ __attribute__((noreturn)) void kmain(
 	// Get the appropriate display driver in place.
 	if (config->vesa_mode == vga_mode_text) {
 		vga_text_prepare(config);
+	}
+	else if (config->vesa_mode == vesa_mode_text) {
+		vesa_text_prepare(config);
 	}
 	else {
 		struct panic_info info = (struct panic_info) {
