@@ -64,4 +64,18 @@ void *memset(void *restrict dst, uint8_t value, uint32_t n);
  */
 void *memsetw(void *restrict dst, uint16_t value, uint32_t n);
 
+/**
+ Write the value into each double word starting at the specified destination, 
+ repeating for the required number of double words.
+
+ 	- dst: The destination of the set operation.
+ 	- value: The double word value to write into memory.
+ 	- n: The number of double words to iterate over.
+
+ RETURNS:
+ 	A pointer to the copy destination.
+ */
+void *memsetd(void *restrict dst, uint32_t value, uint32_t n);
+
+
 #endif

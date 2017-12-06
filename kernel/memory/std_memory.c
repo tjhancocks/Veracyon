@@ -52,3 +52,13 @@ void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
 
 	return dst;
 }
+
+void *memsetd(void *restrict dst, uint32_t value, uint32_t n)
+{
+	register uint32_t *d0 = (uint32_t *)dst;
+
+	while (n--)
+		*d0++ = value;
+
+	return dst;
+}
