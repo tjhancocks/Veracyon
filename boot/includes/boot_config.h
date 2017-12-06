@@ -36,8 +36,9 @@ enum filesystem_type
 
 enum vesa_mode
 {
-    vesa_mode_text = 0,
-    vesa_mode_lfb = 1,
+    vga_mode_text = 0,
+    vesa_mode_text = 1,
+    vesa_mode_gui = 2,
 };
 
 struct boot_config

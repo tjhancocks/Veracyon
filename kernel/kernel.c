@@ -50,8 +50,16 @@ __attribute__((noreturn)) void kmain(
 	serial_prepare();
 
 	// Get the appropriate display driver in place.
-	if (config->vesa_mode == vesa_mode_text) {
+	if (config->vesa_mode == vga_mode_text) {
 		vga_text_prepare(config);
+	}
+	else {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNRECOGNISED DISPLAY CONFIGURATION",
+			"The specified type of display configuration is not recognised."
+		};
+		panic(&info, NULL);
 	}
 
 	// Make sure we have a panic handler in place before starting on the meat of
