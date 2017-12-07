@@ -39,6 +39,41 @@
 void *memcpy(void *restrict dst, const void *restrict src, uint32_t n);
 
 /**
+ Copy the specified number of dwords of memory, dword by dwords from the 
+ source to the destination.
+
+ 	- dst: The destination of the copy operation.
+ 	- src: The source of the copy operation.
+ 	- n: The number of double words to copy.
+
+ RETURNS:
+ 	A pointer to the copy destination.
+ */
+void *memcpyd(void *restrict dst, const void *restrict src, uint32_t n);
+
+/**
+ Copy the specified number of qwords of memory, qword by qword from the 
+ source to the destination.
+
+ 	- dst: The destination of the copy operation.
+ 	- src: The source of the copy operation.
+ 	- n: The number of quad words to copy.
+
+ RETURNS:
+ 	A pointer to the copy destination.
+ */
+void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n);
+
+/**
+ Perform an SSE memory copy if SSE functionality is available.
+
+ 	- dst: The destination of the copy operation.
+ 	- src: The source of the copy operation.
+ 	- n: The number of double quad words to copy.
+ */
+extern int sse_memcpy(void *dst, void *src, uint32_t count);
+
+/**
  Write the value into each byte starting at the specified destination, repeating
  for the required number of bytes.
 
@@ -76,6 +111,5 @@ void *memsetw(void *restrict dst, uint16_t value, uint32_t n);
  	A pointer to the copy destination.
  */
 void *memsetd(void *restrict dst, uint32_t value, uint32_t n);
-
 
 #endif

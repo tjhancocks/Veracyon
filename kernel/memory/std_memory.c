@@ -33,6 +33,28 @@ void *memcpy(void *restrict dst, const void *restrict src, uint32_t n)
 	return dst;
 }
 
+void *memcpyd(void *restrict dst, const void *restrict src, uint32_t n)
+{
+	register uint32_t *d0 = (uint32_t *)dst;
+	register uint32_t *s0 = (uint32_t *)src;
+
+	while (n--)
+		*d0++ = *s0++;
+
+	return dst;
+}
+
+void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n)
+{
+	register uint64_t *d0 = (uint64_t *)dst;
+	register uint64_t *s0 = (uint64_t *)src;
+
+	while (n--)
+		*d0++ = *s0++;
+
+	return dst;
+}
+
 void *memset(void *restrict dst, uint8_t value, uint32_t n)
 {
 	register uint8_t *d0 = (uint8_t *)dst;
