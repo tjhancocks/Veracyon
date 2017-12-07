@@ -146,7 +146,7 @@ void vga_text_prepare(struct boot_config *config)
 		// We have a config, so take the required values.
 		vga_text.cols = config->screen_width;
 		vga_text.rows = config->screen_height;
-		vga_text.buffer = config->linear_frame_buffer;
+		vga_text.buffer = config->front_buffer;
 	}
 
 	// Make sure the KRNOUT mode of the terminal is going to be parsing ANSI

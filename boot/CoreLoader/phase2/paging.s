@@ -249,7 +249,41 @@ _alloc_memory:
 		ret
 
 ;;
-;; Allocates required memory for the linear frame buffer if it is required.
+;; Allocates required memory for the back screen buffer if it is required.
+;;
+;;	void alloc_backing_buffer(void)
+;;
+_alloc_backing_buffer:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.main:
+		mov esi, BOOT_CONFIG
+		movzx eax, byte[esi + BootConf.vesa_mode]
+		test eax, eax
+		jz .unrequired
+		mov eax, [esi + BootConf.back_buffer]
+		mov ebx, [esi + BootConf.screen_size]
+		push 0							; No identity mapped
+		push ebx						; The size of the buffer
+		push eax						; The location of the buffer
+		call _alloc_memory
+		add esp, 12
+	.clear_buffer:
+		mov esi, BOOT_CONFIG
+		mov ecx, [esi + BootConf.screen_size]
+		shr ecx, 2
+		mov edi, [esi + BootConf.front_buffer]
+		mov eax, [esi + BootConf.background_color]
+		rep stosd
+	.unrequired:
+	.epilogue:
+		mov esp, ebp
+		pop ebp
+		ret
+
+;;
+;; Allocates required memory for the front screen buffer if it is required.
 ;;
 ;; 	void alloc_vesa_memory(void)
 ;;
@@ -262,7 +296,7 @@ _alloc_vesa_memory:
 		movzx eax, byte[esi + BootConf.vesa_mode]
 		test eax, eax
 		jz .unrequired
-		mov eax, [esi + BootConf.lfb]
+		mov eax, [esi + BootConf.front_buffer]
 		mov ebx, [esi + BootConf.screen_size]
 		push 1							; Identity mapped
 		push ebx						; The size of the buffer
@@ -273,7 +307,7 @@ _alloc_vesa_memory:
 		mov esi, BOOT_CONFIG
 		mov ecx, [esi + BootConf.screen_size]
 		shr ecx, 2
-		mov edi, [esi + BootConf.lfb]
+		mov edi, [esi + BootConf.front_buffer]
 		mov eax, [esi + BootConf.background_color]
 		rep stosd
 	.done:

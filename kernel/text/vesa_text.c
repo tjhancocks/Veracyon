@@ -40,6 +40,7 @@ static struct {
 	uint16_t width;
 	uint16_t height;
 	void *buffer;
+	void *backing_buffer;
 	uint8_t cols;
 	uint8_t rows;
 	uint8_t attribute;
@@ -122,6 +123,7 @@ void vesa_text_prepare(struct boot_config *config)
 	kdprint(dbgout, "Preparing VESA Text Mode for kernel use...\n");
 
 	// Make sure the configuration is valid/supplied, otherwise assume defaults.
+	uint32_t buffer_size = 0;
 	if (config == NULL) {
 		kdprint(
 			dbgout, 
@@ -130,17 +132,21 @@ void vesa_text_prepare(struct boot_config *config)
 		vesa_text.width = 800;
 		vesa_text.height = 600;
 		vesa_text.buffer = NULL;
+		vesa_text.backing_buffer = NULL;
 	}
 	else {
 		// We have a config, so take the required values.
 		vesa_text.width = config->screen_width;
 		vesa_text.height = config->screen_height;
-		vesa_text.buffer = config->linear_frame_buffer;
+		vesa_text.buffer = config->front_buffer;
+		vesa_text.backing_buffer = config->back_buffer;
+		buffer_size = config->screen_size;
 	}
 
 	drawing_base_prepare(
 		vesa_text.buffer,
-		0,
+		vesa_text.backing_buffer,
+		buffer_size,
 		vesa_text.width,
 		vesa_text.height,
 		32

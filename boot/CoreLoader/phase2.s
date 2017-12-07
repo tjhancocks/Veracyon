@@ -87,6 +87,7 @@ _phase2_start:
 		call _send_serial_bytes
 		add esp, 4
 		call _alloc_vesa_memory
+		call _alloc_backing_buffer
 		push strings.enabling_paging
 		call _send_serial_bytes
 		add esp, 4

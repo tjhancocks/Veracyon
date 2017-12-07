@@ -36,7 +36,8 @@
 	- depth: The number of bits in a pixel.
  */
 void drawing_base_prepare(
-	void *buffer,
+	void *front_buffer,
+	void *backing_buffer,
 	uint32_t size,
 	uint32_t width, 
 	uint32_t height, 

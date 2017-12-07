@@ -49,7 +49,8 @@ struct boot_config
     unsigned short screen_width;
     unsigned short screen_height;
     unsigned char screen_depth;
-    void *linear_frame_buffer;
+    void *front_buffer;
+    void *back_buffer;
     unsigned int background_color;
     unsigned int bytes_per_pixel;
     unsigned int bytes_per_line;

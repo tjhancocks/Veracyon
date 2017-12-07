@@ -99,7 +99,8 @@ STRUC BootConf
 	.width				resw 1
 	.height				resw 1
 	.depth				resb 1
-	.lfb				resd 1
+	.front_buffer		resd 1
+	.back_buffer		resd 1
 	.background_color	resd 1
 	.bytes_per_pixel	resd 1
 	.bytes_per_line		resd 1

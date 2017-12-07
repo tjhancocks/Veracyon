@@ -61,7 +61,8 @@ prepare_boot_configuration_defaults:
 		mov word[di + BootConf.width], 800
 		mov word[di + BootConf.height], 600
 		mov word[di + BootConf.depth], 32
-		mov dword[di + BootConf.lfb], 0x00000
+		mov dword[di + BootConf.front_buffer], 0x00000
+		mov dword[di + BootConf.back_buffer], 0x00000
 		mov dword[di + BootConf.next_ptable_frame], FIRST_PTABLE_FRAME
 		mov dword[di + BootConf.next_frame], FIRST_FRAME
 	.epilogue:
@@ -275,7 +276,8 @@ check_vga_text_mode:
 		mov byte[di + BootConf.vesa_mode], 0
 		mov word[di + BootConf.width], 80
 		mov word[di + BootConf.height], 25
-		mov dword[di + BootConf.lfb], 0xB8000
+		mov dword[di + BootConf.front_buffer], 0xB8000
+		mov dword[di + BootConf.back_buffer], 0xB8000
 	.done:
 		clc
 		ret

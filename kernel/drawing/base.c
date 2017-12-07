@@ -35,6 +35,7 @@ uint32_t drawing_vga_rgb_colors[16] = {
 
 struct {
 	void *base_buffer;
+	void *backing_buffer;
 	uint32_t size;
 	uint32_t width;
 	uint32_t height;
@@ -47,13 +48,15 @@ struct {
 ////////////////////////////////////////////////////////////////////////////////
 
 void drawing_base_prepare(
-	void *buffer,
+	void *front_buffer,
+	void *backing_buffer,
 	uint32_t size,
 	uint32_t width, 
 	uint32_t height, 
 	uint32_t depth
 ) {
-	drawing_info.base_buffer = buffer;
+	drawing_info.base_buffer = front_buffer;
+	drawing_info.backing_buffer = backing_buffer;
 	drawing_info.size = size;
 	drawing_info.width = width;
 	drawing_info.height = height;
@@ -61,6 +64,8 @@ void drawing_base_prepare(
 	drawing_info.bg_pen_color = 0x0;
 	drawing_info.fg_pen_color = 0x7;
 	kdprint(dbgout, "Base Drawing Library prepared.\n");
+	kdprint(dbgout, "  Main Buffer: %p\n", drawing_info.base_buffer);
+	kdprint(dbgout, "  Backing Buffer: %p\n", drawing_info.backing_buffer);
 }
 
 
