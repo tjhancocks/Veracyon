@@ -52,6 +52,11 @@ void drawing_base_prepare(
 void drawing_set_pen_vga(uint8_t attribute);
 
 /**
+ Set the virtual hardware cursor location.
+ */
+void drawing_set_cursor(uint32_t x, uint32_t y);
+
+/**
  Clear the base drawing buffer with the current pen color.
  */
 void drawing_base_clear(void);

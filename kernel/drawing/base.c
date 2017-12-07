@@ -42,6 +42,8 @@ struct {
 	uint32_t depth;
 	uint32_t fg_pen_color;
 	uint32_t bg_pen_color;
+	uint32_t cursor_x;
+	uint32_t cursor_y;
 } drawing_info;
 
 
@@ -77,18 +79,24 @@ void drawing_set_pen_vga(uint8_t attribute)
 	drawing_info.bg_pen_color = drawing_vga_rgb_colors[(attribute >> 4) & 0xF];
 }
 
+void drawing_set_cursor(uint32_t x, uint32_t y)
+{
+	drawing_info.cursor_x = x;
+	drawing_info.cursor_y = y - 2;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void drawing_base_clear(void)
 {
 	uint32_t length = (drawing_info.width * drawing_info.height);
-	memsetd(drawing_info.base_buffer, drawing_info.bg_pen_color, length);
+	memsetd(drawing_info.backing_buffer, drawing_info.bg_pen_color, length);
 }
 
 void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 {
-	uint32_t *buffer = (uint32_t *)drawing_info.base_buffer;
+	uint32_t *buffer = (uint32_t *)drawing_info.backing_buffer;
 
 	// Render the character to the screen buffer.
 	for (uint8_t cy = 0; cy < 16; ++cy) {
@@ -144,6 +152,19 @@ void drawing_base_flush(void)
 		// DQWord, (XMM7)
 		*d0++ = *s0++;
 		*d0++ = *s0++;
+	}
+
+	// Draw the virtual hardware cursor at the specified location
+	uint32_t *buffer = (uint32_t *)drawing_info.base_buffer;
+	uint32_t x = drawing_info.cursor_x;
+	uint32_t y = drawing_info.cursor_y;
+
+	// Render the character to the screen buffer.
+	for (uint8_t cy = 14; cy < 16; ++cy) {
+		for (uint8_t cx = 0; cx < 8; ++cx) {
+			uint32_t offset = (drawing_info.width * (cy + y)) + (x + cx);
+			buffer[offset] = drawing_info.fg_pen_color;
+		}
 	}
 }
 

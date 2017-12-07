@@ -87,7 +87,7 @@ void vesa_text_getpos(uint32_t *x, uint32_t *y)
 
 void vesa_update_cursor(void)
 {
-	// TODO: Update the virtual "hardware" cursor 
+	drawing_set_cursor(vesa_text.x * CHAR_WIDTH, vesa_text.y * CHAR_HEIGHT);
 	drawing_base_flush();
 }
 
