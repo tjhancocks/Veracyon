@@ -103,3 +103,47 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 	}
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+void drawing_base_flush(void)
+{
+	register uint32_t n = drawing_info.size / 128;
+	register uint64_t *d0 = (uint64_t *)drawing_info.base_buffer;
+	register uint64_t *s0 = (uint64_t *)drawing_info.backing_buffer;
+
+	while (n--) {
+		// DQWord, (XMM0)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM1)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM2)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM3)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM4)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM5)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM6)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+
+		// DQWord, (XMM7)
+		*d0++ = *s0++;
+		*d0++ = *s0++;
+	}
+}
+

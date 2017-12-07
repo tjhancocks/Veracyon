@@ -65,4 +65,9 @@ void drawing_base_clear(void);
  */
 void drawing_base_render_char(const char c, uint32_t x, uint32_t y);
 
+/**
+ Flush the backing buffer to the primary screen buffer.
+ */
+void drawing_base_flush(void);
+
 #endif
