@@ -53,7 +53,7 @@ void ps2_keyboard_reset(void)
 
 void ps2_keyboard_initialise(void)
 {
-	kprint("Initialising PS/2 keyboard\n");
+	kdprint(dbgout, "Initialising PS/2 keyboard\n");
 	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
 	ps2_keyboard_reset();
 }

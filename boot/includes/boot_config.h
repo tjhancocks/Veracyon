@@ -71,7 +71,7 @@ struct boot_config
     unsigned int next_frame;
     void *root_page_directory;
     void *panic_handler;
-    void *interrupt_handlers;
+    void *interrupt_stubs;
 } __attribute__((packed));
 
 #endif

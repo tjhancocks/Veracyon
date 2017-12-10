@@ -47,7 +47,7 @@ _prepare_idt:
 		lidt [eax]
 	.update_configuration:
 		mov edi, BOOT_CONFIG
-		mov dword[edi + BootConf.interrupt_handlers], INT_HANDLERS
+		mov dword[edi + BootConf.interrupt_stubs], INT_HANDLERS
 		mov word[edi + BootConf.idt_size], 0x200
 		mov dword[edi + BootConf.idt_base], IDT_BASE
 	.epilogue:
