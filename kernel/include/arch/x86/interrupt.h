@@ -25,9 +25,9 @@
 
 #include <boot_config.h>
 #include <kern_types.h>
-#include <arch/x86/registers.h>
+#include <arch/x86/cpu_state.h>
 
-typedef void(*interrupt_handler_t)(struct registers *);
+typedef void(*interrupt_handler_t)(struct interrupted_cpu_state *);
 
 /**
  Prepare the kernel for using and adding interrupt handlers. This will simply
@@ -43,7 +43,7 @@ void interrupt_handlers_prepare(struct boot_config *config);
  Interrupts are in the range of 0x00 - 0xFF, and the handler function should
  have the prototype:
 
- 	void function(struct registers *);
+ 	void function(struct interrupted_cpu_state *);
 
  To remove an existing interrupt handler, NULL should be passed in place of a
  function pointer.

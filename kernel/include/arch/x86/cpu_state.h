@@ -20,12 +20,12 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_X86_REGISTERS__
-#define __VKERNEL_X86_REGISTERS__
+#ifndef __VKERNEL_X86_CPU_STATE__
+#define __VKERNEL_X86_CPU_STATE__
 
 #include <kern_types.h>
 
-struct registers {
+struct interrupted_cpu_state {
 	uint32_t gs;
 	uint32_t fs;
 	uint32_t es;

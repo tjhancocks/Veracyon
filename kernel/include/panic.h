@@ -24,7 +24,7 @@
 #define __VKERNEL_PANIC__
 
 #include <boot_config.h>
-#include <arch/x86/registers.h>
+#include <arch/x86/cpu_state.h>
 
 enum panic_type
 {
@@ -59,6 +59,6 @@ void prepare_panic_handler(struct boot_config *config);
 	This is not a means of warning the user. It is a nuclear option and will
 	result in the system coming to a halt permanatly.
  */
-void panic(struct panic_info *info, struct registers *registers);
+void panic(struct panic_info *info, struct interrupted_cpu_state *state);
 
 #endif
