@@ -87,6 +87,11 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 
+	// Establish and configure the multitasking environment. The main kernel
+	// task needs to be established along with secondary tasks to regulate the
+	// system.
+	process_spawn_root();
+
 	// Launch a debug kernel shell. This is a blocking function and will prevent
 	// the kernel from launching any further until the shell has exited.
 	init_shell();
