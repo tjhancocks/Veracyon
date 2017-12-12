@@ -22,7 +22,7 @@
 
 #include <arch/x86/port.h>
 #include <arch/x86/interrupt.h>
-#include <arch/x86/cpu_state.h>
+#include <arch/x86/interrupt_frame.h>
 #include <kprint.h>
 #include <kheap.h>
 #include <null.h>
@@ -31,13 +31,13 @@
 static interrupt_handler_t *idt_stubs = NULL;
 static interrupt_handler_t *interrupt_handlers = NULL;
 
-void interrupt_irq_stub(struct interrupted_cpu_state *state)
+void interrupt_irq_stub(struct interrupt_frame *frame)
 {
 	// Attempt to find the appropriate handler, and execute it.
-	uint8_t irq = state->interrupt + 0x20;
+	uint8_t irq = frame->interrupt + 0x20;
 	interrupt_handler_t fn = interrupt_handlers[irq];
 	if (fn) {
-		fn(state);
+		fn(frame);
 	}
 }
 

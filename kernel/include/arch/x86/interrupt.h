@@ -25,9 +25,9 @@
 
 #include <boot_config.h>
 #include <kern_types.h>
-#include <arch/x86/cpu_state.h>
+#include <arch/x86/interrupt_frame.h>
 
-typedef void(*interrupt_handler_t)(struct interrupted_cpu_state *);
+typedef void(*interrupt_handler_t)(struct interrupt_frame *);
 
 /**
  Prepare the kernel for using and adding interrupt handlers. This will simply

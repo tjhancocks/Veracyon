@@ -24,7 +24,7 @@
 #define __VKERNEL_PANIC__
 
 #include <boot_config.h>
-#include <arch/x86/cpu_state.h>
+#include <arch/x86/interrupt_frame.h>
 
 enum panic_type
 {
@@ -53,12 +53,12 @@ void prepare_panic_handler(struct boot_config *config);
  a potentially serious or fatal situation the the kernel has gotten into.
 	
 	- info: Contains information about circumstances of the panic. Can be NULL.
-	- registers: Contains register values at the time of the panic. Can be NULL.
+	- frame: Contains register values at the time of the panic. Can be NULL.
 
  WARNING:
 	This is not a means of warning the user. It is a nuclear option and will
 	result in the system coming to a halt permanatly.
  */
-void panic(struct panic_info *info, struct interrupted_cpu_state *state);
+void panic(struct panic_info *info, struct interrupt_frame *frame);
 
 #endif

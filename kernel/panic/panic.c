@@ -75,14 +75,14 @@ void render_register(const char *name, uint32_t value, uint32_t x, uint32_t y)
 }
 
 __attribute__((noreturn)) void panic(
-	struct panic_info *info, struct interrupted_cpu_state *state
+	struct panic_info *info, struct interrupt_frame *frame
 ) {
 	
 	// If there is no info structure, then we need to construct one.
-	if (!info && state && state->interrupt < 0x20) {
+	if (!info && frame && frame->interrupt < 0x20) {
 		struct panic_info default_info = (struct panic_info) {
 			panic_error,
-			exception_name[state->interrupt],
+			exception_name[frame->interrupt],
 			"An unrecoverable exception occured in the CPU. "
 			"Halting system immediately."
 		};
@@ -97,7 +97,7 @@ __attribute__((noreturn)) void panic(
 	term_set_attribute(krnout, 0x3F);
 	term_set_cursor(krnout, 2, 1);
 
-	if (state && state->interrupt < 0x20)
+	if (frame && frame->interrupt < 0x20)
 		kprint("CPU Exception: ");
 	kprint("%s\n", info->title);
 
@@ -110,19 +110,19 @@ __attribute__((noreturn)) void panic(
 
 	// Finally we want to start displaying register information. This will help
 	// with debugging and knowing state.
-	if (state) {
+	if (frame) {
 		uint32_t y = 0;
 		term_get_cursor(krnout, NULL, &y);
 
-		render_register("EAX", state->eax, 2 + (18 * 0), y+2);
-		render_register("EBX", state->ebx, 2 + (18 * 1), y+2);
-		render_register("ECX", state->ecx, 2 + (18 * 2), y+2);
-		render_register("EDX", state->edx, 2 + (18 * 3), y+2);
+		render_register("EAX", frame->eax, 2 + (18 * 0), y+2);
+		render_register("EBX", frame->ebx, 2 + (18 * 1), y+2);
+		render_register("ECX", frame->ecx, 2 + (18 * 2), y+2);
+		render_register("EDX", frame->edx, 2 + (18 * 3), y+2);
 
-		render_register("ESI", state->esi, 2 + (18 * 0), y+3);
-		render_register("EDI", state->edi, 2 + (18 * 1), y+3);
-		render_register("ESP", state->esp, 2 + (18 * 2), y+3);
-		render_register("EBP", state->ebp, 2 + (18 * 3), y+3);
+		render_register("ESI", frame->esi, 2 + (18 * 0), y+3);
+		render_register("EDI", frame->edi, 2 + (18 * 1), y+3);
+		render_register("ESP", frame->esp, 2 + (18 * 2), y+3);
+		render_register("EBP", frame->ebp, 2 + (18 * 3), y+3);
 
 		uint32_t cr0 = REGISTER(cr0);
 		uint32_t cr2 = REGISTER(cr2);
@@ -133,16 +133,16 @@ __attribute__((noreturn)) void panic(
 		render_register("CR3", cr3, 2 + (18 * 2), y+5);
 		render_register("CR4", cr4, 2 + (18 * 3), y+5);
 
-		render_register("GS", state->gs & 0xFFFF, 2 + (18 * 0), y+6);
-		render_register("FS", state->fs & 0xFFFF, 2 + (18 * 1), y+6);
-		render_register("ES", state->es & 0xFFFF, 2 + (18 * 2), y+6);
-		render_register("DS", state->ds & 0xFFFF, 2 + (18 * 3), y+6);
+		render_register("GS", frame->gs & 0xFFFF, 2 + (18 * 0), y+6);
+		render_register("FS", frame->fs & 0xFFFF, 2 + (18 * 1), y+6);
+		render_register("ES", frame->es & 0xFFFF, 2 + (18 * 2), y+6);
+		render_register("DS", frame->ds & 0xFFFF, 2 + (18 * 3), y+6);
 
-		render_register("SS", state->ss & 0xFFFF, 2 + (18 * 0), y+7);
-		render_register("CS", state->cs & 0xFFFF, 2 + (18 * 1), y+7);
+		render_register("SS", frame->ss & 0xFFFF, 2 + (18 * 0), y+7);
+		render_register("CS", frame->cs & 0xFFFF, 2 + (18 * 1), y+7);
 
-		render_register("EIP", state->eip, 2 + (18 * 0), y+9);
-		render_register("EFLAGS", state->eflags, 2 + (18 * 1), y+9);
+		render_register("EIP", frame->eip, 2 + (18 * 0), y+9);
+		render_register("EFLAGS", frame->eflags, 2 + (18 * 1), y+9);
 	}
 	
 

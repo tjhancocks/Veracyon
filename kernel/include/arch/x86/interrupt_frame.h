@@ -20,12 +20,12 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_X86_CPU_STATE__
-#define __VKERNEL_X86_CPU_STATE__
+#ifndef __VKERNEL_X86_INTERRUPT_FRAME__
+#define __VKERNEL_X86_INTERRUPT_FRAME__
 
 #include <kern_types.h>
 
-struct interrupted_cpu_state {
+struct interrupt_frame {
 	uint32_t gs;
 	uint32_t fs;
 	uint32_t es;
