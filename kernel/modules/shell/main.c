@@ -25,7 +25,6 @@
 #include <read.h>
 #include <kprint.h>
 #include <string.h>
-#include <process.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +41,6 @@ void shell_prompt(void)
 	if (strcmp(input, "exit") == 0) {
 		shell_terminated = 1;
 		goto SHELL_PROMPT_CLEAN_UP;
-	}
-	else if (strcmp(input, "proc") == 0) {
-		list_processes();
 	}
 
 SHELL_PROMPT_CLEAN_UP:

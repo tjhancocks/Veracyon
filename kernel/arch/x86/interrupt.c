@@ -57,9 +57,6 @@ void interrupt_handlers_prepare(struct boot_config *config)
 	// preemption.
 	for (uint8_t irq = 0x20; irq < 0x30; ++irq) {
 		idt_stubs[irq] = interrupt_irq_stub;
-		kdprint(dbgout, "  > installing stub for interrupt %02x\n", irq);
-		kdprint(dbgout, "    > idt_stubs[0x%02x] = %p\n",
-			irq, idt_stubs[irq]);
 	}
 
 	kdprint(dbgout, "Installed interrupt stubs for each IRQ\n");

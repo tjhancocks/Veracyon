@@ -69,6 +69,7 @@ _handle_hardware_interrupt:
         mov es, ax
         mov fs, ax
         mov gs, ax
+        cld
     .irq_info:
 		xor eax, eax
 		xor ebx, ebx

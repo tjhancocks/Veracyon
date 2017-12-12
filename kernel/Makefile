@@ -26,8 +26,8 @@ S-KERNEL-OBJS-TMP := $(addsuffix .s.o, $(basename $(S-KERNEL-SRCS)))
 S-KERNEL-OBJS := $(addprefix ../build, $(S-KERNEL-OBJS-TMP:$(CURDIR)%=%))
 
 # Bad form... declaring environment tools here...
-CC := i586-elf-gcc
-LD := i586-elf-gcc
+CC := i686-elf-gcc
+LD := i686-elf-gcc
 AS := nasm
 
 # Flags

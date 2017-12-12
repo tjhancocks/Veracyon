@@ -133,13 +133,13 @@ __attribute__((noreturn)) void panic(
 		render_register("CR3", cr3, 2 + (18 * 2), y+5);
 		render_register("CR4", cr4, 2 + (18 * 3), y+5);
 
-		render_register("GS", state->gs, 2 + (18 * 0), y+6);
-		render_register("FS", state->fs, 2 + (18 * 1), y+6);
-		render_register("ES", state->es, 2 + (18 * 2), y+6);
-		render_register("DS", state->ds, 2 + (18 * 3), y+6);
+		render_register("GS", state->gs & 0xFFFF, 2 + (18 * 0), y+6);
+		render_register("FS", state->fs & 0xFFFF, 2 + (18 * 1), y+6);
+		render_register("ES", state->es & 0xFFFF, 2 + (18 * 2), y+6);
+		render_register("DS", state->ds & 0xFFFF, 2 + (18 * 3), y+6);
 
-		render_register("SS", state->ss, 2 + (18 * 0), y+7);
-		render_register("CS", state->cs, 2 + (18 * 1), y+7);
+		render_register("SS", state->ss & 0xFFFF, 2 + (18 * 0), y+7);
+		render_register("CS", state->cs & 0xFFFF, 2 + (18 * 1), y+7);
 
 		render_register("EIP", state->eip, 2 + (18 * 0), y+9);
 		render_register("EFLAGS", state->eflags, 2 + (18 * 1), y+9);

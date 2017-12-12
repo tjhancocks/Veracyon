@@ -36,7 +36,7 @@ void ps2_keybaord_wait(void)
 }
 
 void ps2_keyboard_interrupt_handler(
-	struct registers *registers __attribute__((unused))
+	struct interrupted_cpu_state *state __attribute__((unused))
 ) {
 	ps2_keybaord_wait();
 	uint8_t raw_code = inb(0x60);

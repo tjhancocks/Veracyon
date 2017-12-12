@@ -35,6 +35,7 @@ start:
 		mov eax, [esp + 4]				; Fetch the BootConfig structure.
 	.main:
 		mov esp, stack + 0x4000
+		mov ebp, esp
 		push eax
 		call kmain
 		cli
@@ -43,12 +44,12 @@ start:
 
 ;;
 ;; Kernel stack. This is a reserved region of known memory that can be used by
-;; the kernel for the default stack. This is 65KiB in size.
+;; the kernel for the default stack. This is 16KiB in size.
 ;;
 section	.bss
-align	4
+align 	0x4000
 stack:	
-	resb	0x10000
+	resb	0x4000
 
 ;;
 ;; We need some space to use as working memory so that the kernel is able to to
