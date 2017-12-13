@@ -58,7 +58,14 @@ _install_hardware_interrupts:
 ;;
 _handle_hardware_interrupt:
 	.construct_stack_values:
-		pushad
+		push esp
+		push ebp
+		push edi
+		push esi
+		push edx
+		push ecx
+		push ebx
+		push eax
         push ds
         push es
         push fs
@@ -118,7 +125,7 @@ _handle_hardware_interrupt:
 		call eax
 		add esp, 4
 	.acknowledge_irq:
-		; movzx ebx, byte[esp + 0x30]
+		movzx ebx, byte[esp + 0x30]
 		cmp bl, 0x08
 		jl .acknowledge_master_irq
 		mov al, 0x20
@@ -131,7 +138,14 @@ _handle_hardware_interrupt:
         pop fs
         pop es
         pop ds
-		popad
+		pop eax
+		pop ebx
+		pop ecx
+		pop edx
+		pop esi
+		pop edi
+		pop ebp
+		pop esp
 		add esp, 8
 		iret
 

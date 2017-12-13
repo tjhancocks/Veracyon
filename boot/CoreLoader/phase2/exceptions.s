@@ -65,7 +65,14 @@ _install_cpu_exceptions:
 ;; WARNING: This is a naked function and it should not be called directly.
 ;;
 _handle_exception:
-		pushad
+        push esp
+        push ebp
+        push edi
+        push esi
+        push edx
+        push ecx
+        push ebx
+        push eax
         push ds
         push es
         push fs
@@ -83,7 +90,14 @@ _handle_exception:
         pop fs
         pop es
         pop ds
-		popad
+        pop eax
+        pop ebx
+        pop ecx
+        pop edx
+        pop esi
+        pop edi
+        pop ebp
+        pop esp
 		add esp, 8
 		iret
 

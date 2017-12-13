@@ -37,9 +37,7 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		__asm__ __volatile__(
-			"hlt"
-		);
+		__asm__ __volatile__("hlt");
 	}
 }
 
