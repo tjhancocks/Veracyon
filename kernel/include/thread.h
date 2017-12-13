@@ -32,22 +32,16 @@ enum thread_status
 {
 	thread_ready,
 	thread_suspended,
-	thread_terminated
+	thread_terminated,
+	thread_waiting_keyevent,
+	thread_waiting_timer,
 };
 
 struct thread_registers 
 {
-	uint32_t eax;
-	uint32_t ebx;
-	uint32_t ecx;
-	uint32_t edx;
-	uint32_t esi;
-	uint32_t edi;
 	uint32_t esp;
 	uint32_t ebp;
-	uint32_t eflags;
 	uint32_t cr3;
-	uint32_t eip;
 };
 
 struct thread 
@@ -61,14 +55,38 @@ struct thread
 };
 
 /**
+ Prepare the initial threading and multitasking environment ready for use.
+ */
+void threading_prepare(void);
 
+/**
+ Spawn a new thread with the specified label and entry point.
  */
 struct thread *thread_spawn(const char *label, void(*thread_main)(void));
 
 /**
+ Yield the current thread for a new thread.
 
+ WARNING: This should only be called from an interrupt.
  */
 void perform_yield_on_interrupt(struct interrupt_frame *frame);
+
+/**
+ Report the status of the current process.
+ */
+enum thread_status current_thread_status(void);
+
+/**
+ Suspend the current thread for the specified period of time (milliseconds)
+ */
+void thread_wait_time(uint32_t ms);
+
+/**
+ Suspend the current thread until a keyevent is received.
+ */
+void thread_wait_keyevent(void);
+
+
 
 void describe_frame(struct interrupt_frame *frame);
 

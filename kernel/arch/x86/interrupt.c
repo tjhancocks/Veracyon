@@ -45,7 +45,10 @@ void interrupt_irq_stub(struct interrupt_frame *frame)
 		fn(frame);
 	}
 
-	if (irq == 0x20 && ++yield_timer >= YIELD_THRESHOLD) {
+	if (irq == 0x20 && 
+		(current_thread_status() != thread_ready || 
+		++yield_timer >= YIELD_THRESHOLD))
+	{
 		yield_timer = 0;
 		perform_yield_on_interrupt(frame);
 	}

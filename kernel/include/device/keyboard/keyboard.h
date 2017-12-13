@@ -52,4 +52,9 @@ void keyboard_received_scancode(uint8_t scancode);
  */
 struct keyevent *keyboard_wait_for_keyevent(void);
 
+/**
+ Query the keyboard buffer for unread queued key events.
+ */
+uint32_t keyboard_buffer_has_items(void);
+
 #endif

@@ -58,14 +58,7 @@ _install_hardware_interrupts:
 ;;
 _handle_hardware_interrupt:
 	.construct_stack_values:
-		push esp
-		push ebp
-		push edi
-		push esi
-		push edx
-		push ecx
-		push ebx
-		push eax
+		pushad
         push ds
         push es
         push fs
@@ -138,14 +131,7 @@ _handle_hardware_interrupt:
         pop fs
         pop es
         pop ds
-		pop eax
-		pop ebx
-		pop ecx
-		pop edx
-		pop esi
-		pop edi
-		pop ebp
-		pop esp
+		popad
 		add esp, 8
 		iret
 

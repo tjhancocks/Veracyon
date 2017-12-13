@@ -27,6 +27,8 @@
 #include <arch/arch.h>
 #include <serial.h>
 #include <macro.h>
+#include <memory.h>
+#include <device/keyboard/keyboard.h>
 
 static uint32_t next_thread_id = 0;
 static struct {
@@ -42,18 +44,41 @@ __attribute__((noreturn))
 void idle_main(void)
 {
 	while (1) {
-		// kputc_serial('I');
 		__asm__ __volatile__("hlt");
 	}
 }
 
-__attribute__((noreturn))
-void test_main(void)
+////////////////////////////////////////////////////////////////////////////////
+
+enum thread_status current_thread_status(void)
 {
-	while (1) {
-		// kputc_serial('T');
-		__asm__ __volatile__("hlt");
-	}
+	return thread_pool.current ? thread_pool.current->status : thread_ready;
+}
+
+void thread_wait_time(uint32_t ms)
+{
+	// If there is no current thread, or it is the "idle" thread then ignore.
+	if (!thread_pool.current || thread_pool.current->id == 1)
+		return;
+
+	kdprint(dbgout, "*** Suspending thread \"%s\" until time elapsed.\n",
+		thread_pool.current->label);
+
+	thread_pool.current->status = thread_waiting_timer;
+	__asm__ __volatile__("hlt");
+}
+
+void thread_wait_keyevent(void)
+{
+	// If there is no current thread, or it is the "idle" thread then ignore.
+	if (!thread_pool.current || thread_pool.current->id == 1)
+		return;
+
+	kdprint(dbgout, "*** Suspending thread \"%s\" until keyboard event.\n",
+		thread_pool.current->label);
+
+	thread_pool.current->status = thread_waiting_keyevent;
+	__asm__ __volatile__("hlt");
 }
 
 
@@ -63,12 +88,10 @@ void threading_prepare(void)
 {
 	struct thread *root_thread = thread_spawn("root", NULL);
 	struct thread *idle_thread = thread_spawn("idle", idle_main);
-	// struct thread *test_thread = thread_spawn("test", test_main);
 
 	// Configure each thread for use.
 	root_thread->status = thread_ready;
 	idle_thread->status = thread_ready;
-	// test_thread->status = thread_ready;
 
 	// Enable multitasking/threading
 	thread_pool.current = root_thread;
@@ -88,8 +111,6 @@ void *kalloc_stack(uint32_t size, uint32_t eip)
 	stack[size - 3] = 0x208;	// EFLAGS
 	stack[size - 4] = 0x8;		// CS
 	stack[size - 5] = eip;		// EIP
-	stack[size - 6] = 0x0;		// ERROR CODE
-	stack[size - 7] = 0x0;		// INTERRUPT
 
 	// Return what EBP should be.
 	return stack + size;
@@ -104,12 +125,13 @@ struct thread *thread_spawn(const char *label, void(*thread_main)(void))
 	thread->label = label;
 	thread->id = next_thread_id++;
 	thread->status = thread_suspended;
-	thread->state.eip = (uint32_t)thread_main;
-	thread->state.eflags = 0x208;
 
 	if (thread->id > 0) {
-		thread->state.ebp = kalloc_stack(0x1000, thread->state.eip);
-		thread->state.esp = thread->state.ebp - (7 * sizeof(uint32_t));
+		thread->state.ebp = (uint32_t)kalloc_stack(
+			0x1000, 
+			(uint32_t)thread_main
+		);
+		thread->state.esp = thread->state.ebp - (5 * sizeof(uint32_t));
 	}
 
 	// Add the thread into the pool.
@@ -150,43 +172,75 @@ void describe_frame(struct interrupt_frame *frame)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct thread *next_ready_thread(void)
+{
+	struct thread *candidate = thread_pool.current->next ?: thread_pool.first;
+	
+	while (candidate != thread_pool.current) {
+		
+		// Is the candidate ready? If so then use it.
+		if (candidate->status == thread_ready) {
+			return candidate;
+		}
+
+		// Is the candidate waiting on a keyevent? If so check the keyboard
+		// buffer for events. If there are available events then mark the 
+		// thread as ready, and switch to it.
+		if (candidate->status == thread_waiting_keyevent && 
+			keyboard_buffer_has_items() > 0) 
+		{
+			goto MARK_READY_AND_RETURN;
+		}
+
+
+		// There was no way to bring the thread into scope. Move to the next 
+		// one.
+		candidate = candidate->next ?: thread_pool.first;
+	}
+
+	// At this point we just want to fall back on the next thread.
+	candidate = thread_pool.current->next ?: thread_pool.first;
+	return candidate;
+
+MARK_READY_AND_RETURN:
+	kdprint(dbgout, "\n*** Waking thread \"%s\" now.\n", candidate->label);
+	candidate->status = thread_ready;
+	return candidate;
+}
+
+extern void switch_stack(uint32_t esp, uint32_t ebp);
+
 void perform_yield_on_interrupt(struct interrupt_frame *frame)
 {
 	// Only allow a yield if we're in multitasking mode!
-	if (!thread_pool.current)
+	if (!thread_pool.current || thread_pool.first == thread_pool.last)
 		return;
 
-	// kdprint(dbgout, "\n==== perform_yield_on_interrupt(%p) ====\n", frame);
-	// describe_frame(frame);
+	// Get the next thread. If it is the same as the current thread, or not
+	// ready, then abort.
+	struct thread *next_thread = next_ready_thread();
+	if (next_thread == thread_pool.current || 
+		next_thread->status != thread_ready)
+	{
+		return;
+	}
 
-	// Save the appropriate values in to the current thread.
-	thread_pool.current->state.eax = frame->eax;
-	thread_pool.current->state.ebx = frame->ebx;
-	thread_pool.current->state.ecx = frame->ecx;
-	thread_pool.current->state.edx = frame->edx;
-	thread_pool.current->state.edi = frame->edi;
-	thread_pool.current->state.esi = frame->esi;
-	thread_pool.current->state.esp = frame->esp;
-	thread_pool.current->state.ebp = frame->ebp;
-	thread_pool.current->state.eip = frame->eip;
-	thread_pool.current->state.eflags = frame->eflags;
+	kdprint(dbgout, "\n==== perform_yield_on_interrupt(%p) ====\n", frame);
+	describe_frame(frame);
 
 	// Switch to the next task and store the new state values.
-	// kdprint(dbgout, "Switching from \"%s\" to ", thread_pool.current->label);
-	thread_pool.current = thread_pool.current->next ?: thread_pool.first;
-	// kdprint(dbgout, "\"%s\"\n", thread_pool.current->label);
+	kdprint(dbgout, "Switching from \"%s\" to ", thread_pool.current->label);
+	kdprint(dbgout, "\"%s\"\n", next_thread->label);
+	kdprint(dbgout, "================================================\n");
 
-	frame->eax = thread_pool.current->state.eax;
-	frame->ebx = thread_pool.current->state.ebx;
-	frame->ecx = thread_pool.current->state.ecx;
-	frame->edx = thread_pool.current->state.edx;
-	frame->edi = thread_pool.current->state.edi;
-	frame->esi = thread_pool.current->state.esi;
-	frame->esp = thread_pool.current->state.esp;
-	frame->ebp = thread_pool.current->state.ebp;
-	frame->eip = thread_pool.current->state.eip;
-	frame->eflags = thread_pool.current->state.eflags;
+	// Perform the stack switch. For this we need to calculate the required
+	// future position of the current stack. This involves a small amount of
+	// calculation based on the frame.
+	thread_pool.current->state.ebp = frame->ebp;
+	thread_pool.current->state.esp = (uint32_t)frame + (14 * sizeof(uint32_t));
+	thread_pool.current = next_thread;
 
-	// describe_frame(frame);
-	// kdprint(dbgout, "================================================\n");
+	// The next thread should already have an appropriate stack for switching
+	// to. If it does not, then this will cause a panic.
+	switch_stack(next_thread->state.esp, next_thread->state.ebp);
 }

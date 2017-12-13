@@ -26,6 +26,7 @@
 #include <arch/arch.h>
 #include <kheap.h>
 #include <kprint.h>
+#include <thread.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,11 +128,6 @@ struct keyevent *keyboard_consume_key_event(void)
 struct keyevent *keyboard_wait_for_keyevent(void)
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
-	while (keyboard_buffer_has_items() == 0)
-		__asm__ __volatile__(
-			"nop\n"
-			"hlt"
-		);
-
+	thread_wait_keyevent();
 	return keyboard_consume_key_event();
 }
