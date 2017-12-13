@@ -27,9 +27,14 @@
 #include <kheap.h>
 #include <null.h>
 #include <memory.h>
+#include <thread.h>
+#include <macro.h>
 
 static interrupt_handler_t *idt_stubs = NULL;
 static interrupt_handler_t *interrupt_handlers = NULL;
+static uint8_t yield_timer = 0;
+
+#define YIELD_THRESHOLD 20
 
 void interrupt_irq_stub(struct interrupt_frame *frame)
 {
@@ -38,6 +43,11 @@ void interrupt_irq_stub(struct interrupt_frame *frame)
 	interrupt_handler_t fn = interrupt_handlers[irq];
 	if (fn) {
 		fn(frame);
+	}
+
+	if (irq == 0x20 && ++yield_timer >= YIELD_THRESHOLD) {
+		yield_timer = 0;
+		perform_yield_on_interrupt(frame);
 	}
 }
 
