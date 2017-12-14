@@ -20,44 +20,31 @@
  SOFTWARE.
 */
 
+#ifndef __VKERNEL_SEMAPHORE__
+#define __VKERNEL_SEMAPHORE__
+
 #include <kern_types.h>
-#include <null.h>
-#include <serial.h>
-#include <arch/arch.h>
-#include <term.h>
-#include <sema.h>
 
-#define COM1_PORT 0x3F8
+typedef volatile int spin_lock_t[2];
 
-static spin_lock_t serial_lock = { 0 };
+/**
+ Initialise a new "spinlock" semaphore.
+ */
+void spin_init(spin_lock_t lock);
 
-int serial_fifo_ready(void)
-{
-	return (inb(COM1_PORT + 5) & 0x20);
-}
+/**
+ Attempt to acquire a lock.
+ */
+void spin_lock(spin_lock_t lock);
 
-void kputc_serial(const char c)
-{
-	while (serial_fifo_ready() == 0);
-	outb(COM1_PORT, c);
-}
+/**
 
-void kputs_serial(const char *restrict str)
-{
-	spin_lock(serial_lock);
-	
-	while (str && *str)
-		kputc_serial(*str++);
+ */
+void spin_unlock(spin_lock_t lock);
 
-	spin_unlock(serial_lock);
-}
+/**
 
-void serial_prepare(void)
-{
-	kputs_serial("Preparing serial port for Kernel... ");
-	term_bind_putc(dbgout, kputc_serial);
-	term_bind_puts(dbgout, kputs_serial);
-	term_puts(dbgout, "done.\n");
+ */
+void spin_wait(volatile int *address, volatile int *waiters);
 
-	spin_init(serial_lock);
-}
+#endif

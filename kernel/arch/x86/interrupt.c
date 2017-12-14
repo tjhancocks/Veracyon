@@ -36,6 +36,11 @@ static uint8_t yield_timer = 0;
 
 #define YIELD_THRESHOLD 20
 
+void force_yield_on_next_interrupt(void)
+{
+	yield_timer = YIELD_THRESHOLD;
+}
+
 void interrupt_irq_stub(struct interrupt_frame *frame)
 {
 	// Attempt to find the appropriate handler, and execute it.
@@ -43,6 +48,7 @@ void interrupt_irq_stub(struct interrupt_frame *frame)
 	interrupt_handler_t fn = interrupt_handlers[irq];
 	if (fn) {
 		fn(frame);
+		yield_timer = YIELD_THRESHOLD;
 	}
 
 	if (irq == 0x20 && 

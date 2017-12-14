@@ -20,44 +20,81 @@
  SOFTWARE.
 */
 
-#include <kern_types.h>
-#include <null.h>
-#include <serial.h>
-#include <arch/arch.h>
-#include <term.h>
 #include <sema.h>
+#include <thread.h>
 
-#define COM1_PORT 0x3F8
-
-static spin_lock_t serial_lock = { 0 };
-
-int serial_fifo_ready(void)
+static inline int atomic_swap(volatile int *x, int v)
 {
-	return (inb(COM1_PORT + 5) & 0x20);
+	__asm__ __volatile__(
+		"xchg %0, %1"
+		: "=r"(v), "=m"(*x)
+		: "0"(v)
+		: "memory"
+	);
+	return v;
 }
 
-void kputc_serial(const char c)
+static inline void atomic_store(volatile int *p, int x)
 {
-	while (serial_fifo_ready() == 0);
-	outb(COM1_PORT, c);
+	__asm__ __volatile__(
+		"movl %1, %0"
+		: "=m"(*p)
+		: "r"(x)
+		: "memory"
+	);
 }
 
-void kputs_serial(const char *restrict str)
+static inline void atomic_inc(volatile int *x)
 {
-	spin_lock(serial_lock);
-	
-	while (str && *str)
-		kputc_serial(*str++);
-
-	spin_unlock(serial_lock);
+	__asm__ __volatile__(
+		"lock;"
+		"incl %0"
+		: "=m"(*x)
+		: "m"(*x)
+		: "memory"
+	);
 }
 
-void serial_prepare(void)
+static inline void atomic_dec(volatile int *x)
 {
-	kputs_serial("Preparing serial port for Kernel... ");
-	term_bind_putc(dbgout, kputc_serial);
-	term_bind_puts(dbgout, kputs_serial);
-	term_puts(dbgout, "done.\n");
+	__asm__ __volatile__(
+		"lock;"
+		"decl %0"
+		: "=m"(*x)
+		: "m"(*x)
+		: "memory"
+	);
+}
 
-	spin_init(serial_lock);
+void spin_wait(volatile int *address, volatile int *waiters)
+{
+	if (waiters)
+		atomic_inc(waiters);
+
+	while (*address)
+		thread_halt();
+
+	if (waiters)
+		atomic_dec(waiters);
+}
+
+void spin_lock(spin_lock_t lock)
+{
+	while (atomic_swap(lock, 1))
+		spin_wait(lock, lock+1);
+}
+
+void spin_unlock(spin_lock_t lock)
+{
+	if (lock[0]) {
+		atomic_store(lock, 0);
+		if (lock[1])
+			thread_halt();
+	}
+}
+
+void spin_init(spin_lock_t lock)
+{
+	lock[0] = 0;
+	lock[1] = 0;
 }

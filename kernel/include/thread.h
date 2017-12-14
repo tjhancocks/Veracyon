@@ -86,8 +86,10 @@ void thread_wait_time(uint32_t ms);
  */
 void thread_wait_keyevent(void);
 
-
-
-void describe_frame(struct interrupt_frame *frame);
+/**
+ Halt the current thread until it is awoken by an interrupt. This will cause a
+ yield.
+ */
+void thread_halt(void);
 
 #endif

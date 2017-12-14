@@ -50,6 +50,15 @@ void idle_main(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void thread_halt(void)
+{
+	force_yield_on_next_interrupt();
+	__asm__ __volatile__("hlt");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum thread_status current_thread_status(void)
 {
 	return thread_pool.current ? thread_pool.current->status : thread_ready;
@@ -61,8 +70,6 @@ void thread_wait_time(uint32_t ms)
 	if (!thread_pool.current || thread_pool.current->id == 1)
 		return;
 
-	kdprint(dbgout, "*** Suspending thread \"%s\" until time elapsed.\n",
-		thread_pool.current->label);
 
 	thread_pool.current->status = thread_waiting_timer;
 	__asm__ __volatile__("hlt");
@@ -74,8 +81,6 @@ void thread_wait_keyevent(void)
 	if (!thread_pool.current || thread_pool.current->id == 1)
 		return;
 
-	kdprint(dbgout, "*** Suspending thread \"%s\" until keyboard event.\n",
-		thread_pool.current->label);
 
 	thread_pool.current->status = thread_waiting_keyevent;
 	__asm__ __volatile__("hlt");
@@ -217,7 +222,6 @@ struct thread *next_ready_thread(void)
 	return candidate;
 
 MARK_READY_AND_RETURN:
-	kdprint(dbgout, "\n*** Waking thread \"%s\" now.\n", candidate->label);
 	candidate->status = thread_ready;
 	return candidate;
 }
@@ -239,13 +243,8 @@ void perform_yield_on_interrupt(struct interrupt_frame *frame)
 		return;
 	}
 
-	kdprint(dbgout, "\n==== perform_yield_on_interrupt(%p) ====\n", frame);
-	describe_frame(frame);
 
 	// Switch to the next task and store the new state values.
-	kdprint(dbgout, "Switching from \"%s\" to ", thread_pool.current->label);
-	kdprint(dbgout, "\"%s\"\n", next_thread->label);
-	kdprint(dbgout, "================================================\n");
 
 	// Perform the stack switch. For this we need to calculate the required
 	// future position of the current stack. This involves a small amount of

@@ -78,8 +78,6 @@ void keyboard_buffer_enqueue(struct keyevent *event)
 		(buffer_last && buffer_last->event && event &&
 		 buffer_last->event->keycode == event->keycode)
 	) {
-		kdprint(dbgout, "Dicarding key event. Unable to add to buffer.\n");
-		kdprint(dbgout, "event = %p\n");
 		kfree(event);
 		return;
 	}
