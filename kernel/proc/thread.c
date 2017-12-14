@@ -169,28 +169,6 @@ struct thread *thread_spawn(const char *label, void(*thread_main)(void))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void describe_frame(struct interrupt_frame *frame)
-{
-	kdprint(dbgout, "THREAD: %s\n", thread_pool.current->label);
-	kdprint(dbgout, "GS/FS/ES/DS: %08x %08x %08x %08x\n", 
-		frame->gs, frame->fs, frame->es, frame->ds);
-
-	kdprint(dbgout, "EDI/ESI/EBP/ESP: %08x %08x %08x %08x\n", 
-		frame->edi, frame->esi, frame->ebp, frame->esp);
-	kdprint(dbgout, "EBX/EDX/ECX/EAX: %08x %08x %08x %08x\n", 
-		frame->ebx, frame->edx, frame->ecx, frame->eax);
-
-	kdprint(dbgout, "INT_NO/ERROR: %08x %08x\n", 
-		frame->interrupt, frame->error_code);
-
-	kdprint(dbgout, "EIP/CS: %08x %08x\n", 
-		frame->eip, frame->cs);
-	kdprint(dbgout, "EFLAGS/USER_ESP/SS: %08x %08x %08x\n", 
-		frame->eflags, frame->user_esp, frame->ss);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct thread *next_ready_thread(void)
 {
 	struct thread *candidate = thread_pool.current->next ?: thread_pool.first;
@@ -210,7 +188,6 @@ struct thread *next_ready_thread(void)
 		{
 			goto MARK_READY_AND_RETURN;
 		}
-
 
 		// There was no way to bring the thread into scope. Move to the next 
 		// one.
@@ -242,9 +219,6 @@ void perform_yield_on_interrupt(struct interrupt_frame *frame)
 	{
 		return;
 	}
-
-
-	// Switch to the next task and store the new state values.
 
 	// Perform the stack switch. For this we need to calculate the required
 	// future position of the current stack. This involves a small amount of
