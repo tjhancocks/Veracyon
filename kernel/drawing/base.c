@@ -90,15 +90,12 @@ void drawing_set_cursor(uint32_t x, uint32_t y)
 
 void drawing_base_clear(void)
 {
-	__asm__ __volatile__("cli");
 	uint32_t length = (drawing_info.width * drawing_info.height);
 	memsetd(drawing_info.backing_buffer, drawing_info.bg_pen_color, length);
-	__asm__ __volatile__("sti");
 }
 
 void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 {
-	__asm__ __volatile__("cli");
 	uint32_t *buffer = (uint32_t *)drawing_info.backing_buffer;
 
 	// Render the character to the screen buffer.
@@ -112,7 +109,6 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 												  : drawing_info.bg_pen_color;
 		}
 	}
-	__asm__ __volatile__("sti");
 }
 
 
@@ -120,7 +116,6 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 
 void drawing_base_flush(void)
 {
-	__asm__ __volatile__("cli");
 	register uint32_t n = drawing_info.size / 128;
 	register uint64_t *d0 = (uint64_t *)drawing_info.base_buffer;
 	register uint64_t *s0 = (uint64_t *)drawing_info.backing_buffer;
@@ -171,6 +166,5 @@ void drawing_base_flush(void)
 			buffer[offset] = drawing_info.fg_pen_color;
 		}
 	}
-	__asm__ __volatile__("sti");
 }
 

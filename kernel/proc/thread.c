@@ -106,11 +106,25 @@ void *kalloc_stack(uint32_t size, uint32_t eip)
 	memset(stack, 0, size * sizeof(*stack));
 
 	// We need to construct the initial values of the stack.
-	stack[size - 1] = 0x10;		// SS
-	stack[size - 2] = 0x0;		// USER ESP
-	stack[size - 3] = 0x208;	// EFLAGS
-	stack[size - 4] = 0x8;		// CS
-	stack[size - 5] = eip;		// EIP
+	stack[size - 1]  = 0x10;			// SS
+	stack[size - 2]  = 0x00;			// USER ESP
+	stack[size - 3]  = 0x208;			// EFLAGS
+	stack[size - 4]  = 0x08;			// CS
+	stack[size - 5]  = eip;				// EIP
+	stack[size - 6]  = 0x00;			// ERROR CODE
+	stack[size - 7]  = 0x00;			// INTERRUPT
+	stack[size - 8]  = 0x00;			// EDI
+	stack[size - 9]  = 0x00;			// ESI
+	stack[size - 10] = (uint32_t)stack;	// EBP
+	stack[size - 11] = 0x00;			// ESP
+	stack[size - 12] = 0x00;			// EBX
+	stack[size - 13] = 0x00;			// EDX
+	stack[size - 14] = 0x00;			// ECX
+	stack[size - 15] = 0x00;			// EAX
+	stack[size - 16] = 0x10;			// DS
+	stack[size - 17] = 0x10;			// ES
+	stack[size - 18] = 0x10;			// FS
+	stack[size - 19] = 0x10;			// GS
 
 	// Return what EBP should be.
 	return stack + size;
@@ -131,7 +145,7 @@ struct thread *thread_spawn(const char *label, void(*thread_main)(void))
 			0x1000, 
 			(uint32_t)thread_main
 		);
-		thread->state.esp = thread->state.ebp - (5 * sizeof(uint32_t));
+		thread->state.esp = thread->state.ebp - (19 * sizeof(uint32_t));
 	}
 
 	// Add the thread into the pool.
@@ -237,7 +251,7 @@ void perform_yield_on_interrupt(struct interrupt_frame *frame)
 	// future position of the current stack. This involves a small amount of
 	// calculation based on the frame.
 	thread_pool.current->state.ebp = frame->ebp;
-	thread_pool.current->state.esp = (uint32_t)frame + (14 * sizeof(uint32_t));
+	thread_pool.current->state.esp = (uint32_t)frame;
 	thread_pool.current = next_thread;
 
 	// The next thread should already have an appropriate stack for switching

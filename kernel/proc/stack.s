@@ -1,4 +1,4 @@
-; Copyright (c) 2017 Tom Hancocks
+  ; Copyright (c) 2017 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -35,4 +35,11 @@ switch_stack:
 	.swap:
 		mov ebp, [esp + 8]
 		mov esp, [esp + 4]
+	.conclude:
+		pop gs
+		pop fs
+		pop es
+		pop ds
+		popad
+		add esp, 8
 		iret
