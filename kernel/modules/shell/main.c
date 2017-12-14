@@ -33,6 +33,18 @@ static uint8_t shell_terminated = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void kernel_about(void)
+{
+	kprint("Veracyon OS %s\n", __BUILD_VERSION__);
+	kprint("%8s: %s\n", "Kernel", "vkernel");
+	kprint("%8s: %s\n", "Built", __BUILD_TIME__);
+	kprint("%8s: %s\n", "Commit", __BUILD_COMMIT__);
+	kprint("\n");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 void shell_prompt(void)
 {
 	kdprint(krnout, "> ");
@@ -41,10 +53,11 @@ void shell_prompt(void)
 
 	if (strcmp(input, "exit") == 0) {
 		shell_terminated = 1;
-		goto SHELL_PROMPT_CLEAN_UP;
+	}
+	else if (strcmp(input, "about") == 0) {
+		kernel_about();
 	}
 
-SHELL_PROMPT_CLEAN_UP:
 	kfree((void *)input);
 }
 

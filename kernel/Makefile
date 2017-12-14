@@ -30,11 +30,19 @@ CC := i686-elf-gcc
 LD := i686-elf-gcc
 AS := nasm
 
+BUILD_TIME := $(shell date)
+BUILD_VERSION := 0.1
+BUILD_COMMIT := $(shell git log -1 --pretty=format:"%H")
+BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
 # Flags
 CCFLAGS := -I./include -I../boot/includes -ffreestanding -Wall -Wextra\
             -nostdlib -nostdinc -fno-builtin -fno-stack-protector\
             -nostartfiles -nodefaultlibs -m32 -finline-functions -std=c99\
-            -O0 -fstrength-reduce -fomit-frame-pointer
+            -O0 -fstrength-reduce -fomit-frame-pointer \
+            -D__BUILD_TIME__="\"$(BUILD_TIME)\"" \
+            -D__BUILD_VERSION__="\"$(BUILD_VERSION)\"" \
+            -D__BUILD_COMMIT__="\"$(BUILD_COMMIT) ($(BUILD_BRANCH))\""
 
 LDFLAGS := -ffreestanding -O0 -nostdlib -lgcc
 
