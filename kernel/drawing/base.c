@@ -25,6 +25,7 @@
 #include <memory.h>
 #include <kprint.h>
 #include <biosfont.h>
+#include <sema.h>
 
 uint32_t drawing_vga_rgb_colors[16] = {
 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
@@ -46,6 +47,7 @@ struct {
 	uint32_t cursor_y;
 } drawing_info;
 
+static spin_lock_t draw_lock = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +59,8 @@ void drawing_base_prepare(
 	uint32_t height, 
 	uint32_t depth
 ) {
+	spin_init(draw_lock);
+
 	drawing_info.base_buffer = front_buffer;
 	drawing_info.backing_buffer = backing_buffer;
 	drawing_info.size = size;
@@ -75,14 +79,18 @@ void drawing_base_prepare(
 
 void drawing_set_pen_vga(uint8_t attribute)
 {
+	spin_lock(draw_lock);
 	drawing_info.fg_pen_color = drawing_vga_rgb_colors[attribute & 0xF];
 	drawing_info.bg_pen_color = drawing_vga_rgb_colors[(attribute >> 4) & 0xF];
+	spin_unlock(draw_lock);
 }
 
 void drawing_set_cursor(uint32_t x, uint32_t y)
 {
+	spin_lock(draw_lock);
 	drawing_info.cursor_x = x;
 	drawing_info.cursor_y = y - 2;
+	spin_unlock(draw_lock);
 }
 
 
@@ -91,7 +99,9 @@ void drawing_set_cursor(uint32_t x, uint32_t y)
 void drawing_base_clear(void)
 {
 	uint32_t length = (drawing_info.width * drawing_info.height);
+	spin_lock(draw_lock);
 	memsetd(drawing_info.backing_buffer, drawing_info.bg_pen_color, length);
+	spin_unlock(draw_lock);
 }
 
 void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
@@ -99,6 +109,7 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 	uint32_t *buffer = (uint32_t *)drawing_info.backing_buffer;
 
 	// Render the character to the screen buffer.
+	spin_lock(draw_lock);
 	for (uint8_t cy = 0; cy < 16; ++cy) {
 		
 		uint8_t row = bios_font[(c * 16) + cy];
@@ -109,6 +120,7 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 												  : drawing_info.bg_pen_color;
 		}
 	}
+	spin_unlock(draw_lock);
 }
 
 
@@ -116,6 +128,8 @@ void drawing_base_render_char(const char c, uint32_t x, uint32_t y)
 
 void drawing_base_flush(void)
 {
+	spin_lock(draw_lock);
+
 	register uint32_t n = drawing_info.size / 128;
 	register uint64_t *d0 = (uint64_t *)drawing_info.base_buffer;
 	register uint64_t *s0 = (uint64_t *)drawing_info.backing_buffer;
@@ -166,5 +180,7 @@ void drawing_base_flush(void)
 			buffer[offset] = drawing_info.fg_pen_color;
 		}
 	}
+
+	spin_unlock(draw_lock);
 }
 

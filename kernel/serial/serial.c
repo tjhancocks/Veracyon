@@ -25,8 +25,11 @@
 #include <serial.h>
 #include <arch/arch.h>
 #include <term.h>
+#include <sema.h>
 
 #define COM1_PORT 0x3F8
+
+static spin_lock_t serial_lock = { 0 };
 
 int serial_fifo_ready(void)
 {
@@ -41,8 +44,12 @@ void kputc_serial(const char c)
 
 void kputs_serial(const char *restrict str)
 {
+	spin_lock(serial_lock);
+	
 	while (str && *str)
 		kputc_serial(*str++);
+
+	spin_unlock(serial_lock);
 }
 
 void serial_prepare(void)
@@ -51,4 +58,6 @@ void serial_prepare(void)
 	term_bind_putc(dbgout, kputc_serial);
 	term_bind_puts(dbgout, kputs_serial);
 	term_puts(dbgout, "done.\n");
+
+	spin_init(serial_lock);
 }

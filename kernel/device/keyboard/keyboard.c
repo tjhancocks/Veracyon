@@ -26,6 +26,7 @@
 #include <arch/arch.h>
 #include <kheap.h>
 #include <kprint.h>
+#include <thread.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +48,7 @@ static uint32_t buffer_count = 0;
 
 uint32_t keyboard_buffer_has_items(void)
 {
-	return buffer_count;
+	return (buffer_count > 0 && buffer_first != NULL) ? 1 : 0;
 }
 
 struct keyevent *keyboard_buffer_dequeue(void)
@@ -77,8 +78,6 @@ void keyboard_buffer_enqueue(struct keyevent *event)
 		(buffer_last && buffer_last->event && event &&
 		 buffer_last->event->keycode == event->keycode)
 	) {
-		kdprint(dbgout, "Dicarding key event. Unable to add to buffer.\n");
-		kdprint(dbgout, "event = %p\n");
 		kfree(event);
 		return;
 	}
@@ -127,11 +126,6 @@ struct keyevent *keyboard_consume_key_event(void)
 struct keyevent *keyboard_wait_for_keyevent(void)
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
-	while (keyboard_buffer_has_items() == 0)
-		__asm__ __volatile__(
-			"nop\n"
-			"hlt"
-		);
-
+	thread_wait_keyevent();
 	return keyboard_consume_key_event();
 }

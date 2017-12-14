@@ -77,6 +77,7 @@ void kheap_expand_by_required_length(uint32_t length)
 	for (uint32_t n = 0; n < required_pages; ++n)
 		kheap_expand_by_single_page();
 	
+	should_coalesce = 10;
 	kheap_coalesce_free_blocks();
 	kdprint(dbgout, "Kernel heap expanded.\n");
 }

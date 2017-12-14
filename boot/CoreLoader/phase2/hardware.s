@@ -57,10 +57,23 @@ _install_hardware_interrupts:
 ;; function and should not be called directly.
 ;;
 _handle_hardware_interrupt:
+	.construct_stack_values:
 		pushad
+        push ds
+        push es
+        push fs
+        push gs
+    .correct_segments:
+        mov ax, 0x10
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
+        cld
+    .irq_info:
 		xor eax, eax
 		xor ebx, ebx
-		movzx ebx, byte[esp + 32]
+		movzx ebx, byte[esp + 0x30]
 		mov eax, ebx
 	.handle_spurious_irq7:
 		cmp bl, 0x07
@@ -82,26 +95,30 @@ _handle_hardware_interrupt:
 		nop
 		jmp .handle_keyboard_irq
 	.finish_keyboard_irq:
-		movzx eax, byte[esp + 32]
+		movzx eax, byte[esp + 0x30]
 		add eax, 0x20
 		mov esi, INT_HANDLERS
 		mov eax, [esi + eax * 4]
 		cmp eax, 0
 		jz .acknowledge_irq
 		nop
+		push esp
 		call eax
+		add esp, 4
 		jmp .acknowledge_irq
 	.find_irq_handler:
-		movzx eax, byte[esp + 32]
+		movzx eax, byte[esp + 0x30]
 		add eax, 0x20
 		mov esi, INT_HANDLERS
 		mov eax, [esi + eax * 4]
 	.check_handler:
 		cmp eax, 0
 		jz .acknowledge_irq
+		push esp
 		call eax
+		add esp, 4
 	.acknowledge_irq:
-		; movzx ebx, byte[esp + 32]
+		movzx ebx, byte[esp + 0x30]
 		cmp bl, 0x08
 		jl .acknowledge_master_irq
 		mov al, 0x20
@@ -110,8 +127,12 @@ _handle_hardware_interrupt:
 		mov al, 0x20
 		out 0x20, al
 	.finish:
+		pop gs
+        pop fs
+        pop es
+        pop ds
 		popad
-		add esp, 4
+		add esp, 8
 		iret
 
 
@@ -143,64 +164,80 @@ _register_hardware_interrupt_handler:
 _hdw_int_0:
         cli
         push byte 0
+        push byte 0
         jmp _handle_hardware_interrupt
 _hdw_int_1:
         cli
+        push byte 0
         push byte 1
         jmp _handle_hardware_interrupt
 _hdw_int_2:
         cli
+        push byte 0
         push byte 2
         jmp _handle_hardware_interrupt
 _hdw_int_3:
         cli
+        push byte 0
         push byte 3
         jmp _handle_hardware_interrupt
 _hdw_int_4:
         cli
+        push byte 0
         push byte 4
         jmp _handle_hardware_interrupt
 _hdw_int_5:
         cli
+        push byte 0
         push byte 5
         jmp _handle_hardware_interrupt
 _hdw_int_6:
         cli
+        push byte 0
         push byte 6
         jmp _handle_hardware_interrupt
 _hdw_int_7:
         cli
+        push byte 0
         push byte 7
         jmp _handle_hardware_interrupt
 _hdw_int_8:
         cli
+        push byte 0
         push byte 8
         jmp _handle_hardware_interrupt
 _hdw_int_9:
         cli
+        push byte 0
         push byte 9
         jmp _handle_hardware_interrupt
 _hdw_int_10:
         cli
+        push byte 0
         push byte 10
         jmp _handle_hardware_interrupt
 _hdw_int_11:
         cli
+        push byte 0
         push byte 11
         jmp _handle_hardware_interrupt
 _hdw_int_12:
         cli
+        push byte 0
         push byte 12
         jmp _handle_hardware_interrupt
 _hdw_int_13:
         cli
+        push byte 0
         push byte 13
         jmp _handle_hardware_interrupt
 _hdw_int_14:
         cli
+        push byte 0
         push byte 14
         jmp _handle_hardware_interrupt
 _hdw_int_15:
         cli
+        push byte 0
         push byte 15
         jmp _handle_hardware_interrupt

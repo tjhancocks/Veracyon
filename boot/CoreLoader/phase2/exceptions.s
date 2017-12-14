@@ -65,7 +65,7 @@ _install_cpu_exceptions:
 ;; WARNING: This is a naked function and it should not be called directly.
 ;;
 _handle_exception:
-		pushad
+        pushad
         push ds
         push es
         push fs
@@ -75,6 +75,7 @@ _handle_exception:
         mov es, ax
         mov fs, ax
         mov gs, ax
+        cld
 	.unsafe_finish:
 		jmp _panic 					; We're in an unsafe state! Panic!
 	.safe_finish:
@@ -82,7 +83,7 @@ _handle_exception:
         pop fs
         pop es
         pop ds
-		popad
+        popad
 		add esp, 8
 		iret
 
@@ -103,8 +104,7 @@ _panic:
         push esp
         push 0
 		call eax						; It's not NULL so jump to the handler.
-        add esp, 4
-        pop esp
+        add esp, 8
         jmp .hang
 	.report:
 		push .message
@@ -123,180 +123,162 @@ _panic:
 ;;
 _cpu_exp_0:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 0
     	jmp _handle_exception
 _cpu_exp_1:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 1
     	jmp _handle_exception
 _cpu_exp_2:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 2
     	jmp _handle_exception
 _cpu_exp_3:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 3
     	jmp _handle_exception
 _cpu_exp_4:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 4
     	jmp _handle_exception
 _cpu_exp_5:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 5
     	jmp _handle_exception
 _cpu_exp_6:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 6
     	jmp _handle_exception
 _cpu_exp_7:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 7
     	jmp _handle_exception
 _cpu_exp_8:
     	cli
-    	push byte 0
+        nop
+        nop
     	push byte 8
     	jmp _handle_exception
 _cpu_exp_9:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 9
     	jmp _handle_exception
 _cpu_exp_10:
     	cli
-    	push byte 0
+    	nop
+        nop
     	push byte 10
     	jmp _handle_exception
 _cpu_exp_11:
     	cli
-    	push byte 0
+        nop
+        nop
     	push byte 11
     	jmp _handle_exception
 _cpu_exp_12:
     	cli
-    	push byte 0
+        nop
+        nop
     	push byte 12
     	jmp _handle_exception
 _cpu_exp_13:
     	cli
-    	push byte 0
+        nop
+        nop
     	push byte 13
     	jmp _handle_exception
 _cpu_exp_14:
     	cli
-    	push byte 0
+        nop
     	push byte 14
     	jmp _handle_exception
 _cpu_exp_15:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 15
     	jmp _handle_exception
 _cpu_exp_16:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 16
     	jmp _handle_exception
 _cpu_exp_17:
     	cli
-    	push byte 0
+        nop
+        nop
     	push byte 17
     	jmp _handle_exception
 _cpu_exp_18:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 18
     	jmp _handle_exception
 _cpu_exp_19:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 19
     	jmp _handle_exception
 _cpu_exp_20:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 20
     	jmp _handle_exception
 _cpu_exp_21:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 21
     	jmp _handle_exception
 _cpu_exp_22:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 22
     	jmp _handle_exception
 _cpu_exp_23:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 23
     	jmp _handle_exception
 _cpu_exp_24:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 24
     	jmp _handle_exception
 _cpu_exp_26:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 26
     	jmp _handle_exception
 _cpu_exp_27:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 27
     	jmp _handle_exception
 _cpu_exp_28:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 28
     	jmp _handle_exception
 _cpu_exp_29:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 29
     	jmp _handle_exception
 _cpu_exp_30:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 30
     	jmp _handle_exception
 _cpu_exp_31:
     	cli
-    	nop
-    	nop
+        push byte 0
     	push byte 31
     	jmp _handle_exception

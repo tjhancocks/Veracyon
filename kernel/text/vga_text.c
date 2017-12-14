@@ -29,6 +29,7 @@
 #include <kprint.h>
 #include <arch/arch.h>
 #include <term.h>
+#include <sema.h>
 
 #define TAB_WIDTH 4
 
@@ -39,8 +40,10 @@ static struct {
 	uint8_t attribute;
 	uint8_t default_attribute;
 	uint8_t x;
-	uint8_t y; 
+	uint8_t y;
 } vga_text;
+
+static spin_lock_t vga_lock = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +61,9 @@ void vga_text_clear(uint8_t attribute)
 	uint32_t len = vga_text.cols * vga_text.rows;
 	uint16_t cell = (attribute << 8) | ' ';
 
+	spin_lock(vga_lock);
 	memsetw(vga_text.buffer, cell, len);
+	spin_unlock(vga_lock);
 
 	vga_text_setpos(0, 0);
 	vga_text.attribute = attribute;
@@ -84,10 +89,12 @@ void vga_text_getpos(uint32_t *x, uint32_t *y)
 void vga_update_cursor(void)
 {
 	uint16_t pos = (vga_text.cols * vga_text.y) + vga_text.x;
+	spin_lock(vga_lock);
 	outb(0x3d4, 0x0f);
 	outb(0x3d5, (uint8_t)(pos & 0xFF));
 	outb(0x3d4, 0x0e);
 	outb(0x3d5, (uint8_t)((pos >> 8) & 0xFF));
+	spin_unlock(vga_lock);
 }
 
 void vga_text_setattr(uint8_t attribute)
@@ -113,6 +120,8 @@ void vga_text_restore_default_attribute(void)
 void vga_text_scroll(void)
 {
 	if (vga_text.y >= vga_text.rows) {
+		spin_lock(vga_lock);
+
 		uint16_t tmp = vga_text.y - vga_text.rows + 1;
 		memcpy(
 			vga_text.buffer, 
@@ -125,11 +134,15 @@ void vga_text_scroll(void)
 			vga_text.cols
 		);
 		vga_text.y = vga_text.rows - 1;
+
+		spin_unlock(vga_lock);
 	}
 }
 
 void vga_text_prepare(struct boot_config *config)
 {
+	spin_init(vga_lock);
+
 	kdprint(dbgout, "Preparing vga text mode for kernel use...\n");
 
 	// Make sure the configuration is valid/supplied, otherwise assume defaults.
@@ -205,6 +218,7 @@ void vga_text_control_code(const char c)
 
 void kputc_vga_text(const char c __attribute__((unused)))
 {
+	spin_lock(vga_lock);
 	if (c <= kASCII_US || c == kASCII_DEL) {
 		// This is a control code and should be treated as such.
 		vga_text_control_code(c);
@@ -221,6 +235,7 @@ void kputc_vga_text(const char c __attribute__((unused)))
 		vga_text.x = 0;
 		vga_text.y++;
 	}
+	spin_unlock(vga_lock);
 
 	// If we've gone off the end of the screen then scroll the contents up so
 	// we're back on screen.

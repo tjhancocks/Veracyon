@@ -20,41 +20,81 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_KEYBOARD__
-#define __VKERNEL_KEYBOARD__
+#include <sema.h>
+#include <thread.h>
 
-#include <kern_types.h>
-#include <device/keyboard/scancode.h>
+static inline int atomic_swap(volatile int *x, int v)
+{
+	__asm__ __volatile__(
+		"xchg %0, %1"
+		: "=r"(v), "=m"(*x)
+		: "0"(v)
+		: "memory"
+	);
+	return v;
+}
 
-/**
- Initialise all required concrete keyboard drivers (PS/2 and USB). These drivers 
- are then responsible for establishing communication back to the virtual 
- keyboard driver.
- */
-void keyboard_driver_prepare(void);
+static inline void atomic_store(volatile int *p, int x)
+{
+	__asm__ __volatile__(
+		"movl %1, %0"
+		: "=m"(*p)
+		: "r"(x)
+		: "memory"
+	);
+}
 
-/**
- Inform the virtual keyboard driver that a scancode has been received. The 
- scancode is assumed to be part of "Scancode Set 1". The virtual keyboard driver
- will then manage the construction of key events and buffering them.
+static inline void atomic_inc(volatile int *x)
+{
+	__asm__ __volatile__(
+		"lock;"
+		"incl %0"
+		: "=m"(*x)
+		: "m"(*x)
+		: "memory"
+	);
+}
 
- 	- scancode: The scancode that the virtual keyboard driver should process.
- */
-void keyboard_received_scancode(uint8_t scancode);
+static inline void atomic_dec(volatile int *x)
+{
+	__asm__ __volatile__(
+		"lock;"
+		"decl %0"
+		: "=m"(*x)
+		: "m"(*x)
+		: "memory"
+	);
+}
 
-/**
- Receive the next keyevent from virtual keyboard driver. This is a blocking
- function.
+void spin_wait(volatile int *address, volatile int *waiters)
+{
+	if (waiters)
+		atomic_inc(waiters);
 
- Returns:
- 	A keyboard event structure with keycode information, modifier key states,
- 	etc.
- */
-struct keyevent *keyboard_wait_for_keyevent(void);
+	while (*address)
+		thread_halt();
 
-/**
- Query the keyboard buffer for unread queued key events.
- */
-uint32_t keyboard_buffer_has_items(void);
+	if (waiters)
+		atomic_dec(waiters);
+}
 
-#endif
+void spin_lock(spin_lock_t lock)
+{
+	while (atomic_swap(lock, 1))
+		spin_wait(lock, lock+1);
+}
+
+void spin_unlock(spin_lock_t lock)
+{
+	if (lock[0]) {
+		atomic_store(lock, 0);
+		if (lock[1])
+			thread_halt();
+	}
+}
+
+void spin_init(spin_lock_t lock)
+{
+	lock[0] = 0;
+	lock[1] = 0;
+}

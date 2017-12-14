@@ -20,31 +20,31 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_X86_REGISTERS__
-#define __VKERNEL_X86_REGISTERS__
+#ifndef __VKERNEL_SEMAPHORE__
+#define __VKERNEL_SEMAPHORE__
 
 #include <kern_types.h>
 
-struct registers {
-	uint32_t gs;
-	uint32_t fs;
-	uint32_t es;
-	uint32_t ds;
-	uint32_t edi;
-	uint32_t esi;
-	uint32_t ebp;
-	uint32_t esp;
-	uint32_t ebx;
-	uint32_t edx;
-	uint32_t ecx;
-	uint32_t eax;
-	uint32_t interrupt;
-	uint32_t error_code;
-	uint32_t eip;
-	uint32_t cs;
-	uint32_t eflags;
-	uint32_t user_esp;
-	uint32_t ss;
-} __attribute__((packed));
+typedef volatile int spin_lock_t[2];
+
+/**
+ Initialise a new "spinlock" semaphore.
+ */
+void spin_init(spin_lock_t lock);
+
+/**
+ Attempt to acquire a lock.
+ */
+void spin_lock(spin_lock_t lock);
+
+/**
+
+ */
+void spin_unlock(spin_lock_t lock);
+
+/**
+
+ */
+void spin_wait(volatile int *address, volatile int *waiters);
 
 #endif

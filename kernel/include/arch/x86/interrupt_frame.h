@@ -20,41 +20,31 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_KEYBOARD__
-#define __VKERNEL_KEYBOARD__
+#ifndef __VKERNEL_X86_INTERRUPT_FRAME__
+#define __VKERNEL_X86_INTERRUPT_FRAME__
 
 #include <kern_types.h>
-#include <device/keyboard/scancode.h>
 
-/**
- Initialise all required concrete keyboard drivers (PS/2 and USB). These drivers 
- are then responsible for establishing communication back to the virtual 
- keyboard driver.
- */
-void keyboard_driver_prepare(void);
-
-/**
- Inform the virtual keyboard driver that a scancode has been received. The 
- scancode is assumed to be part of "Scancode Set 1". The virtual keyboard driver
- will then manage the construction of key events and buffering them.
-
- 	- scancode: The scancode that the virtual keyboard driver should process.
- */
-void keyboard_received_scancode(uint8_t scancode);
-
-/**
- Receive the next keyevent from virtual keyboard driver. This is a blocking
- function.
-
- Returns:
- 	A keyboard event structure with keycode information, modifier key states,
- 	etc.
- */
-struct keyevent *keyboard_wait_for_keyevent(void);
-
-/**
- Query the keyboard buffer for unread queued key events.
- */
-uint32_t keyboard_buffer_has_items(void);
+struct interrupt_frame {
+	uint32_t gs;
+	uint32_t fs;
+	uint32_t es;
+	uint32_t ds;
+	uint32_t eax;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t ebx;
+	uint32_t esp;
+	uint32_t ebp;
+	uint32_t esi;
+	uint32_t edi;
+	uint32_t interrupt;
+	uint32_t error_code;
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+	uint32_t user_esp;
+	uint32_t ss;
+} __attribute__((packed));
 
 #endif

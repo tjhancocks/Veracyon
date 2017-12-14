@@ -1,4 +1,4 @@
-; Copyright (c) 2017 Tom Hancocks
+  ; Copyright (c) 2017 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -20,40 +20,26 @@
 
 	[bits 	32]
 
-;;
-;; Public Kernel Symbols
-;;
-	global	start
-	extern	kmain
+	global  switch_stack
 
 ;;
-;; Kernel starting and entry point.
 ;;
-section .text
-start:
-	.capture_coreloader_info:
-		mov eax, [esp + 4]				; Fetch the BootConfig structure.
-	.main:
-		mov esp, stack + 0x4000
-		mov ebp, esp
-		push eax
-		call kmain
-		cli
-		hlt
-		jmp $
-
 ;;
-;; Kernel stack. This is a reserved region of known memory that can be used by
-;; the kernel for the default stack. This is 16KiB in size.
+;;	__attribute__((noreturn))
+;;	void switch_stack(uint32_t esp, uint32_t ebp);
 ;;
-section	.bss
-align 	0x4000
-stack:	
-	resb	0x4000
-
-;;
-;; We need some space to use as working memory so that the kernel is able to to
-;; initially do its job. This reserves 4MiB of memory for the kernel.
-;;
-working_memory:
-	resb 	4 * 1024 * 1024
+switch_stack:
+	.acknowledge_irq:
+		mov al, 0x20
+		out 0x20, al
+	.swap:
+		mov ebp, [esp + 8]
+		mov esp, [esp + 4]
+	.conclude:
+		pop gs
+		pop fs
+		pop es
+		pop ds
+		popad
+		add esp, 8
+		iret

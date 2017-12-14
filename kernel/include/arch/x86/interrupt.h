@@ -25,9 +25,9 @@
 
 #include <boot_config.h>
 #include <kern_types.h>
-#include <arch/x86/registers.h>
+#include <arch/x86/interrupt_frame.h>
 
-typedef void(*interrupt_handler_t)(struct registers *);
+typedef void(*interrupt_handler_t)(struct interrupt_frame *);
 
 /**
  Prepare the kernel for using and adding interrupt handlers. This will simply
@@ -43,7 +43,7 @@ void interrupt_handlers_prepare(struct boot_config *config);
  Interrupts are in the range of 0x00 - 0xFF, and the handler function should
  have the prototype:
 
- 	void function(struct registers *);
+ 	void function(struct interrupted_cpu_state *);
 
  To remove an existing interrupt handler, NULL should be passed in place of a
  function pointer.
@@ -52,5 +52,11 @@ void interrupt_handlers_prepare(struct boot_config *config);
  	- handler: A function pointer to the function that will handle the interrupt
  */
 void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler);
+
+/**
+ Flag to the interrupt yielding process that a task switch should occur on the
+ next timer interrupt.
+ */
+void force_yield_on_next_interrupt(void);
 
 #endif

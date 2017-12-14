@@ -22,20 +22,71 @@
 
 #include <arch/x86/port.h>
 #include <arch/x86/interrupt.h>
-#include <arch/x86/registers.h>
+#include <arch/x86/interrupt_frame.h>
 #include <kprint.h>
+#include <kheap.h>
+#include <null.h>
+#include <memory.h>
+#include <thread.h>
+#include <macro.h>
 
-static interrupt_handler_t *idt_handlers = 0;
+static interrupt_handler_t *idt_stubs = NULL;
+static interrupt_handler_t *interrupt_handlers = NULL;
+static uint8_t yield_timer = 0;
+
+#define YIELD_THRESHOLD 20
+
+void force_yield_on_next_interrupt(void)
+{
+	yield_timer = YIELD_THRESHOLD;
+}
+
+void interrupt_irq_stub(struct interrupt_frame *frame)
+{
+	// Attempt to find the appropriate handler, and execute it.
+	uint8_t irq = frame->interrupt + 0x20;
+	interrupt_handler_t fn = interrupt_handlers[irq];
+	if (fn) {
+		fn(frame);
+		yield_timer = YIELD_THRESHOLD;
+	}
+
+	if (irq == 0x20 && 
+		(current_thread_status() != thread_ready || 
+		++yield_timer >= YIELD_THRESHOLD))
+	{
+		yield_timer = 0;
+		perform_yield_on_interrupt(frame);
+	}
+}
 
 void interrupt_handlers_prepare(struct boot_config *config)
 {
-	idt_handlers = (interrupt_handler_t *)config->interrupt_handlers;
-	kprint("Interrupt Handlers table is located at %p\n", idt_handlers);
+	// Disable interrupts for the duration of this function.
+	__asm__ __volatile__("cli");
+
+	idt_stubs = (interrupt_handler_t *)config->interrupt_stubs;
+	kdprint(dbgout, "Interrupt stubs table is located at %p\n", idt_stubs);
+
+	// Allocate space for the interrupt handlers table.
+	interrupt_handlers = kalloc(sizeof(*interrupt_handlers) * 256);
+	memset(interrupt_handlers, 0, sizeof(*interrupt_handlers) * 256);
+
+	// Install a generic stub for each of the IRQ's - these will be used for
+	// preemption.
+	for (uint8_t irq = 0x20; irq < 0x30; ++irq) {
+		idt_stubs[irq] = interrupt_irq_stub;
+	}
+
+	kdprint(dbgout, "Installed interrupt stubs for each IRQ\n");
+
+	// Re-enable interrupts
+	__asm__ __volatile__("sti");
 }
 
 void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler)
 {
-	kprint("Installing interrupt handler %p for interrupt %02x (%d)\n", 
+	kdprint(dbgout, "Installing interrupt handler %p for interrupt %02x (%d)\n", 
 		handler, interrupt, interrupt);
-	idt_handlers[interrupt] = handler;
+	interrupt_handlers[interrupt] = handler;
 }

@@ -24,7 +24,7 @@
 #define __VKERNEL_ARCH__
 
 #include <arch/x86/port.h>
-#include <arch/x86/registers.h>
+#include <arch/x86/interrupt_frame.h>
 #include <arch/x86/interrupt.h>
 
 #endif

@@ -32,14 +32,13 @@
 #include <device/keyboard/keyboard.h>
 #include <panic.h>
 #include <modules/shell.h>
+#include <thread.h>
 
 
 __attribute__((noreturn)) void kwork(void)
 {
 	while (1) {
-		__asm__ __volatile__(
-			"hlt"
-		);
+		__asm__ __volatile__("hlt");
 	}
 }
 
@@ -86,6 +85,9 @@ __attribute__((noreturn)) void kmain(
 
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
+
+	// Threading and multitasking support now need to be installed and enabled.
+	threading_prepare();
 
 	// Launch a debug kernel shell. This is a blocking function and will prevent
 	// the kernel from launching any further until the shell has exited.

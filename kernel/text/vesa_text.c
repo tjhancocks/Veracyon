@@ -31,6 +31,7 @@
 #include <term.h>
 #include <drawing/base.h>
 #include <biosfont.h>
+#include <sema.h>
 
 #define TAB_WIDTH 	4
 #define CHAR_WIDTH 	(BIOS_FONT_WIDTH + 1)
@@ -49,6 +50,8 @@ static struct {
 	uint8_t y; 
 } vesa_text;
 
+static spin_lock_t vesa_lock = { 0 };
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void kputc_vesa_text(const char c);
@@ -63,7 +66,10 @@ void vesa_update_cursor(void);
 void vesa_text_clear(uint8_t attribute)
 {
 	drawing_set_pen_vga(attribute);
+
+	spin_lock(vesa_lock);
 	drawing_base_clear();
+	spin_unlock(vesa_lock);
 
 	vesa_text_setpos(0, 0);
 	vesa_text.attribute = attribute;
@@ -87,8 +93,10 @@ void vesa_text_getpos(uint32_t *x, uint32_t *y)
 
 void vesa_update_cursor(void)
 {
+	spin_lock(vesa_lock);
 	drawing_set_cursor(vesa_text.x * CHAR_WIDTH, vesa_text.y * CHAR_HEIGHT);
 	drawing_base_flush();
+	spin_unlock(vesa_lock);
 }
 
 void vesa_text_setattr(uint8_t attribute)
@@ -121,6 +129,8 @@ void vesa_text_scroll(void)
 
 void vesa_text_prepare(struct boot_config *config)
 {
+	spin_init(vesa_lock);
+
 	kdprint(dbgout, "Preparing VESA Text Mode for kernel use...\n");
 
 	// Make sure the configuration is valid/supplied, otherwise assume defaults.
@@ -208,6 +218,7 @@ void vesa_text_control_code(const char c)
 
 void kputc_vesa_text(const char c)
 {
+	spin_lock(vesa_lock);
 	if (c <= kASCII_US || c == kASCII_DEL) {
 		// This is a control code and should be treated as such.
 		vesa_text_control_code(c);
@@ -227,6 +238,7 @@ void kputc_vesa_text(const char c)
 		vesa_text.x = 0;
 		vesa_text.y++;
 	}
+	spin_unlock(vesa_lock);
 
 	// If we've gone off the end of the screen then scroll the contents up so
 	// we're back on screen.
