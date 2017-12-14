@@ -64,7 +64,7 @@ enum thread_status current_thread_status(void)
 	return thread_pool.current ? thread_pool.current->status : thread_ready;
 }
 
-void thread_wait_time(uint32_t ms)
+void thread_wait_time(uint64_t ms)
 {
 	// If there is no current thread, or it is the "idle" thread then ignore.
 	if (!thread_pool.current || thread_pool.current->id == 1)
@@ -72,6 +72,7 @@ void thread_wait_time(uint32_t ms)
 
 
 	thread_pool.current->status = thread_waiting_timer;
+	thread_pool.current->status_info = ms;
 	__asm__ __volatile__("hlt");
 }
 
@@ -83,6 +84,19 @@ void thread_wait_keyevent(void)
 
 
 	thread_pool.current->status = thread_waiting_keyevent;
+	thread_pool.current->status_info = 0;
+	__asm__ __volatile__("hlt");
+}
+
+void thread_wait_irq(uint8_t irq)
+{
+	// If there is no current thread, or it is the "idle" thread then ignore.
+	if (!thread_pool.current || thread_pool.current->id == 1)
+		return;
+
+
+	thread_pool.current->status = thread_waiting_irq;
+	thread_pool.current->status_info = (uint64_t)irq;
 	__asm__ __volatile__("hlt");
 }
 

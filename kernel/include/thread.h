@@ -35,6 +35,7 @@ enum thread_status
 	thread_terminated,
 	thread_waiting_keyevent,
 	thread_waiting_timer,
+	thread_waiting_irq,
 };
 
 struct thread_registers 
@@ -49,6 +50,7 @@ struct thread
 	uint32_t id;
 	const char *label;
 	enum thread_status status;
+	uint64_t status_info;
 	struct thread_registers state;
 	struct thread *next;
 	struct thread *prev;
@@ -79,12 +81,17 @@ enum thread_status current_thread_status(void);
 /**
  Suspend the current thread for the specified period of time (milliseconds)
  */
-void thread_wait_time(uint32_t ms);
+void thread_wait_time(uint64_t ms);
 
 /**
  Suspend the current thread until a keyevent is received.
  */
 void thread_wait_keyevent(void);
+
+/**
+ Suspend the current thread until a keyevent is received.
+ */
+void thread_wait_irq(uint8_t irq);
 
 /**
  Halt the current thread until it is awoken by an interrupt. This will cause a
