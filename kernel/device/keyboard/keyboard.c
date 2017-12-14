@@ -27,6 +27,7 @@
 #include <kheap.h>
 #include <kprint.h>
 #include <thread.h>
+#include <sema.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +44,7 @@ struct buffer_item {
 static struct buffer_item *buffer_first = NULL;
 static struct buffer_item *buffer_last = NULL;
 static uint32_t buffer_count = 0;
+static spin_lock_t buffer_lock = { 0 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,23 +106,33 @@ void keyboard_buffer_enqueue(struct keyevent *event)
 
 void keyboard_driver_prepare(void)
 {
+	spin_init(buffer_lock);
 	ps2_keyboard_initialise();
 }
 
 void keyboard_received_scancode(uint8_t scancode)
 {
 	struct keyevent *event = keyevent_make(scancode);
+	
+	spin_lock(buffer_lock);
 	keyboard_buffer_enqueue(event);
+	spin_unlock(buffer_lock);
 }
 
 struct keyevent *keyboard_consume_key_event(void)
 {
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
-	if (keyboard_buffer_has_items() == 0)
+	spin_lock(buffer_lock);
+	if (keyboard_buffer_has_items() == 0) {
+		spin_unlock(buffer_lock);
 		return NULL;
+	}
 
-	return keyboard_buffer_dequeue();
+	struct keyevent *event = keyboard_buffer_dequeue();
+	spin_unlock(buffer_lock);
+
+	return event;
 }
 
 struct keyevent *keyboard_wait_for_keyevent(void)

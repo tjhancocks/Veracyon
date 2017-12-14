@@ -30,13 +30,22 @@
 #include <memory.h>
 #include <device/keyboard/keyboard.h>
 
-static uint32_t next_thread_id = 0;
+static uint32_t next_thread_id = 2;
 static struct {
 	struct thread *first;
 	struct thread *last;
 	struct thread *current;
 } thread_pool;
 
+static struct thread _kernel_main_thread = (struct thread) {
+	.id = ROOT_THREAD_ID,
+	.label = "vkernel::root_thread",
+	.status = thread_ready,
+	.status_info = 0,
+	.state = 0,
+	.next = NULL,
+	.prev = NULL
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,15 +114,19 @@ void thread_wait_irq(uint8_t irq)
 
 void threading_prepare(void)
 {
-	struct thread *root_thread = thread_spawn("root", NULL);
+	thread_pool.current = &_kernel_main_thread;
+	thread_pool.first = thread_pool.current;
+	thread_pool.last = thread_pool.last;
+
+	kdprint(dbgout, "Established root thread as TID::%d [%s]\n",
+		thread_pool.current->id, thread_pool.current->label);
+}
+
+void establish_idle_thread(void)
+{
 	struct thread *idle_thread = thread_spawn("idle", idle_main);
-
-	// Configure each thread for use.
-	root_thread->status = thread_ready;
+	idle_thread->id = IDLE_THREAD_ID;
 	idle_thread->status = thread_ready;
-
-	// Enable multitasking/threading
-	thread_pool.current = root_thread;
 }
 
 

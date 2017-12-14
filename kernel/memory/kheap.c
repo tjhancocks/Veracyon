@@ -25,12 +25,15 @@
 #include <memory.h>
 #include <kprint.h>
 #include <panic.h>
+#include <sema.h>
 
 static uintptr_t kheap_start = 0;
 static uintptr_t kheap_end = 0;
 static struct kheap_block *kheap_first_block = NULL;
 static struct kheap_block *kheap_last_block = NULL;
 static uint8_t should_coalesce = 0;
+
+static spin_lock_t heap_lock = { 0 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +54,8 @@ void kheap_expand_by_single_page(void)
 	}
 
 	// We can get the ending address by asking for the next available address.
+	spin_lock(heap_lock);
+
 	kheap_end = first_available_kernel_page() - 1;
 
 	// Ensure that the page is marked as "free".
@@ -66,6 +71,8 @@ void kheap_expand_by_single_page(void)
 	// appropriate.
 	kheap_last_block = block;
 	kheap_first_block = kheap_first_block ?: block;
+
+	spin_unlock(heap_lock);
 }
 
 void kheap_expand_by_required_length(uint32_t length)
@@ -108,8 +115,12 @@ void kheap_divide_block(struct kheap_block *block, uint32_t size)
 	new_block->size = block->size - (size + sizeof(*block));
 	block->size = size;
 
+	spin_lock(heap_lock);
+
 	if (kheap_last_block == block)
 		kheap_last_block = new_block;
+
+	spin_unlock(heap_lock);
 }
 
 void kheap_allocate_block(struct kheap_block *block)
@@ -122,6 +133,9 @@ void kheap_coalesce_free_blocks(void)
 {
 	if (++should_coalesce < 5)
 		return;
+
+	spin_lock(heap_lock);
+
 	should_coalesce = 0;
 
 
@@ -168,6 +182,8 @@ void kheap_coalesce_free_blocks(void)
 	COALESCE_NEXT_BLOCK:
 		block = block->prev;
 	}
+
+	spin_unlock(heap_lock);
 }
 
 void kheap_describe(void)
@@ -192,6 +208,8 @@ struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
 {
 	// Calculate how space is actually going to be needed for the block
 	// entry.
+	spin_lock(heap_lock);
+
 	struct kheap_block *block = kheap_first_block;
 	uint32_t required = (minimum + (sizeof(*block) * 2));
 	while (block) {
@@ -203,10 +221,12 @@ struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
 		// Does the block have at least the minimum space mentioned plus the 
 		// twice the size of the block header?
 		if (block->size >= required) {
+			spin_unlock(heap_lock);
 			goto ALLOCATE_OVERSIZED_BLOCK;
 		}
 		else if (block->size >= minimum && block->size < required) {
 			kheap_allocate_block(block);
+			spin_unlock(heap_lock);
 			return block;
 		}
 		else if (block->size < minimum) {
@@ -214,11 +234,14 @@ struct kheap_block *kheap_find_block_of_size(uint32_t minimum)
 		}
 
 		// We've found a suitable block. 
+		spin_unlock(heap_lock);
 		return block;
 
 	CHECK_SIZE_OF_NEXT_BLOCK:
 		block = block->next;
 	}
+
+	spin_unlock(heap_lock);
 
 	// If we've reach this point then we've exhausted all available blocks in
 	// the heap, and will need more!
@@ -280,6 +303,8 @@ void kfree(void *ptr)
 
 void kheap_prepare(void)
 {
+	spin_init(heap_lock);
+
 	kdprint(dbgout, "Preparing kernel heap.\n");
 
 	// Get the starting point of the kernel heap.

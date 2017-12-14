@@ -49,6 +49,10 @@ __attribute__((noreturn)) void kmain(
 	// we can get debug logs for the kernel.
 	serial_prepare();
 
+	// Establish the basic threading support. This should get the main kernel
+	// thread in place so that resources can be correctly managed.
+	threading_prepare();
+
 	// Get the appropriate display driver in place.
 	if (config->vesa_mode == vga_mode_text) {
 		vga_text_prepare(config);
@@ -86,13 +90,14 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 
-	// Threading and multitasking support now need to be installed and enabled.
-	threading_prepare();
+	// Establish a second thread to be the idle thread. This will handle CPU
+	// power management when all other threads are busy/waiting.
+	// This will enable context switching in the system.
+	establish_idle_thread();
 
 	// Launch a debug kernel shell. This is a blocking function and will prevent
 	// the kernel from launching any further until the shell has exited.
 	init_shell();
-	kprint("\n\033[31mKernel shell exited successfully.\n");
 
 	kwork();
 }

@@ -26,6 +26,9 @@
 #include <kern_types.h>
 #include <arch/arch.h>
 
+#define ROOT_THREAD_ID	0
+#define IDLE_THREAD_ID 	1
+
 struct thread;
 
 enum thread_status 
@@ -57,9 +60,23 @@ struct thread
 };
 
 /**
- Prepare the initial threading and multitasking environment ready for use.
+ Prepare the initial threading and multitasking environment. This will ensure
+ the main kernel thread is constructed, ready and current.
+
+ NOTE: This does not mean that the kernel will begin context switching 
+ immediately. Context switching will not start until the second thread is
+ constructed.
  */
 void threading_prepare(void);
+
+/**
+ Construct an idle thread. This is a fallback thread that is used whenever all
+ other threads are busy or waiting for events to occur.
+
+ NOTE: The idle thread will typically be ID 1, and upon creation enable context
+ switching in the kernel.
+ */
+void establish_idle_thread(void);
 
 /**
  Spawn a new thread with the specified label and entry point.
@@ -72,6 +89,11 @@ struct thread *thread_spawn(const char *label, void(*thread_main)(void));
  WARNING: This should only be called from an interrupt.
  */
 void perform_yield_on_interrupt(struct interrupt_frame *frame);
+
+/**
+ Returns a reference to the current thread.
+ */
+struct thread *current_thread(void);
 
 /**
  Report the status of the current process.
