@@ -20,12 +20,14 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_x86_UTIL__
+#define __VKERNEL_x86_UTIL__
 
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
+#include <kern_types.h>
+
+/**
+ Returns the current value of the EFLAGS register.
+ */
+extern uint32_t get_eflags(void);
 
 #endif

@@ -22,6 +22,8 @@
 
 #include <sema.h>
 #include <thread.h>
+#include <arch/arch.h>
+#include <kprint.h>
 
 static inline int atomic_swap(volatile int *x, int v)
 {

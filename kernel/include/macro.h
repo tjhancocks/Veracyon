@@ -24,43 +24,8 @@
 #define __VKERNEL_MACROS__
 
 #include <kern_types.h>
-#include <string.h>
-#include <kprint.h>
 
-static uint32_t __kregister_read(const char *restrict name)
-{
-	uint32_t value = 0xDEADBEEF;
-
-	if (strcmp(name, "eax") == 0) 
-		__asm__ __volatile("movl %%eax, %0" : "=r"(value));
-	else if (strcmp(name, "ebx") == 0) 
-		__asm__ __volatile("movl %%ebx, %0" : "=r"(value));
-	else if (strcmp(name, "ecx") == 0) 
-		__asm__ __volatile("movl %%ecx, %0" : "=r"(value));
-	else if (strcmp(name, "edx") == 0) 
-		__asm__ __volatile("movl %%edx, %0" : "=r"(value));
-	else if (strcmp(name, "esi") == 0) 
-		__asm__ __volatile("movl %%esi, %0" : "=r"(value));
-	else if (strcmp(name, "edi") == 0) 
-		__asm__ __volatile("movl %%edi, %0" : "=r"(value));
-	else if (strcmp(name, "esp") == 0) 
-		__asm__ __volatile("movl %%esp, %0" : "=r"(value));
-	else if (strcmp(name, "ebp") == 0) 
-		__asm__ __volatile("movl %%ebp, %0" : "=r"(value));
-	else if (strcmp(name, "cr0") == 0) 
-		__asm__ __volatile("movl %%cr0, %0" : "=r"(value));
-	else if (strcmp(name, "cr4") == 0) 
-		__asm__ __volatile("movl %%cr4, %0" : "=r"(value));
-	else if (strcmp(name, "cr2") == 0) 
-		__asm__ __volatile("movl %%cr2, %0" : "=r"(value));
-	else if (strcmp(name, "cr3") == 0) 
-		__asm__ __volatile("movl %%cr3, %0" : "=r"(value));
-	else {
-		kprint("Attempted to read unrecognised register: %s\n", name);
-	}
-
-	return value;
-}
+extern uint32_t __kregister_read(const char *name);
 
 #define _TO_STR(s) __TO_STR(s)
 #define __TO_STR(s)	#s
