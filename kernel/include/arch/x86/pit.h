@@ -20,13 +20,24 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_X86_PIT__
+#define __VKERNEL_X86_PIT__
 
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
+#include <kern_types.h>
+
+/**
+ Configure and prepare the Programmable Interrupt Timer for use.
+ */
+void pit_prepare(void);
+
+/**
+ Reports the current tick count.
+ */
+uint64_t pit_get_ticks(void);
+
+/**
+ Reports the current subtick count.
+ */
+uint32_t pit_get_subticks(void);
 
 #endif

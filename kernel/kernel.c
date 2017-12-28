@@ -90,6 +90,9 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 
+	// Setup the PIT and timers for kernel use.
+	pit_prepare();
+
 	// Establish a second thread to be the idle thread. This will handle CPU
 	// power management when all other threads are busy/waiting.
 	// This will enable context switching in the system.

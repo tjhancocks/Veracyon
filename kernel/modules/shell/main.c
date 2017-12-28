@@ -26,6 +26,7 @@
 #include <kprint.h>
 #include <string.h>
 #include <kheap.h>
+#include <time.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +43,38 @@ static void kernel_about(void)
 	kprint("\n");
 }
 
+static void kernel_uptime(void)
+{
+	uint64_t time_ms = system_uptime();
+	uint64_t time_s = time_ms / 1000;
+	uint64_t time_m = time_s / 60;
+	uint64_t time_h = time_m / 60;
+	uint64_t time_d = time_h / 24;
+
+	time_ms %= 1000;
+	time_s %= 60;
+	time_h %= 60;
+	time_d %= 24;
+
+	if (time_d) {
+		kprint("\t%02dd, %02dm, %02dm, %02ds, %03dms\n", 
+			time_d, time_h, time_m, time_s, time_ms);
+	}
+	else if (time_h) {
+		kprint("\t%02dm, %02dm, %02ds, %03dms\n", 
+			time_h, time_m, time_s, time_ms);
+	}
+	else if (time_m) {
+		kprint("\t%02dm, %02ds, %03dms\n", time_m, time_s, time_ms);
+	}
+	else if (time_s) {
+		kprint("\t%02ds, %03dms\n", time_s, time_ms);
+	}
+	else {
+		kprint("\t%03dms\n", time_ms);
+	}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +89,9 @@ void shell_prompt(void)
 	}
 	else if (strcmp(input, "about") == 0) {
 		kernel_about();
+	}
+	else if (strcmp(input, "uptime") == 0) {
+		kernel_uptime();
 	}
 
 	kfree((void *)input);

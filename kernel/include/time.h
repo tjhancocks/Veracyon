@@ -20,13 +20,15 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_TIME__
+#define __VKERNEL_TIME__
 
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
+#include <kern_types.h>
+
+/**
+ Reports the current system uptime in seconds (does not include time spent in 
+ bootloader)
+ */
+uint64_t system_uptime(void);
 
 #endif
