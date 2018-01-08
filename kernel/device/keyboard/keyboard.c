@@ -27,110 +27,65 @@
 #include <kheap.h>
 #include <kprint.h>
 #include <thread.h>
-#include <sema.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define KEYBOARD_BUFFER	64
+#define KEYBOARD_BUFFER_LEN	64
 
-struct buffer_item;
-struct buffer_item {
-	struct buffer_item *next;
-	struct keyevent *event;	
-};
+static uint8_t keyboard_buffer[KEYBOARD_BUFFER_LEN] = { 0 };
+static uint32_t keyboard_read_idx = 0;
+static uint32_t keyboard_write_idx = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct buffer_item *buffer_first = NULL;
-static struct buffer_item *buffer_last = NULL;
-static uint32_t buffer_count = 0;
-static spin_lock_t buffer_lock = { 0 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-uint32_t keyboard_buffer_has_items(void)
+static int32_t keyboard_buffer_count(void)
 {
-	return (buffer_count > 0 && buffer_first != NULL) ? 1 : 0;
+	return keyboard_write_idx - keyboard_read_idx;
 }
 
-struct keyevent *keyboard_buffer_dequeue(void)
+static void keyboard_insert_scancode(uint8_t code)
 {
-	struct buffer_item *item = buffer_first;
-	
-	if (item == NULL)
-		return NULL;
+	// Get the insertion index into the buffer and get the mod of it. 
+	uint32_t idx = keyboard_write_idx % KEYBOARD_BUFFER_LEN;
+	++keyboard_write_idx;
 
-	struct keyevent *event = item->event;
+	// Check if the insertion point is over the buffer length from the read 
+	// point. If it is pull the read point forwards.
+	int32_t diff = keyboard_buffer_count();
+	if (diff >= KEYBOARD_BUFFER_LEN)
+		keyboard_read_idx += (diff - KEYBOARD_BUFFER_LEN);
 
-	--buffer_count;
-	buffer_first = item->next;
-	if (buffer_count == 0)
-		buffer_last = NULL;
-	kfree(item);
-
-	return event;
+	// Write the scancode into the insertion point of the buffer.
+	keyboard_buffer[idx] = code;	
 }
 
-void keyboard_buffer_enqueue(struct keyevent *event)
+static uint8_t keyboard_read_scancode(void)
 {
-	if (buffer_count >= KEYBOARD_BUFFER) {
-		return;
-	}
-	if (buffer_count >= KEYBOARD_BUFFER ||
-		(buffer_last && buffer_last->event && event &&
-		 buffer_last->event->keycode == event->keycode)
-	) {
-		kfree(event);
-		return;
-	}
-
-	struct buffer_item *item = kalloc(sizeof(*item));
-	item->event = event;
-	item->next = NULL;
-
-	if (buffer_last) {
-		buffer_last->next = item;
-	}
-	buffer_last = item;
-
-	if (!buffer_first) {
-		buffer_first = item;
-	}
-
-	++buffer_count;
+	uint32_t idx = keyboard_read_idx++ % KEYBOARD_BUFFER_LEN;
+	return keyboard_buffer[idx];
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
 void keyboard_driver_prepare(void)
 {
-	spin_init(buffer_lock);
 	ps2_keyboard_initialise();
 }
 
 void keyboard_received_scancode(uint8_t scancode)
-{
-	struct keyevent *event = keyevent_make(scancode);
-	
-	spin_lock(buffer_lock);
-	keyboard_buffer_enqueue(event);
-	spin_unlock(buffer_lock);
+{	
+	keyboard_insert_scancode(scancode);
 }
 
 struct keyevent *keyboard_consume_key_event(void)
 {
+	struct keyevent *event = NULL;
+
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
-	spin_lock(buffer_lock);
-	if (keyboard_buffer_has_items() == 0) {
-		spin_unlock(buffer_lock);
-		return NULL;
-	}
-
-	struct keyevent *event = keyboard_buffer_dequeue();
-	spin_unlock(buffer_lock);
+	if (keyboard_buffer_has_items())
+		event = keyevent_make(keyboard_read_scancode());
 
 	return event;
 }
@@ -140,4 +95,9 @@ struct keyevent *keyboard_wait_for_keyevent(void)
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
 	thread_wait_keyevent();
 	return keyboard_consume_key_event();
+}
+
+uint32_t keyboard_buffer_has_items(void)
+{
+	return keyboard_buffer_count() > 0 ? 1 : 0;
 }

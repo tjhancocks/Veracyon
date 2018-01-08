@@ -100,6 +100,7 @@ void shell_prompt(void)
 
 void shell_main(void)
 {
+	kdprint(dbgout, "====== SHELL STARTED ======\n");
 	while (shell_terminated == 0) {
 		shell_prompt();
 	}
