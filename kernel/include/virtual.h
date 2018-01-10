@@ -69,6 +69,15 @@ void virtual_memory_prepare(struct boot_config *config);
 uintptr_t first_available_kernel_page(void);
 
 /**
+ Reports the address of the first available page in the kernel address space 
+ that is followed by the specified number of contiguous available pages.
+
+ RETURNS:
+    An address for a page in kernel space.
+ */
+uintptr_t find_available_contiguous_kernel_pages(uint32_t count);
+
+/**
  Attempt to allocate the page at the specified address.
 
     - address: Any 32-bit address.

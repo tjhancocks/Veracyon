@@ -113,6 +113,48 @@ uintptr_t first_available_kernel_page(void)
 	return 0;
 }
 
+uintptr_t find_available_contiguous_kernel_pages(uint32_t count)
+{
+	uintptr_t start_page_address = 0;
+	uint32_t available_page_count = 0;
+
+	for (
+		uintptr_t address = first_available_kernel_address;
+		address < 0xFFFFFFFF;
+		address += page_size
+	) {
+		switch (is_page_allocated(address)) {
+			case kPAGE_ALLOCATED: {
+				start_page_address = 0;
+				available_page_count = 0;
+				break;
+			}
+
+			case kNO_PAGE_TABLE_ALLOCATED:
+			case kNO_PAGE_ALLOCATED: {
+				if (start_page_address == 0) 
+					start_page_address = address;
+
+				if (++available_page_count >= count)
+					return start_page_address;
+			}
+		}
+	}
+
+	// At this point we can safely assume that there are not _enough_ available 
+	// kernel space addresses left.
+	struct panic_info info = (struct panic_info) {
+		panic_memory,
+		"INSUFFICIENT KERNEL ADDRESS SPACE",
+		"The kernel has exhausted all of the address space assigned to it. "
+		"No more memory can be allocated to the kernel."
+	};
+	panic(&info, NULL);
+
+	// Keep the compiler happy.
+	return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
