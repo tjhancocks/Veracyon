@@ -60,4 +60,9 @@ void *kalloc(uint32_t length);
  */
 void kfree(void *ptr);
 
+/**
+ Describe the structure of the kernel heap.
+ */
+void kheap_dump_structure(void);
+
 #endif

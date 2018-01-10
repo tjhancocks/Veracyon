@@ -185,8 +185,6 @@ uintptr_t kframe_alloc(void)
 	free_frame_stack++;
 	free_frame_count--;
 
-	kdprint(dbgout, "Allocated physical frame: %p (%d)\n",
-		*free_frame_stack, free_frame_count - 1);
 
 	return *free_frame_stack;
 }
@@ -195,5 +193,4 @@ void kframe_free(uintptr_t frame)
 {
 	// TODO: There should really be some verification about frame validity here.
 	push_free_frame(frame);
-	kdprint(dbgout, "Freed physical frame: %p\n", frame);
 }
