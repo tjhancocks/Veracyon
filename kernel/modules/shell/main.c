@@ -27,6 +27,9 @@
 #include <string.h>
 #include <kheap.h>
 #include <time.h>
+#include <process.h>
+#include <macro.h>
+#include <atomic.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +101,7 @@ void shell_prompt(void)
 }
 
 
-void shell_main(void)
+int shell_main(void)
 {
 	kdprint(dbgout, "====== SHELL STARTED ======\n");
 	while (shell_terminated == 0) {
@@ -114,6 +117,12 @@ void init_shell(void)
 	// Ensure that the shell termination flag is not set.
 	shell_terminated = 0;
 
-	// Launch it!
-	shell_main();
+	// Create a new process for the shell
+	atom_t atom;
+	atomic_start(atom);
+
+	struct process *shell_proc = process_spawn("root_shell", shell_main);
+	shell_proc->page_dir = REGISTER(cr3);
+
+	atomic_end(atom);
 }

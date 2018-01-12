@@ -22,239 +22,156 @@
 
 #include <thread.h>
 #include <kheap.h>
-#include <panic.h>
 #include <kprint.h>
-#include <arch/arch.h>
-#include <serial.h>
-#include <macro.h>
 #include <memory.h>
-#include <device/keyboard/keyboard.h>
+#include <panic.h>
+#include <macro.h>
+#include <task.h>
+#include <time.h>
+#include <atomic.h>
 
-static uint32_t next_thread_id = 2;
-static struct {
-	struct thread *first;
-	struct thread *last;
-	struct thread *current;
-} thread_pool;
+////////////////////////////////////////////////////////////////////////////////
 
-static struct thread _kernel_main_thread = (struct thread) {
-	.id = ROOT_THREAD_ID,
-	.label = "vkernel::root_thread",
-	.status = thread_ready,
-	.status_info = 0,
-	.state = 0,
-	.next = NULL,
-	.prev = NULL
-};
+static uint32_t next_tid = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct thread *thread_create(const char *label, int(*start)(void))
+{
+	kdprint(dbgout, "Creating new thread: %s\n", label ?: "(unnamed)");
+
+	// Construct the basic thread.
+	struct thread *thread = kalloc(sizeof(*thread));
+	memset(thread, 0, sizeof(*thread));
+
+	// Basic thread metadata
+	thread->tid = next_tid++;
+	thread->label = label ?: "";
+
+	// Configure the thread state. Make sure it is ready to be switched in by
+	// the scheduler.
+	thread->state.mode = thread_running;
+	thread->state.reason = 0;
+	thread->state.info = 0;
+
+	thread->start = start;
+
+	kdprint(dbgout, "   * assigning tid: %d\n", thread->tid);
+	return thread;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 __attribute__((noreturn))
-void idle_main(void)
+static void _thread_start(void)
 {
-	while (1) {
-		__asm__ __volatile__("hlt");
+	// Get the thread from the current task. It is the context that we require.
+	struct thread *this = task_get_current()->thread;
+
+	// Make sure that a thread instance has been provided. If it has not then,
+	// panic. We're executing a task that is invalid.
+	if (!this || !this->start) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"INVALID THREAD STARTED",
+			"The context provided to _thread_start was invalid."
+		};
+		panic(&info, NULL);
 	}
+
+	kdprint(dbgout, "Starting thread execution: %d (%p)\n",
+		this->tid, this);
+
+	// Call the main function of the thread. We should remain inside this
+	// function until the thread is ready to terminate.
+	this->start();
+
+	// Mark the thread as terminated. This will prevent the scheduler from
+	// switching to it and leave it marked for removal.
+	this->state.mode = thread_killed;
+	this->state.reason = reason_exited;
+
+	// Enter an infinite loop, so that we don't fall out of the bottom of the 
+	// stack.
+	while (1)
+		__asm__ __volatile__("hlt");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void thread_halt(void)
+int thread_stack_init(struct thread *thread, uint32_t size)
 {
-	force_yield_on_next_interrupt();
-	__asm__ __volatile__("hlt");
-}
+	// Ensure the thread reference that we were given is actually correct.
+	if (!thread)
+		return 0;
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum thread_status current_thread_status(void)
-{
-	return thread_pool.current ? thread_pool.current->status : thread_ready;
-}
-
-void thread_wait_time(uint64_t ms)
-{
-	// If there is no current thread, or it is the "idle" thread then ignore.
-	if (!thread_pool.current || thread_pool.current->id == 1)
-		return;
-
-
-	thread_pool.current->status = thread_waiting_timer;
-	thread_pool.current->status_info = ms;
-	__asm__ __volatile__("hlt");
-}
-
-void thread_wait_keyevent(void)
-{
-	// If there is no current thread, or it is the "idle" thread then ignore.
-	if (!thread_pool.current || thread_pool.current->id == 1)
-		return;
-
-
-	thread_pool.current->status = thread_waiting_keyevent;
-	thread_pool.current->status_info = 0;
-	__asm__ __volatile__("hlt");
-}
-
-void thread_wait_irq(uint8_t irq)
-{
-	// If there is no current thread, or it is the "idle" thread then ignore.
-	if (!thread_pool.current || thread_pool.current->id == 1)
-		return;
-
-
-	thread_pool.current->status = thread_waiting_irq;
-	thread_pool.current->status_info = (uint64_t)irq;
-	__asm__ __volatile__("hlt");
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void threading_prepare(void)
-{
-	thread_pool.current = &_kernel_main_thread;
-	thread_pool.first = thread_pool.current;
-	thread_pool.last = thread_pool.last;
-
-	kdprint(dbgout, "Established root thread as TID::%d [%s]\n",
-		thread_pool.current->id, thread_pool.current->label);
-}
-
-void establish_idle_thread(void)
-{
-	struct thread *idle_thread = thread_spawn("idle", idle_main);
-	idle_thread->id = IDLE_THREAD_ID;
-	idle_thread->status = thread_ready;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void *kalloc_stack(uint32_t size, uint32_t eip)
-{
-	uint32_t *stack = (uint32_t *)kalloc(size * sizeof(*stack));
+	// Construct a new stack
+	uint32_t *stack = kalloc(size * sizeof(*stack));
+	uint32_t off = 1;
 	memset(stack, 0, size * sizeof(*stack));
 
-	// We need to construct the initial values of the stack.
-	stack[size - 1]  = 0x10;			// SS
-	stack[size - 2]  = 0x00;			// USER ESP
-	stack[size - 3]  = 0x208;			// EFLAGS
-	stack[size - 4]  = 0x08;			// CS
-	stack[size - 5]  = eip;				// EIP
-	stack[size - 6]  = 0x00;			// ERROR CODE
-	stack[size - 7]  = 0x00;			// INTERRUPT
-	stack[size - 8]  = 0x00;			// EDI
-	stack[size - 9]  = 0x00;			// ESI
-	stack[size - 10] = (uint32_t)stack;	// EBP
-	stack[size - 11] = 0x00;			// ESP
-	stack[size - 12] = 0x00;			// EBX
-	stack[size - 13] = 0x00;			// EDX
-	stack[size - 14] = 0x00;			// ECX
-	stack[size - 15] = 0x00;			// EAX
-	stack[size - 16] = 0x10;			// DS
-	stack[size - 17] = 0x10;			// ES
-	stack[size - 18] = 0x10;			// FS
-	stack[size - 19] = 0x10;			// GS
+	kdprint(dbgout, "Initialising stack for thread: %d (%p)\n",
+		thread->tid, thread);
 
-	// Return what EBP should be.
-	return stack + size;
+	// The _thread_start function needs parameters to exist on the stack.
+	stack[size - (off++)] = (uint32_t)thread;
+	stack[size - (off++)] = 0x00;
+
+	// We also need to setup a interrupt frame. We'll be switching to this
+	// thread via an interrupt, so the interrupt needs to be able to return
+	// successfully without raising a fault.
+	stack[size - (off++)] = 0x10;						// SS
+	stack[size - (off++)] = 0x00;						// UESP
+	stack[size - (off++)] = 0x208;						// EFLAGS
+	stack[size - (off++)] = 0x08; 						// CS
+	stack[size - (off++)] = (uint32_t)_thread_start;	// EIP
+	stack[size - (off++)] = 0x00;						// ERROR CODE
+	stack[size - (off++)] = 0x00;						// INTERRUPT
+	stack[size - (off++)] = 0x00;						// EDI
+	stack[size - (off++)] = 0x00;						// ESI
+	stack[size - (off++)] = (uint32_t)stack;			// EBP
+	stack[size - (off++)] = 0x00;						// ESP (ignored)
+	stack[size - (off++)] = 0x00;						// EBX
+	stack[size - (off++)] = 0x00;						// EDX
+	stack[size - (off++)] = 0x00;						// ECX
+	stack[size - (off++)] = 0x00;						// EAX
+	stack[size - (off++)] = 0x10;						// DS
+	stack[size - (off++)] = 0x10;						// ES
+	stack[size - (off++)] = 0x10;						// FS
+	stack[size - (off)] = 0x10;							// GS
+
+	// Setup the stack information in the thread.
+	thread->stack.ebp = (uint32_t)stack + (size * sizeof(*stack));
+	thread->stack.esp = thread->stack.ebp - (off * sizeof(*stack));
 }
-
-struct thread *thread_spawn(const char *label, void(*thread_main)(void))
-{
-	// Begin constructing the basics of a new thread
-	struct thread *thread = kalloc(sizeof(*thread));
-	memset(thread, 0, sizeof(*thread));
-
-	thread->label = label;
-	thread->id = next_thread_id++;
-	thread->status = thread_suspended;
-
-	if (thread->id > 0) {
-		thread->state.ebp = (uint32_t)kalloc_stack(
-			0x1000, 
-			(uint32_t)thread_main
-		);
-		thread->state.esp = thread->state.ebp - (19 * sizeof(uint32_t));
-	}
-
-	// Add the thread into the pool.
-	thread_pool.first = thread_pool.first ?: thread;
-
-	thread->prev = thread_pool.last;
-	if (thread->prev) 
-		thread->prev->next = thread;
-
-	thread_pool.last = thread;
-
-	// Finish up and return the thread instance to the caller.
-	return thread;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct thread *next_ready_thread(void)
+void sleep(uint64_t ms)
 {
-	struct thread *candidate = thread_pool.current->next ?: thread_pool.first;
-	
-	while (candidate != thread_pool.current) {
-		
-		// Is the candidate ready? If so then use it.
-		if (candidate->status == thread_ready) {
-			return candidate;
-		}
-
-		// Is the candidate waiting on a keyevent? If so check the keyboard
-		// buffer for events. If there are available events then mark the 
-		// thread as ready, and switch to it.
-		if (candidate->status == thread_waiting_keyevent && 
-			keyboard_buffer_has_items() > 0) 
-		{
-			goto MARK_READY_AND_RETURN;
-		}
-
-		// There was no way to bring the thread into scope. Move to the next 
-		// one.
-		candidate = candidate->next ?: thread_pool.first;
-	}
-
-	// At this point we just want to fall back on the next thread.
-	candidate = thread_pool.current->next ?: thread_pool.first;
-	return candidate;
-
-MARK_READY_AND_RETURN:
-	candidate->status = thread_ready;
-	return candidate;
-}
-
-extern void switch_stack(uint32_t esp, uint32_t ebp);
-
-void perform_yield_on_interrupt(struct interrupt_frame *frame)
-{
-	// Only allow a yield if we're in multitasking mode!
-	if (!thread_pool.current || thread_pool.first == thread_pool.last)
+	// If the duration is zero then cancel.
+	if (ms == 0)
 		return;
 
-	// Get the next thread. If it is the same as the current thread, or not
-	// ready, then abort.
-	struct thread *next_thread = next_ready_thread();
-	if (next_thread == thread_pool.current || 
-		next_thread->status != thread_ready)
-	{
-		return;
-	}
+	// Fetch the current thread and mark it as suspended. Specify the reason, 
+	// and the resume time.
+	atom_t atom;
+	atomic_start(atom);
 
-	// Perform the stack switch. For this we need to calculate the required
-	// future position of the current stack. This involves a small amount of
-	// calculation based on the frame.
-	thread_pool.current->state.ebp = frame->ebp;
-	thread_pool.current->state.esp = (uint32_t)frame;
-	thread_pool.current = next_thread;
+	struct thread *current = task_get_current()->thread;
 
-	// The next thread should already have an appropriate stack for switching
-	// to. If it does not, then this will cause a panic.
-	switch_stack(next_thread->state.esp, next_thread->state.ebp);
+	current->state.info = system_uptime() + ms;
+	current->state.reason = reason_sleep;
+	current->state.mode = thread_paused;
+
+	// Indicate to the system that we need to be preempted now.
+	request_preemption();
+
+	atomic_end(atom);
+
+	// Wait until the thread is marked as running before resuming. Once it is,
+	// break from the loop and continue on.
+	while (current->state.mode != thread_running)
+		__asm__ __volatile__("hlt");
 }
+

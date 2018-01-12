@@ -54,9 +54,8 @@ void interrupt_handlers_prepare(struct boot_config *config);
 void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler);
 
 /**
- Flag to the interrupt yielding process that a task switch should occur on the
- next timer interrupt.
+ Request that the current task be preempted at the next system tick.
  */
-void force_yield_on_next_interrupt(void);
+void request_preemption(void);
 
 #endif

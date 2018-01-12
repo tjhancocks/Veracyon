@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,61 +20,47 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_THREAD__
-#define __VKERNEL_THREAD__
+#ifndef __VKERNEL_TASK__
+#define __VKERNEL_TASK__
 
 #include <kern_types.h>
+#include <thread.h>
 #include <arch/arch.h>
-#include <process.h>
 
-enum thread_mode
+struct task
 {
-	thread_running,
-	thread_paused,
-	thread_blocked,
-	thread_killed,
-};
-
-enum thread_mode_reason
-{
-	reason_none,
-	reason_irq_wait,
-	reason_key_wait,
-	reason_sleep,
-	reason_process,
-	reason_exited,
-};
-
-struct thread
-{
-	uint32_t tid;
-	const char *label;
-	struct process *owner;
-	struct {
-		uint32_t esp;
-		uint32_t ebp;
-	} stack;
-	struct {
-		enum thread_mode mode;
-		enum thread_mode_reason reason;
-		uint64_t info;
-	} state;
-	int(*start)(void);
+	struct thread *thread;
+	struct task *prev;
+	struct task *next;
 };
 
 /**
- Construct a new thread object.
+ Is multitasking enabled?
  */
-struct thread *thread_create(const char *label, int(*start)(void));
+int task_allowed(void);
 
 /**
- Initialise a new stack for the specified thread.
+ Toggle the allowed status of multitasking
  */
-int thread_stack_init(struct thread *thread, uint32_t size);
+void task_set_allowed(int flag);
 
 /**
- Put the current thread to sleep for the specified period of time (milliseconds)
+ Setup a new task. This will schedule the specified thread in the multitasking
+ environment.
+
+ RETURN: 0 - if the task could not be created. Any other value if the task was
+ created.
  */
-void sleep(uint64_t ms);
+int task_create(struct thread *thread);
+
+/**
+ Yield the current task. This can only be done in an interrupt frame.
+ */
+void yield(struct interrupt_frame *frame);
+
+/**
+ Returns the currently executing task.
+ */
+struct task *task_get_current(void);
 
 #endif

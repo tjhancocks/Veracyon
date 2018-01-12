@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,61 +20,35 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_THREAD__
-#define __VKERNEL_THREAD__
+#ifndef __VKERNEL_ATOMIC__
+#define __VKERNEL_ATOMIC__
 
 #include <kern_types.h>
-#include <arch/arch.h>
-#include <process.h>
+#include <macro.h>
 
-enum thread_mode
-{
-	thread_running,
-	thread_paused,
-	thread_blocked,
-	thread_killed,
-};
+typedef uint32_t atom_t;
 
-enum thread_mode_reason
-{
-	reason_none,
-	reason_irq_wait,
-	reason_key_wait,
-	reason_sleep,
-	reason_process,
-	reason_exited,
-};
+#ifndef atomic_start
+#define atomic_start(__atom)	\
+	{ \
+		if (get_eflags() & 0x200) { \
+			__atom = 0x11223344; \
+			__asm__ __volatile__("cli"); \
+		} \
+		else { \
+			__atom = 0; \
+		} \
+	}
+#endif
 
-struct thread
-{
-	uint32_t tid;
-	const char *label;
-	struct process *owner;
-	struct {
-		uint32_t esp;
-		uint32_t ebp;
-	} stack;
-	struct {
-		enum thread_mode mode;
-		enum thread_mode_reason reason;
-		uint64_t info;
-	} state;
-	int(*start)(void);
-};
-
-/**
- Construct a new thread object.
- */
-struct thread *thread_create(const char *label, int(*start)(void));
-
-/**
- Initialise a new stack for the specified thread.
- */
-int thread_stack_init(struct thread *thread, uint32_t size);
-
-/**
- Put the current thread to sleep for the specified period of time (milliseconds)
- */
-void sleep(uint64_t ms);
+#ifndef atomic_end
+#define atomic_end(__atom)	\
+	{ \
+		if (__atom == 0x11223344) { \
+			__atom = 0; \
+			__asm__ __volatile__("sti"); \
+		} \
+	}
+#endif
 
 #endif

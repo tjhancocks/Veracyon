@@ -93,7 +93,7 @@ struct keyevent *keyboard_consume_key_event(void)
 struct keyevent *keyboard_wait_for_keyevent(void)
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
-	thread_wait_keyevent();
+	// TODO: Wait until key event wakes thread.
 	return keyboard_consume_key_event();
 }
 

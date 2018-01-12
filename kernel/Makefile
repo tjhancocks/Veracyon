@@ -31,7 +31,7 @@ LD := i686-elf-gcc
 AS := nasm
 
 BUILD_TIME := $(shell date)
-BUILD_VERSION := 0.1
+BUILD_VERSION := 0.2
 BUILD_COMMIT := $(shell git log -1 --pretty=format:"%H")
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
