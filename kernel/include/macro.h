@@ -26,6 +26,7 @@
 #include <kern_types.h>
 
 extern uint32_t __kregister_read(const char *name);
+extern uint32_t get_eflags(void);
 
 #define _TO_STR(s) __TO_STR(s)
 #define __TO_STR(s)	#s

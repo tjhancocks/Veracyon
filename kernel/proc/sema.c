@@ -73,7 +73,7 @@ void spin_wait(volatile int *address, volatile int *waiters)
 		atomic_inc(waiters);
 
 	while (*address)
-		thread_halt();
+		request_preemption();
 
 	if (waiters)
 		atomic_dec(waiters);
@@ -90,7 +90,7 @@ void spin_unlock(spin_lock_t lock)
 	if (lock[0]) {
 		atomic_store(lock, 0);
 		if (lock[1])
-			thread_halt();
+			request_preemption();
 	}
 }
 

@@ -30,6 +30,7 @@
 #include <arch/arch.h>
 #include <term.h>
 #include <sema.h>
+#include <atomic.h>
 
 #define TAB_WIDTH 4
 
@@ -58,6 +59,7 @@ void vga_update_cursor(void);
 
 void vga_text_clear(uint8_t attribute)
 {
+
 	uint32_t len = vga_text.cols * vga_text.rows;
 	uint16_t cell = (attribute << 8) | ' ';
 
@@ -119,6 +121,9 @@ void vga_text_restore_default_attribute(void)
 
 void vga_text_scroll(void)
 {
+	atom_t atom;
+	atomic_start(atom);
+
 	if (vga_text.y >= vga_text.rows) {
 		spin_lock(vga_lock);
 
@@ -137,6 +142,8 @@ void vga_text_scroll(void)
 
 		spin_unlock(vga_lock);
 	}
+
+	atomic_end(atom);
 }
 
 void vga_text_prepare(struct boot_config *config)
@@ -218,6 +225,9 @@ void vga_text_control_code(const char c)
 
 void kputc_vga_text(const char c __attribute__((unused)))
 {
+	atom_t atom;
+	atomic_start(atom);
+
 	spin_lock(vga_lock);
 	if (c <= kASCII_US || c == kASCII_DEL) {
 		// This is a control code and should be treated as such.
@@ -242,6 +252,8 @@ void kputc_vga_text(const char c __attribute__((unused)))
 	if (vga_text.y >= vga_text.rows) {
 		vga_text_scroll();
 	}
+
+	atomic_end(atom);
 }
 
 void kputs_vga_text(const char *restrict str)

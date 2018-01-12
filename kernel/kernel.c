@@ -33,6 +33,7 @@
 #include <panic.h>
 #include <modules/shell.h>
 #include <thread.h>
+#include <process.h>
 
 
 __attribute__((noreturn)) void kwork(void)
@@ -48,10 +49,6 @@ __attribute__((noreturn)) void kmain(
 	// We need the debug serial port to be enabled before anything else so that
 	// we can get debug logs for the kernel.
 	serial_prepare();
-
-	// Establish the basic threading support. This should get the main kernel
-	// thread in place so that resources can be correctly managed.
-	threading_prepare();
 
 	// Get the appropriate display driver in place.
 	if (config->vesa_mode == vga_mode_text) {
@@ -74,7 +71,7 @@ __attribute__((noreturn)) void kmain(
 	prepare_panic_handler(config);
 
 	// Some basic information to be shown to the user.
-	kprint("\033[96mVERACYON VERSION 0.1\033[0m\n");
+	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
 	kprint("\033[90m Copyright (c) 2017 Tom Hancocks. MIT License.\033[0m\n\n");
 
 	// Get the memory management of the system/kernel up and running. This will
@@ -93,10 +90,8 @@ __attribute__((noreturn)) void kmain(
 	// Setup the PIT and timers for kernel use.
 	pit_prepare();
 
-	// Establish a second thread to be the idle thread. This will handle CPU
-	// power management when all other threads are busy/waiting.
-	// This will enable context switching in the system.
-	establish_idle_thread();
+	// Establish multitasking and processes
+	process_prepare();
 
 	// Launch a debug kernel shell. This is a blocking function and will prevent
 	// the kernel from launching any further until the shell has exited.
