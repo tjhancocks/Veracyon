@@ -77,4 +77,10 @@ int thread_stack_init(struct thread *thread, uint32_t size);
  */
 void sleep(uint64_t ms);
 
+/**
+ Sleep the thread until a keyboard event is received. Any keyboard will resume
+ the thread.
+ */
+void key_wait(void);
+
 #endif

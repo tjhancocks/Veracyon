@@ -27,6 +27,7 @@
 #include <macro.h>
 #include <memory.h>
 #include <task.h>
+#include <atomic.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
 
@@ -34,7 +35,7 @@
 
 static struct process *first_process = NULL;
 static struct process *last_process = NULL;
-static struct process *current_process = NULL;
+static struct process *frontmost_process = NULL;
 static uint32_t process_count = 0;
 static uint32_t next_pid = 0;
 
@@ -51,10 +52,7 @@ void process_prepare(void)
 {
 	// Create a reference for the kernel and discard the result. We need to 
 	// adopt the appropriate information for the process.
-	struct process *kernel_proc = process_spawn("kernel", NULL);
-	
-	// If no kernel process has been spawned then panic. We will be unable to
-	// continue.
+	struct process *kernel_proc = process_launch("kernel", NULL, P_ROOT);
 	if (!kernel_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -65,16 +63,8 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
-	// Specify the page directory of the kernel process.
-	kernel_proc->page_dir = REGISTER(cr3);
-	kdprint(dbgout, "Process %d (%s) established with page directory: %p\n",
-		kernel_proc->pid, kernel_proc->name, kernel_proc->page_dir);
-
 	// Spawn the idle process
-	struct process *idle_proc = process_spawn("idle", idle);
-
-	// If no idle process has been spawned then panic. It would be unwise to
-	// continue.
+	struct process *idle_proc = process_launch("idle", idle, P_ROOT);
 	if (!idle_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -85,12 +75,50 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
-	idle_proc->page_dir = REGISTER(cr3);
-	kdprint(dbgout, "Process %d (%s) established with page directory: %p\n",
-		idle_proc->pid, idle_proc->name, idle_proc->page_dir);
-
 	// Enable multitasking
 	task_set_allowed(1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct process *process_launch(
+	const char *name,
+	int(*_entry)(void),
+	enum process_launch_flags flags
+) {
+	// Make sure an entry point was actually specified.
+	if (!_entry && first_process)
+		return NULL;
+
+	atom_t atom;
+	atomic_start(atom);
+
+	struct process *proc = process_spawn(name ?: "(unnamed)", _entry);
+	if (!proc) 
+		return NULL;
+
+	if (flags & P_USR) {
+		// Setup a new page directory for the user-mode process.
+		proc->page_dir = REGISTER(cr3);
+	} 
+	else {
+		// Adopt the kernel page directory.
+		proc->page_dir = REGISTER(cr3);
+	}
+
+	if ((proc->allow_frontmost = (flags & P_UI) ? 1 : 0) == 1) {
+		if (!frontmost_process) {
+			frontmost_process = proc;
+		}
+	}
+
+
+	kdprint(dbgout, "Process %d (%s) established with page directory: %p\n",
+		proc->pid, proc->name, proc->page_dir);
+
+	atomic_end(atom);
+
+	return proc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +143,12 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	proc->stdin.r_idx = 0;
 	proc->stdin.w_idx = 0;
 	kdprint(dbgout, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
+
+	proc->kbdin.size = 64;
+	proc->kbdin.buffer = kalloc(proc->kbdin.size);
+	proc->kbdin.r_idx = 0;
+	proc->kbdin.w_idx = 0;
+	kdprint(dbgout, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -182,9 +216,9 @@ struct thread *process_spawn_thread(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct process *process_current(void)
+struct process *process_get_frontmost(void)
 {
-	return current_process;
+	return frontmost_process;
 }
 
 struct process *process_get(uint32_t pid)

@@ -26,43 +26,63 @@
 #include <arch/arch.h>
 #include <kheap.h>
 #include <kprint.h>
-#include <thread.h>
+#include <task.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define KEYBOARD_BUFFER_LEN	64
-
-static uint8_t keyboard_buffer[KEYBOARD_BUFFER_LEN] = { 0 };
-static uint32_t keyboard_read_idx = 0;
-static uint32_t keyboard_write_idx = 0;
-
-////////////////////////////////////////////////////////////////////////////////
-
-static int32_t keyboard_buffer_count(void)
+static int32_t kbdin_buffer_count(void)
 {
-	return keyboard_write_idx - keyboard_read_idx;
+	// Get the frontmost process. We'll need to get the KBDIN for it in order
+	// to write the scancode to it. 
+	struct process *proc = task_get_current()->thread->owner;
+
+	// If there is no process then report 0.
+	// TODO: Maybe a panic here as it should be impossible?
+	if (!proc)
+		return 0;
+
+	return proc->kbdin.w_idx - proc->kbdin.r_idx;
 }
 
-static void keyboard_insert_scancode(uint8_t code)
+static void kbdin_write_scancode(uint8_t code)
 {
+	// Get the frontmost process. We'll need to get the KBDIN for it in order
+	// to write the scancode to it. 
+	struct process *proc = process_get_frontmost();
+
+	// If there is no frontmost process then just discard the scancode.
+	// TODO: At some point an agent should accept all scancodes as well in order
+	// to handle global shortcuts.
+	if (!proc)
+		return;
+
 	// Get the insertion index into the buffer and get the mod of it. 
-	uint32_t idx = keyboard_write_idx % KEYBOARD_BUFFER_LEN;
-	++keyboard_write_idx;
+	uint32_t idx = proc->kbdin.w_idx % proc->kbdin.size;
+	++proc->kbdin.w_idx;
 
 	// Check if the insertion point is over the buffer length from the read 
 	// point. If it is pull the read point forwards.
-	int32_t diff = keyboard_buffer_count();
-	if (diff >= KEYBOARD_BUFFER_LEN)
-		keyboard_read_idx += (diff - KEYBOARD_BUFFER_LEN);
+	int32_t diff = proc->kbdin.w_idx - proc->kbdin.r_idx;
+	if (diff >= proc->kbdin.size)
+		proc->kbdin.r_idx += (diff - proc->kbdin.size);
 
 	// Write the scancode into the insertion point of the buffer.
-	keyboard_buffer[idx] = code;	
+	proc->kbdin.buffer[idx] = code;	
 }
 
-static uint8_t keyboard_read_scancode(void)
+static uint8_t kbdin_read_scancode(void)
 {
-	uint32_t idx = keyboard_read_idx++ % KEYBOARD_BUFFER_LEN;
-	return keyboard_buffer[idx];
+	// Get the frontmost process. We'll need to get the KBDIN for it in order
+	// to write the scancode to it. 
+	struct process *proc = task_get_current()->thread->owner;
+
+	// If there is no frontmost process then just return NUL char
+	// TODO: Maybe a panic here as it should be impossible?
+	if (!proc)
+		return '\0';
+
+	uint32_t idx = proc->kbdin.r_idx++ % proc->kbdin.size;
+	return proc->kbdin.buffer[idx];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +95,8 @@ void keyboard_driver_prepare(void)
 
 void keyboard_received_scancode(uint8_t scancode)
 {	
-	keyboard_insert_scancode(scancode);
+	kbdin_write_scancode(scancode);
+	task_resume_any_for(reason_key_wait, 0);
 }
 
 struct keyevent *keyboard_consume_key_event(void)
@@ -84,8 +105,8 @@ struct keyevent *keyboard_consume_key_event(void)
 
 	// Check if there are any items in the keyboard buffer. If there are not
 	// then return a dummy keyevent.
-	if (keyboard_buffer_has_items())
-		event = keyevent_make(keyboard_read_scancode());
+	if (kbdin_buffer_count() > 0)
+		event = keyevent_make(kbdin_read_scancode());
 
 	return event;
 }
@@ -93,11 +114,15 @@ struct keyevent *keyboard_consume_key_event(void)
 struct keyevent *keyboard_wait_for_keyevent(void)
 {
 	// Wait for input from the keyboard. Halt until we're awoken by hardware.
-	// TODO: Wait until key event wakes thread.
-	return keyboard_consume_key_event();
+	struct keyevent *event = keyboard_consume_key_event();
+	while (!event) {
+		__asm__ __volatile__("hlt");
+		event = keyboard_consume_key_event();
+	}
+	return event;
 }
 
 uint32_t keyboard_buffer_has_items(void)
 {
-	return keyboard_buffer_count() > 0 ? 1 : 0;
+	return kbdin_buffer_count() > 0 ? 1 : 0;
 }

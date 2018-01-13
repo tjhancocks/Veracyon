@@ -36,14 +36,6 @@ struct kheap_block  {
 } __attribute__((packed));
 
 /**
- Setup and configure the kernel heap environment. Ensures that there is an 
- initial page available with a single "free" block present. This free block can
- then be divided or expanded upon as required by the kernel, via any allocations
- it makes.
- */
-void kheap_prepare(void);
-
-/**
  Allocate a block of memory that is of the specified length.
 
  	- length: The number of bytes to be allocated.

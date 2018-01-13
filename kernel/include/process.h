@@ -26,11 +26,24 @@
 #include <kern_types.h>
 #include <thread.h>
 
+enum process_launch_flags
+{
+	// The process is a root/kernel level agent and doesn't accept user input.
+	P_ROOT = 1 << 0,
+
+	// The process should exist within user-space.
+	P_USR = 1 << 1,
+
+	// The process should exist as an UI agent, accepting user input.
+	P_UI = 1 << 2
+};
+
 struct process 
 {
 	uint32_t pid;
 	const char *name;
 	uintptr_t page_dir;
+	int allow_frontmost;
 
 	struct {
 		char *buffer;
@@ -38,6 +51,13 @@ struct process
 		uint32_t w_idx;
 		uint32_t size;
 	} stdin;
+
+	struct {
+		uint8_t *buffer;
+		uint32_t r_idx;
+		uint32_t w_idx;
+		uint32_t size;
+	} kbdin;
 
 	struct {
 		struct thread *main;
@@ -51,6 +71,18 @@ struct process
  Prepare basic process environment and configuration.
  */
 void process_prepare(void);
+
+/**
+ Launch a new process with the specified name, starting location and 
+ launch flags.
+
+ NOTE: This is the preferred method of launching processes.
+ */
+struct process *process_launch(
+	const char *name,
+	int(*_entry)(void),
+	enum process_launch_flags flags
+);
 
 /**
  Spawn a new process with the specified meta-data. A newly spawned process
@@ -75,9 +107,10 @@ struct thread *process_spawn_thread(
 );
 
 /**
- Get a pointer to the current process structure.
+ Get a pointer to the frontmost process. This may be NULL if there is no front
+ most process currently.
  */
-struct process *process_current(void);
+struct process *process_get_frontmost(void);
 
 /**
  Get a pointer to the process with the specified pid.

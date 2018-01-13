@@ -78,7 +78,6 @@ __attribute__((noreturn)) void kmain(
 	// be needed by a lot of the later functionality.
 	physical_memory_prepare(config);
 	virtual_memory_prepare(config);
-	kheap_prepare();
 
 	// Take control of the interrupts system, and get some basic interrupts
 	// installed.

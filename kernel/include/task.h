@@ -63,4 +63,9 @@ void yield(struct interrupt_frame *frame);
  */
 struct task *task_get_current(void);
 
+/**
+ Resume all relavent tasks that have been blocked due to the specified reason.
+ */
+void task_resume_any_for(enum thread_mode_reason reason, uint64_t info);
+
 #endif

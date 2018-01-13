@@ -150,6 +150,25 @@ static int task_can_resume(struct task *task)
 	return 0;
 }
 
+void task_resume_any_for(enum thread_mode_reason reason, uint64_t info)
+{
+	// Step through all tasks and mark all that fit the specified reason/info
+	// as running.
+	struct task *task = first_task;
+	do {
+		if (task->thread->state.mode != thread_blocked)
+			continue;
+		else if (task->thread->state.reason != reason)
+			continue;
+		else if (task->thread->state.info != info)
+			continue;
+
+		task->thread->state.mode = thread_running;
+		task->thread->state.reason = reason_none;
+		task->thread->state.info = 0;
+	} 
+	while (task = task->next);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

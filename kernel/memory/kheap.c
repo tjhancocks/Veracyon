@@ -63,11 +63,6 @@ static uint32_t heap_page_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void kheap_prepare(void)
-{
-	kdprint(dbgout, "Preparing kernel heap structure.\n");
-}
-
 void kheap_dump_structure(void)
 {
 	kheap_describe_structure();
@@ -90,14 +85,14 @@ void *kalloc(uint32_t size)
 
 	// Calculate the absolute start of the allocated memory.
 	uintptr_t address = (uintptr_t)block + sizeof(*block);
-	kdprint(dbgout, "Allocated memory (%d bytes) at %p\n", size, address);
+	// kdprint(dbgout, "Allocated memory (%d bytes) at %p\n", size, address);
 
 	return (void *)address;
 }
 
 void kfree(void *ptr)
 {
-	kdprint(dbgout, "Attempting to free memory at pointer: %p\n", ptr);
+	// kdprint(dbgout, "Attempting to free memory at pointer: %p\n", ptr);
 
 	// Make sure we're attempting to free a valid memory pointer. Warn if we're
 	// not.
@@ -129,15 +124,15 @@ static struct kheap_block *kheap_expand(uint32_t size)
 
 static struct kheap_block *kheap_expand_pages(uint32_t pages)
 {
-	kdprint(dbgout, "Expanding kernel heap by %d page(s).\n", pages);
+	// kdprint(dbgout, "Expanding kernel heap by %d page(s).\n", pages);
 
 	uintptr_t first_page = find_available_contiguous_kernel_pages(pages);
-	kdprint(dbgout, "	* Starting at page address %p\n", first_page);
+	// kdprint(dbgout, "	* Starting at page address %p\n", first_page);
 
 	// Prepare to allocate each of the pages.
 	for (uint32_t n = 0; n < pages; ++n) {
 		uintptr_t address = first_page + (kPAGE_SIZE * n);
-		kdprint(dbgout, "      * allocating %p\n", address);
+		// kdprint(dbgout, "      * allocating %p\n", address);
 
 		if (kpage_alloc(address) == kPAGE_ALLOC_ERROR) {
 			struct panic_info info = (struct panic_info) {
@@ -150,26 +145,26 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 
 	// Configure the newly allocated pages correctly.
-	kdprint(dbgout, "   * Configuring newly allocated pages for heap use.\n");
+	// kdprint(dbgout, "   * Configuring newly allocated pages for heap use.\n");
 
 	uintptr_t raw_address = first_page;
 	uint32_t raw_size = pages * kPAGE_SIZE;
-	kdprint(dbgout, "      Raw address: %p, Raw size: %d bytes\n",
-		raw_address, raw_size);
+	// kdprint(dbgout, "      Raw address: %p, Raw size: %d bytes\n",
+	// 	raw_address, raw_size);
 
 	struct kheap_block *block = kheap_make_block(raw_address, raw_size);
 
 	// Add the newly constructed block into the heap chain. If this is the first
 	// block, then mark it as such.
 	if (!heap_first) {
-		kdprint(dbgout, "   * No first block in kernel heap. Setting it.\n");
+		// kdprint(dbgout, "   * No first block in kernel heap. Setting it.\n");
 		heap_first = heap_last = block;
 	}
 
 	// Attempt to collect the block into the current last block. If the 
 	// operation is successful, the report it and finish.
 	else if (kheap_collect_block(heap_last, block) == kHEAP_COLLECT_OK) {
-		kdprint(dbgout, "   * Collecting block into previous last block.\n");
+		// kdprint(dbgout, "   * Collecting block into previous last block.\n");
 		block = heap_last;
 	}
 
@@ -191,7 +186,7 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 	
 	// Return the block to the caller.
-	kdprint(dbgout, "***\n");
+	// kdprint(dbgout, "***\n");
 	return block;
 }
 
@@ -224,17 +219,17 @@ static struct kheap_block *kheap_make_block(
 	uint32_t block_header_size = sizeof(*block);
 	uint32_t block_real_size = raw_size - block_header_size;
 
-	kdprint(dbgout, "Making kernel heap block [header-size: %d bytes]\n",
-		block_header_size);
-	kdprint(dbgout, "   * Raw size: %d bytes, Real size: %d\n",
-		raw_size, block_real_size);
+	// kdprint(dbgout, "Making kernel heap block [header-size: %d bytes]\n",
+	// 	block_header_size);
+	// kdprint(dbgout, "   * Raw size: %d bytes, Real size: %d\n",
+	// 	raw_size, block_real_size);
 
 	block->magic = kHEAP_AVAIL_MAGIC;
 	block->prev = NULL;
 	block->next = NULL;
 	block->size = block_real_size;
 
-	kdprint(dbgout, "   * Block constructed\n");
+	// kdprint(dbgout, "   * Block constructed\n");
 
 	return block;
 }
@@ -338,7 +333,7 @@ static int kheap_split_block(
 static struct kheap_block *kheap_allocate_block(uint32_t size)
 {
 	uint32_t required_split_size = size + (sizeof(struct kheap_block) * 2);
-	kdprint(dbgout, "Finding heap block for allocation of %d bytes.\n", size);
+	// kdprint(dbgout, "Finding heap block for allocation of %d bytes.\n", size);
 
 	// The first step is to search all current blocks for the first available
 	// block that is large enough to accomodate the requested allocation, and
@@ -352,12 +347,12 @@ static struct kheap_block *kheap_allocate_block(uint32_t size)
 
 	// Failed to find a suitable block in the heap. Attempt to expand the heap
 	// in order to get one.
-	kdprint(dbgout, "Failed to find suitable heap block. Expanding heap.\n");
+	// kdprint(dbgout, "Failed to find suitable heap block. Expanding heap.\n");
 	block = kheap_expand(size + sizeof(*block));
 
 	// Perform a sanity check to ensure the reported block is actually suitable.
 	if (block->magic != kHEAP_AVAIL_MAGIC || block->size < size) {
-		kdprint(dbgout, "   * Serious error. Failed to make suitable block!\n");
+		// kdprint(dbgout, "   * Serious error. Failed to make suitable block!\n");
 		return NULL;
 	}
 
@@ -365,17 +360,17 @@ BLOCK_FOUND:
 	// If the block is far larger than needed then we need to split it, so that
 	// we do not waste too much space.
 	if (block->size > required_split_size) {
-		kdprint(dbgout, "   * Block too large (%d>%d). Attempting to split.\n",
-			block->size, required_split_size);
+		// kdprint(dbgout, "   * Block too large (%d>%d). Attempting to split.\n",
+		// 	block->size, required_split_size);
 		if (kheap_split_block(block, size) != kHEAP_SPLIT_OK) {
-			kdprint(dbgout, "   * Failed to split heap block. Leaving.\n");
+			// kdprint(dbgout, "   * Failed to split heap block. Leaving.\n");
 		}
 	}
 
 	// The block reference is now of the requested size and needs to be marked
 	// as allocated and returned the caller.
 	block->magic = kHEAP_ALLOC_MAGIC;
-	kdprint(dbgout, "***\n");
+	// kdprint(dbgout, "***\n");
 
 	return block;
 }

@@ -175,3 +175,26 @@ void sleep(uint64_t ms)
 		__asm__ __volatile__("hlt");
 }
 
+void key_wait(void)
+{
+	// Fetch the current thread and mark it as blocked. Specify the reason, 
+	// and the resume condition.
+	atom_t atom;
+	atomic_start(atom);
+
+	struct thread *current = task_get_current()->thread;
+
+	current->state.reason = reason_key_wait;
+	current->state.mode = thread_blocked;
+
+	// Indicate to the system that we need to be preempted now.
+	request_preemption();
+
+	atomic_end(atom);
+
+	// Wait until the thread is marked as running before resuming. Once it is,
+	// break from the loop and continue on.
+	while (current->state.mode != thread_running)
+		__asm__ __volatile__("hlt");
+}
+
