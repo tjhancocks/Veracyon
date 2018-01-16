@@ -103,7 +103,7 @@ void shell_prompt(void)
 
 int shell_main(void)
 {
-	kdprint(dbgout, "====== SHELL STARTED ======\n");
+	kdprint(COM1, "====== SHELL STARTED ======\n");
 	while (shell_terminated == 0) {
 		shell_prompt();
 	}

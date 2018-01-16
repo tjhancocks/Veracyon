@@ -158,6 +158,6 @@ void prepare_panic_handler(
 ) {
 	panic_handler = config->panic_handler;
 	*panic_handler = (uintptr_t)panic;
-	kdprint(dbgout, "Registered panic handler %p at %p\n", 
+	kdprint(COM1, "Registered panic handler %p at %p\n", 
 		*panic_handler, panic_handler);
 }

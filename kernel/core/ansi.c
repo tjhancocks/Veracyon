@@ -163,7 +163,7 @@ const char *ansi_determine_sequence(
 		break;
 	default:
 		// Invalid escape code encounted.
-		kdprint(dbgout, "Invalid ANSI escape code encountered: '%c'\n", *ptr);
+		kdprint(COM1, "Invalid ANSI escape code encountered: '%c'\n", *ptr);
 		break;
 	}
 

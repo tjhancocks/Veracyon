@@ -21,7 +21,6 @@
 */
 
 #include <boot_config.h>
-#include <serial.h>
 #include <vga_text.h>
 #include <vesa_text.h>
 #include <kprint.h>
@@ -35,6 +34,8 @@
 #include <thread.h>
 #include <process.h>
 
+#include <device/device.h>
+#include <device/RS232/RS232.h>
 
 __attribute__((noreturn)) void kwork(void)
 {
@@ -65,6 +66,10 @@ __attribute__((noreturn)) void kmain(
 		};
 		panic(&info, NULL);
 	}
+	// Install early devices/drivers (Phase 1). These are low level, minimal 
+	// support devices that will be required during system setup.
+	rs232_prepare();
+
 
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.
@@ -85,16 +90,11 @@ __attribute__((noreturn)) void kmain(
 
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
-
-	// Setup the PIT and timers for kernel use.
 	pit_prepare();
 
 	// Establish multitasking and processes
 	process_prepare();
-
-	// Launch a debug kernel shell. This is a blocking function and will prevent
-	// the kernel from launching any further until the shell has exited.
+	
 	init_shell();
-
 	kwork();
 }

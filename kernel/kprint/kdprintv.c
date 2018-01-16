@@ -44,7 +44,7 @@ enum token
 	token_upper = 1 << 10
 };
 
-void kdprintv(uint32_t handle, const char *restrict fmt, va_list args)
+void kdprintv(device_t dev, const char *restrict fmt, va_list args)
 {
 	char buffer[BUFFER_LEN + 1] = { 0 };
 	register char *out = buffer;
@@ -191,7 +191,7 @@ void kdprintv(uint32_t handle, const char *restrict fmt, va_list args)
 	}
 
 	// Finished constructing the output. Send it to the requested device.
-	term_puts(handle, buffer);
+	dv_write(dev, buffer);
 }
 
 static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)

@@ -65,7 +65,7 @@ void interrupt_handlers_prepare(struct boot_config *config)
 	__asm__ __volatile__("cli");
 
 	idt_stubs = (interrupt_handler_t *)config->interrupt_stubs;
-	kdprint(dbgout, "Interrupt stubs table is located at %p\n", idt_stubs);
+	kdprint(COM1, "Interrupt stubs table is located at %p\n", idt_stubs);
 
 	// Allocate space for the interrupt handlers table.
 	interrupt_handlers = kalloc(sizeof(*interrupt_handlers) * 256);
@@ -77,7 +77,7 @@ void interrupt_handlers_prepare(struct boot_config *config)
 		idt_stubs[irq] = interrupt_irq_stub;
 	}
 
-	kdprint(dbgout, "Installed interrupt stubs for each IRQ\n");
+	kdprint(COM1, "Installed interrupt stubs for each IRQ\n");
 
 	// Re-enable interrupts
 	__asm__ __volatile__("sti");
@@ -85,7 +85,7 @@ void interrupt_handlers_prepare(struct boot_config *config)
 
 void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler)
 {
-	kdprint(dbgout, "Installing interrupt handler %p for interrupt %02x (%d)\n", 
+	kdprint(COM1, "Installing interrupt handler %p for interrupt %02x (%d)\n", 
 		handler, interrupt, interrupt);
 	interrupt_handlers[interrupt] = handler;
 }

@@ -23,10 +23,10 @@
 #include <kprint.h>
 #include <va_args.h>
 
-void kdprint(uint32_t handle, const char *restrict fmt, ...)
+void kdprint(device_t dev, const char *restrict fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	kdprintv(handle, fmt, args);
+	kdprintv(dev, fmt, args);
 	va_end(args);
 }

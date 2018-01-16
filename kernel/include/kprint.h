@@ -25,11 +25,11 @@
 
 #include <va_args.h>
 #include <kern_types.h>
-#include <term.h>
+#include <device/device.h>
 
 /**
  Kernel specific print function, providing similar capabilities printf().
- Routes output to the "allout" terminal interface.
+ Routes output to the "TERM" device.
 
  	- fmt: The format string with which to use.
  */
@@ -37,23 +37,23 @@ void kprint(const char *restrict fmt, ...);
 
 /**
  Kernel specific print function, providing similar capabilities printf().
- Allows the destination route (i.e. "krnout", or "dbgout") to be specified,
+ Allows the destination route (i.e. COM1, TERM) to be specified,
  so that all output is sent to the correct/desired place.
 
-	- handle: The terminal handle/identifier in which to send output.
+	- dev: The device in which to send the result to.
  	- fmt: The format string with which to use.
  */
-void kdprint(uint32_t handle, const char *restrict fmt, ...);
+void kdprint(device_t dev, const char *restrict fmt, ...);
 
 /**
  Kernel specific print function, providing similar capabilities printf().
- Allows the destination route (i.e. "krnout", or "dbgout") to be specified,
+ Allows the destination route (i.e. COM1, TERM) to be specified,
  so that all output is sent to the correct/desired place.
 
-	- handle: The terminal handle/identifier in which to send output.
+	- dev: The device in which to send the result to.
  	- fmt: The format string with which to use.
  	- va: The variadic arguments structure with substitution values.
  */
-void kdprintv(uint32_t handle, const char *restrict fmt, va_list va);
+void kdprintv(device_t dev, const char *restrict fmt, va_list va);
 
 #endif

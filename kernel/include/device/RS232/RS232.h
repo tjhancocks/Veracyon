@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,44 +20,21 @@
  SOFTWARE.
 */
 
-#include <kern_types.h>
-#include <null.h>
-#include <serial.h>
-#include <arch/arch.h>
-#include <term.h>
-#include <sema.h>
+#ifndef __VKERNEL_DEVICE_RS232_SERIAL__
+#define __VKERNEL_DEVICE_RS232_SERIAL__
 
-#define COM1_PORT 0x3F8
+#include <device/device.h>
 
-static spin_lock_t serial_lock = { 0 };
+/*
+ Attempt to configure the RS232 serial port for use. If the port does not exist
+ then the driver will be left inactive.
+ */
+void rs232_prepare(void);
 
-int serial_fifo_ready(void)
-{
-	return (inb(COM1_PORT + 5) & 0x20);
-}
+/*
+ Returns a reference to the device descriptor for the RS232 serial port if
+ available. Returns NULL otherwise.
+ */
+struct device *RS232_get_device(void);
 
-void kputc_serial(const char c)
-{
-	while (serial_fifo_ready() == 0);
-	outb(COM1_PORT, c);
-}
-
-void kputs_serial(const char *restrict str)
-{
-	spin_lock(serial_lock);
-	
-	while (str && *str)
-		kputc_serial(*str++);
-
-	spin_unlock(serial_lock);
-}
-
-void serial_prepare(void)
-{
-	kputs_serial("Preparing serial port for Kernel... ");
-	term_bind_putc(dbgout, kputc_serial);
-	term_bind_puts(dbgout, kputs_serial);
-	term_puts(dbgout, "done.\n");
-
-	spin_init(serial_lock);
-}
+#endif

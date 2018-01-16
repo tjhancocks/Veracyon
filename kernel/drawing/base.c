@@ -69,9 +69,9 @@ void drawing_base_prepare(
 	drawing_info.depth = depth;
 	drawing_info.bg_pen_color = 0x0;
 	drawing_info.fg_pen_color = 0x7;
-	kdprint(dbgout, "Base Drawing Library prepared.\n");
-	kdprint(dbgout, "  Main Buffer: %p\n", drawing_info.base_buffer);
-	kdprint(dbgout, "  Backing Buffer: %p\n", drawing_info.backing_buffer);
+	kdprint(COM1, "Base Drawing Library prepared.\n");
+	kdprint(COM1, "  Main Buffer: %p\n", drawing_info.base_buffer);
+	kdprint(COM1, "  Backing Buffer: %p\n", drawing_info.backing_buffer);
 }
 
 

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,40 +20,47 @@
  SOFTWARE.
 */
 
+#include <device/RS232/RS232.h>
 #include <arch/arch.h>
-#include <device/ps2/keyboard.h>
-#include <device/keyboard/keyboard.h>
-#include <kprint.h>
-#include <kheap.h>
-#include <panic.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void ps2_keybaord_wait(void)
+#define COM1_PORT 0x3F8
+
+static struct device __rs232 = { 0 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+void rs232_write(struct device *dev __attribute__((unused)), uint8_t c)
 {
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
+	outb(COM1_PORT, c);
 }
 
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
+int rs232_ready(struct device *dev __attribute__((unused)))
+{
+	return (inb(COM1_PORT + 5) & 0x20);
 }
 
-void ps2_keyboard_reset(void)
+////////////////////////////////////////////////////////////////////////////////
+
+void rs232_prepare(void)
 {
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
+	// We need to configure the RS232 device.
+	__rs232.dev_id = device_next_id;
+	__rs232.name = "COM1";
+	__rs232.kind = device_com1;
+	__rs232.opts = DP_WRITE | DP_ATOMIC_WRITE;
+	__rs232.write_byte = rs232_write;
+	__rs232.can_write = rs232_ready;
+
+	// Now initialise the RS232 port. Make sure it has the correct configuration
+	// TODO: We're still relying on the boot loader to have done this for us.
+
+	// Bind the device to the appropriate handle.
+	device_bind(&COM1, &__rs232);
 }
 
-void ps2_keyboard_initialise(void)
+struct device *RS232_get_device(void)
 {
-	kdprint(COM1, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
+	return &__rs232;
 }
