@@ -28,7 +28,7 @@
 
 device_t COM1 = 0;
 device_t KBD = 0;
-device_t TERM = 0;
+device_t VT100 = 0;
 
 static uint32_t next_device_id = 0;
 

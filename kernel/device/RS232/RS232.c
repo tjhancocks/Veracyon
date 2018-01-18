@@ -43,18 +43,21 @@ int rs232_ready(struct device *dev __attribute__((unused)))
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void rs232_prepare(void)
+void RS232_prepare(void)
 {
 	// We need to configure the RS232 device.
-	__rs232.dev_id = device_next_id;
+	__rs232.dev_id = device_next_id();
 	__rs232.name = "COM1";
-	__rs232.kind = device_com1;
+	__rs232.kind = device_COM1;
 	__rs232.opts = DP_WRITE | DP_ATOMIC_WRITE;
 	__rs232.write_byte = rs232_write;
 	__rs232.can_write = rs232_ready;
 
 	// Now initialise the RS232 port. Make sure it has the correct configuration
 	// TODO: We're still relying on the boot loader to have done this for us.
+
+	// Begin the log on the COM1 port.
+	dv_write(&__rs232, "\nCOM1 Serial Port Started...\n");
 
 	// Bind the device to the appropriate handle.
 	device_bind(&COM1, &__rs232);

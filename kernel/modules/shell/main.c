@@ -22,7 +22,7 @@
 
 #include <modules/shell.h>
 #include <kern_types.h>
-#include <read.h>
+// #include <read.h>
 #include <kprint.h>
 #include <string.h>
 #include <kheap.h>
@@ -83,9 +83,9 @@ static void kernel_uptime(void)
 
 void shell_prompt(void)
 {
-	kdprint(krnout, "> ");
+	kdprint(VT100, "> ");
 
-	const char *input = read_user_input();
+	const char *input = NULL;//read_user_input();
 
 	if (strcmp(input, "exit") == 0) {
 		shell_terminated = 1;

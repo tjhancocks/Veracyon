@@ -34,7 +34,7 @@ typedef void *device_t;
 
 extern device_t COM1;	// Output only
 extern device_t KBD; 	// Input only
-extern device_t TERM;	// Output only
+extern device_t VT100;	// Output only
 
 /**
  Bind the provided device driver information to the specified device handle.
@@ -58,9 +58,9 @@ enum device_descriptor
 
 	// The next group is a ready constructed list of devices recognised by the
 	// kernel.
-	device_com1 = device_type_serial | device_protocol_RS232,
-	device_ps2_keyboard = device_type_keyboard | device_protocol_PS2,
-	device_terminal = device_type_terminal
+	device_COM1 = device_type_serial | device_protocol_RS232,
+	device_PS2_keyboard = device_type_keyboard | device_protocol_PS2,
+	device_VT100 = device_type_terminal
 };
 
 enum device_options

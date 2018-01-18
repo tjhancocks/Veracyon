@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,18 +20,16 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_VESA_TEXT__
-#define __VKERNEL_VESA_TEXT__
+#ifndef __VKERNEL_VT100__
+#define __VKERNEL_VT100__
 
 #include <boot_config.h>
-#include <kern_types.h>
+#include <device/device.h>
 
 /**
- Configures and installs the VESA Text Display driver. This will also ensure the 
- "krnout" terminal is setup for VESA Text mode correctly.
-
- 	- config: A valid boot configuration structure.
+ Prepare the VT100 terminal device for use. This device is responsible for 
+ driving the root terminal in the early stages of the system life cycle.
  */
-void vesa_text_prepare(struct boot_config *config);
+void VT100_prepare(struct boot_config *config);
 
 #endif

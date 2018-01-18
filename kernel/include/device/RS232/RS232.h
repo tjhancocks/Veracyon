@@ -29,7 +29,7 @@
  Attempt to configure the RS232 serial port for use. If the port does not exist
  then the driver will be left inactive.
  */
-void rs232_prepare(void);
+void RS232_prepare(void);
 
 /*
  Returns a reference to the device descriptor for the RS232 serial port if

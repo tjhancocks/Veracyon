@@ -23,7 +23,6 @@
 #include <panic.h>
 #include <kern_types.h>
 #include <kprint.h>
-#include <term.h>
 #include <macro.h>
 
 static const char *exception_name[] = {
@@ -67,11 +66,8 @@ static uintptr_t *panic_handler = NULL;
 
 void render_register(const char *name, uint32_t value, uint32_t x, uint32_t y)
 {
-	term_set_cursor(krnout, x, y);
-	term_set_attribute(krnout, 0x3B);
-	kprint("%8s: ", name);
-	term_set_attribute(krnout, 0x3F);
-	kprint("%08x\n", value);
+	kprint("\t\033[94m%8s: ", name);
+	kprint("\033[96m%08x\n", value);
 }
 
 __attribute__((noreturn)) void panic(
@@ -91,28 +87,21 @@ __attribute__((noreturn)) void panic(
 
 	// We need to clear the screen and get back into a basic terminal 
 	// presentation.
-	term_clear(krnout, 0x3B);
-
-	// The title of the panic needs to be a slightly different text colour.
-	term_set_attribute(krnout, 0x3F);
-	term_set_cursor(krnout, 2, 1);
+	kprint("\033[44m\033[2J\n");
 
 	if (frame && frame->interrupt < 0x20)
-		kprint("CPU Exception: ");
-	kprint("%s\n", info->title);
+		kprint(" CPU Exception:");
+	kprint("\033[97m %s\n", info->title);
 
 	// The message is the next bit of information to be displayed. This needs
 	// be printed so that it can word wrap to subsequent in a clean way.
 	// TODO: Word wrapping.
-	term_set_attribute(krnout, 0x3B);
-	term_set_cursor(krnout, 2, 2);
-	kprint("%s\n", info->message);
+	kprint("\033[94m %s\n\n", info->message);
 
 	// Finally we want to start displaying register information. This will help
 	// with debugging and knowing state.
 	if (frame) {
 		uint32_t y = 0;
-		term_get_cursor(krnout, NULL, &y);
 
 		render_register("EAX", frame->eax, 2 + (18 * 0), y+2);
 		render_register("EBX", frame->ebx, 2 + (18 * 1), y+2);

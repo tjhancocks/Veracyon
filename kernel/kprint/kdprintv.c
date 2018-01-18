@@ -22,7 +22,6 @@
 
 #include <kprint.h>
 #include <memory.h>
-#include <term.h>
 
 #define BUFFER_LEN 1024
 #define DIGIT_SOURCE "0123456789ABCDEF"

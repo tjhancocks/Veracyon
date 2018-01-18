@@ -21,8 +21,6 @@
 */
 
 #include <boot_config.h>
-#include <vga_text.h>
-#include <vesa_text.h>
 #include <kprint.h>
 #include <physical.h>
 #include <virtual.h>
@@ -36,6 +34,8 @@
 
 #include <device/device.h>
 #include <device/RS232/RS232.h>
+#include <device/VT100/VT100.h>
+
 
 __attribute__((noreturn)) void kwork(void)
 {
@@ -47,37 +47,18 @@ __attribute__((noreturn)) void kwork(void)
 __attribute__((noreturn)) void kmain(
 	struct boot_config *config
 ) {
-	// We need the debug serial port to be enabled before anything else so that
-	// we can get debug logs for the kernel.
-	serial_prepare();
-
-	// Get the appropriate display driver in place.
-	if (config->vesa_mode == vga_mode_text) {
-		vga_text_prepare(config);
-	}
-	else if (config->vesa_mode == vesa_mode_text) {
-		vesa_text_prepare(config);
-	}
-	else {
-		struct panic_info info = (struct panic_info) {
-			panic_general,
-			"UNRECOGNISED DISPLAY CONFIGURATION",
-			"The specified type of display configuration is not recognised."
-		};
-		panic(&info, NULL);
-	}
 	// Install early devices/drivers (Phase 1). These are low level, minimal 
 	// support devices that will be required during system setup.
-	rs232_prepare();
+	RS232_prepare();
+	VT100_prepare(config);
 
+	// Some basic information to be shown to the user.
+	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
+	kprint("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
 
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.
 	prepare_panic_handler(config);
-
-	// Some basic information to be shown to the user.
-	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
-	kprint("\033[90m Copyright (c) 2017 Tom Hancocks. MIT License.\033[0m\n\n");
 
 	// Get the memory management of the system/kernel up and running. This will
 	// be needed by a lot of the later functionality.
@@ -94,7 +75,7 @@ __attribute__((noreturn)) void kmain(
 
 	// Establish multitasking and processes
 	process_prepare();
-	
-	init_shell();
+
+	// init_shell();
 	kwork();
 }
