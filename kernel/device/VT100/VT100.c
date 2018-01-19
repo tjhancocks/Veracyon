@@ -21,6 +21,7 @@
 */
 
 #include <device/VT100/VT100.h>
+#include <driver/vga/text.h>
 #include <ascii.h>
 #include <atomic.h>
 #include <memory.h>
@@ -79,6 +80,11 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void vt100_update_cursor(struct VT100_info *vt100)
+{
+	vga_text_setpos(vt100->cursor.x, vt100->cursor.y, vt100->screen.cols);
+}
+
 static void vt100_ascii_control_code(struct VT100_info *vt100, const char c)
 {
 	switch (c) {
@@ -108,6 +114,7 @@ static void vt100_setpos(struct VT100_info *vt100, uint32_t x, uint32_t y)
 
 	vt100->cursor.x = x - 1;
 	vt100->cursor.y = y - 1;
+	vt100_update_cursor(vt100);
 }
 
 static void vt100_clear(struct VT100_info *vt100)
@@ -120,6 +127,7 @@ static void vt100_clear(struct VT100_info *vt100)
 
 	vt100->cursor.y = 0;
 	vt100->cursor.x = 0;
+	vt100_update_cursor(vt100);
 }
 
 static void vt100_scroll(struct VT100_info *vt100)
@@ -138,6 +146,7 @@ static void vt100_scroll(struct VT100_info *vt100)
 		);
 		vt100->cursor.y = vt100->screen.rows - 1;
 	}
+	vt100_update_cursor(vt100);
 }
 
 static void vt100_wrap(struct VT100_info *vt100)
@@ -208,6 +217,7 @@ static void vt100_putc(struct VT100_info *vt100, const char c)
 	}
 
 	vt100_wrap(vt100);
+	vt100_update_cursor(vt100);
 
 	atomic_end(putc);
 }
@@ -357,6 +367,8 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c)
 			vt100->cursor.y = 0;
 		else
 			vt100->cursor.y -= vt100->escape.args[0];
+		
+		vt100_update_cursor(vt100);
 	}
 	else if (vt100->escape.bracket_type && c == 'B') {
 		// Cursor Down
@@ -365,6 +377,8 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c)
 		
 		vt100->cursor.y += vt100->escape.args[0];
 		vt100_wrap(vt100);
+		
+		vt100_update_cursor(vt100);
 	}
 	else if (vt100->escape.bracket_type && c == 'C') {
 		// Cursor Forwards
@@ -373,6 +387,8 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c)
 		
 		vt100->cursor.x += vt100->escape.args[0];
 		vt100_wrap(vt100);
+		
+		vt100_update_cursor(vt100);
 	}
 	else if (vt100->escape.bracket_type && c == 'D') {
 		// Cursor Backwards
@@ -383,6 +399,8 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c)
 			vt100->cursor.x = 0;
 		else
 			vt100->cursor.x -= vt100->escape.args[0];
+		
+		vt100_update_cursor(vt100);
 	}
 	else if (vt100->escape.bracket_type && (c == 'H' || c == 'f')) {
 		// Cursor Home / Force Cursor Position
@@ -410,6 +428,8 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c)
 		vt100->cursor.x = vt100->cursor.x_stack[vt100->cursor.idx];
 		vt100->cursor.y = vt100->cursor.y_stack[vt100->cursor.idx];
 		vt100->cursor.attr = vt100->cursor.attr_stack[vt100->cursor.idx];
+		
+		vt100_update_cursor(vt100);
 	}
 
 	// This second block is for Text Coloring and attribuites.
