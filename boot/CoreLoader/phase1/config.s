@@ -58,8 +58,8 @@ prepare_boot_configuration_defaults:
 		mov cx, 11
 		rep movsb						; Write the kernel name (assume FAT)
 		mov di, BOOT_CONFIG
-		mov word[di + BootConf.width], 800
-		mov word[di + BootConf.height], 600
+		mov word[di + BootConf.width], 640
+		mov word[di + BootConf.height], 480
 		mov word[di + BootConf.depth], 32
 		mov dword[di + BootConf.front_buffer], 0x00000
 		mov dword[di + BootConf.back_buffer], 0x00000

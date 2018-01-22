@@ -377,7 +377,7 @@ _fdc_motor_on:
 		mov edx, FDC_DOR
 		mov eax, 0x1C
 		out dx, al
-		push 500
+		push 300
 		call _sleep
 		add esp, 4
 	.L1:
@@ -463,7 +463,7 @@ _fdc_timer:
 		jmp .epilogue
 	.L1:
 		mov eax, [esi + FDCData.ticks]
-		sub eax, 5
+		sub eax, 50
 		mov dword[esi + FDCData.ticks], eax
 		test eax, eax
 		jz .L2

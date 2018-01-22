@@ -89,6 +89,9 @@ _elf_load:
 		call _elf_parse_phdr
 		add esp, 4
 	.launch:
+		push .launching
+		call _send_serial_bytes
+		add esp, 4
 		mov esi, [ebp + 8]
 		mov eax, [esi + ELFHdr.e_entry]
 		push BOOT_CONFIG
@@ -97,6 +100,8 @@ _elf_load:
 		mov esp, ebp
 		pop ebp
 		ret
+	.launching:	
+		db "Launching ELF Kernel...", 0xA, 0x0
 
 ;;
 ;; ELF Related Panic. This will halt the boot process and output an error 

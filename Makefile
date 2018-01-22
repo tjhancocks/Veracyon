@@ -54,7 +54,8 @@ fat12-bochs: build/fat12.img
 			 "magic_break: enabled=1" \
 			 "com1: enabled=1, mode=file, dev=debug/bochs.log" \
 			 "port_e9_hack: enabled=1" \
-			 "memory: guest=512, host=256"
+			 "memory: guest=512, host=256" \
+			 "cpuid: model=pentium_mmx, level=6, mmx=1"
 			 # "clock: sync=realtime"
 
 ################################################################################

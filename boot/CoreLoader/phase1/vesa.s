@@ -214,15 +214,16 @@ prepare_vesa:
 		push si
 		mov si, VBE_MODE				; Location of the VBE Mode Info.
 		mov eax, [si + VBEMode.frame_buffer]
-		pop si
 		mov dword[di + BootConf.front_buffer], eax
 		add eax, dword[di + BootConf.screen_size]
 		mov dword[di + BootConf.back_buffer], eax
-		movzx eax, word[si + ScreenConf.width]
+		movzx eax, word[si + VBEMode.width]
+		mov word[di + BootConf.width], ax
 		shr eax, 3
 		sub eax, 1
 		mov dword[di + BootConf.x_max], eax
-		movzx eax, word[si + ScreenConf.height]
+		movzx eax, word[si + VBEMode.height]
+		mov word[di + BootConf.height], ax
 		shr eax, 4
 		sub eax, 1
 		mov dword[di + BootConf.y_max], eax

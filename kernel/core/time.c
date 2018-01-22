@@ -27,5 +27,5 @@ uint64_t system_uptime(void)
 {
 	uint32_t subticks = pit_get_subticks();
 	uint64_t ticks = pit_get_ticks();
-	return (ticks * 1000) + (subticks * 10);
+	return (ticks * 1000) + subticks;
 }
