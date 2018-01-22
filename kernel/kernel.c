@@ -31,6 +31,7 @@
 #include <modules/shell.h>
 #include <thread.h>
 #include <process.h>
+#include <drawing/base.h>
 
 #include <device/device.h>
 #include <device/RS232/RS232.h>
@@ -51,10 +52,14 @@ __attribute__((noreturn)) void kmain(
 	// support devices that will be required during system setup.
 	RS232_prepare();
 	VT100_prepare(config);
+	drawing_prepare(config);
+
+	clear_screen(0x00000000);
 
 	// Some basic information to be shown to the user.
 	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
 	kprint("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
+	kprint("\n");
 
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.

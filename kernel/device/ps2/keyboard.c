@@ -21,7 +21,7 @@
 */
 
 #include <arch/arch.h>
-#include <device/ps2/keyboard.h>
+#include <device/PS2/keyboard.h>
 #include <device/keyboard/keyboard.h>
 #include <kprint.h>
 #include <kheap.h>
