@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,48 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
-
 #include <arch/x86/features.h>
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
 
-#endif
+#define CPUID_GETFEATURES	1
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum cpuid_features
+{
+	CPUID_FEATURE_EDX_MMX	= 1 << 23,
+	CPUID_FEATURE_EDX_SSE 	= 1 << 25,
+	CPUID_FEATURE_EDX_SSE2	= 1 << 26,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline void cpuid(
+	int code, 
+	uint32_t *a, 
+	uint32_t *b, 
+	uint32_t *c, 
+	uint32_t *d
+) {
+	__asm__ __volatile__(
+		"cpuid"
+		: "=a"(*a), "=b"(*b), "=c"(*c), "=d"(*d)
+		: "a"(code)
+	);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int cpu_sse_available(void)
+{
+	return 0;
+	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
+	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
+	return (edx & CPUID_FEATURE_EDX_SSE == 1);
+}
+
+int cpu_mmx_available(void)
+{
+	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
+	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
+	return (edx & CPUID_FEATURE_EDX_MMX == 1);
+}

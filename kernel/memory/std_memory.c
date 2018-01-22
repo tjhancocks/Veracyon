@@ -21,34 +21,16 @@
 */
 
 #include <memory.h>
+#include <arch/arch.h>
+#include <kprint.h>
+
+////////////////////////////////////////////////////////////////////////////////
 
 void *memcpy(void *restrict dst, const void *restrict src, uint32_t n)
 {
 	register uint8_t *d0 = (uint8_t *)dst;
 	register uint8_t *s0 = (uint8_t *)src;
-
-	while (n--)
-		*d0++ = *s0++;
-
-	return dst;
-}
-
-void *memcpyd(void *restrict dst, const void *restrict src, uint32_t n)
-{
-	register uint32_t *d0 = (uint32_t *)dst;
-	register uint32_t *s0 = (uint32_t *)src;
-
-	while (n--)
-		*d0++ = *s0++;
-
-	return dst;
-}
-
-void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n)
-{
-	register uint64_t *d0 = (uint64_t *)dst;
-	register uint64_t *s0 = (uint64_t *)src;
-
+	
 	while (n--)
 		*d0++ = *s0++;
 
@@ -75,12 +57,3 @@ void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
 	return dst;
 }
 
-void *memsetd(void *restrict dst, uint32_t value, uint32_t n)
-{
-	register uint32_t *d0 = (uint32_t *)dst;
-
-	while (n--)
-		*d0++ = value;
-
-	return dst;
-}

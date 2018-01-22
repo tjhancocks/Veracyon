@@ -37,6 +37,7 @@
  	A pointer to the copy destination.
  */
 void *memcpy(void *restrict dst, const void *restrict src, uint32_t n);
+void *mmx_memcpy(void *restrict dst, const void *restrict src, uint32_t n);
 
 /**
  Copy the specified number of dwords of memory, dword by dwords from the 

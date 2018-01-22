@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,19 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_X86_FEATURES__
+#define __VKERNEL_X86_FEATURES__
 
-#include <arch/x86/features.h>
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
+#include <kern_types.h>
+
+/**
+ Test to see if the CPU has SSE capabilities.
+ */
+int cpu_sse_available(void);
+
+/**
+ Test to see if the CPU has MMX capabilities.
+ */
+int cpu_mmx_available(void);
 
 #endif
