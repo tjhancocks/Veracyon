@@ -117,6 +117,8 @@ struct device
 	int(*can_write)(struct device *);
 	uint8_t(*read_byte)(struct device *);
 	int(*bytes_available)(struct device *);
+	void(*start_batch)(struct device *);
+	void(*batch_commit)(struct device *);
 };
 
 /**

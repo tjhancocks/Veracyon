@@ -66,6 +66,10 @@ int dv_write(struct device *dev, const char *restrict str)
 	if (dev->opts & DP_ATOMIC_WRITE)
 		atomic_start(atomic_write);
 
+	// Begin batching certain operations on the device.
+	if (dev->batch_commit)
+		dev->start_batch(dev);
+
 	// We can now start to write to the device. We should write character by
 	// character and make sure the device is ready for more characters before
 	// writing.
@@ -80,6 +84,10 @@ int dv_write(struct device *dev, const char *restrict str)
 		while (dev->can_write && !dev->can_write(dev));
 		dev->write_byte(dev, '\0');
 	}
+
+	// Commit the batched operations on the device.
+	if (dev->batch_commit)
+		dev->batch_commit(dev);
 
 	if (dev->opts & DP_ATOMIC_WRITE || atomic_write)
 		atomic_end(atomic_write);

@@ -27,6 +27,7 @@
 #include <atomic.h>
 #include <memory.h>
 #include <panic.h>
+#include <kheap.h>
 
 #define TAB			4
 #define MAX_ARGS	32
@@ -54,6 +55,7 @@ struct VT100_info
 	} cursor;
 	struct {
 		uint16_t *ptr;
+		int batching;
 		void(*redraw)(void);
 	} buffer;
 	struct {
@@ -84,10 +86,13 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c);
 
 static void vt100_update_cursor(struct VT100_info *vt100)
 {
+	if (vt100->buffer.batching)
+		return;
+
 	vga_text_setpos(vt100->cursor.x, vt100->cursor.y, vt100->screen.cols);
 	
 	if (vt100->buffer.redraw)
-		vt100->buffer.redraw();
+			vt100->buffer.redraw();
 }
 
 static void vt100_ascii_control_code(struct VT100_info *vt100, const char c)
@@ -274,6 +279,25 @@ static int vt100_ready(struct device *dev __attribute__((unused)))
 	return 1;
 }
 
+static void vt100_start_batch(struct device *dev)
+{
+	if (!dev || !dev->info)
+		return;
+	struct VT100_info *vt100 = dev->info;
+
+	vt100->buffer.batching = 1;
+} 
+
+static void vt100_batch_commit(struct device *dev)
+{
+	if (!dev || !dev->info)
+		return;
+	struct VT100_info *vt100 = dev->info;
+	
+	vt100->buffer.batching = 0;
+	vt100_update_cursor(vt100);
+} 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void VT100_prepare(struct boot_config *config)
@@ -289,6 +313,8 @@ void VT100_prepare(struct boot_config *config)
 		// calculated.
 		__vt100_info.screen.width = __vt100_info.screen.cols * 9;
 		__vt100_info.screen.height = __vt100_info.screen.rows * 16;
+
+		__vt100_info.buffer.redraw = NULL;
 	}
 	else if (config->vesa_mode == vesa_mode_text) {
 		uint32_t buffer_size = config->screen_width * config->screen_height;
@@ -325,6 +351,8 @@ void VT100_prepare(struct boot_config *config)
 	__vt100.opts = DP_WRITE | DP_ATOMIC_WRITE | DP_ALLOWS_ANSI;
 	__vt100.write_byte = vt100_write;
 	__vt100.can_write = vt100_ready;
+	__vt100.start_batch = vt100_start_batch;
+	__vt100.batch_commit = vt100_batch_commit;
 	__vt100.info = &__vt100_info;
 
 	// Bind the device to the appropriate handle.
