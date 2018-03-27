@@ -25,6 +25,9 @@
 #include <atomic.h>
 #include <kprint.h>
 
+#define BLIT_WIDTH	80
+#define BLIT_HEIGHT	24
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static uint32_t screen_width = 0;
@@ -35,6 +38,12 @@ static uint32_t screen_size = 0;
 static uint32_t screen_bpp = 0;
 static uint32_t *vesa_buffer = NULL;
 static uint32_t *buffer = NULL;
+static uint8_t blit_mask[BLIT_WIDTH * BLIT_HEIGHT] = { 1 };
+static uint32_t blit_rect_width;
+static uint32_t blit_rect_height;
+static uint32_t blit_count;
+
+extern uint8_t bios_font[0x1000];
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,16 +64,50 @@ void drawing_prepare(struct boot_config *config)
 
 	vesa_buffer = config->front_buffer;
 	buffer = config->back_buffer;
+	kdprint(COM1, "vesa_buffer = %p\n", vesa_buffer);
+	kdprint(COM1, "buffer = %p\n", buffer);
+
+	blit_rect_width = screen_width / BLIT_WIDTH;
+	blit_rect_height = screen_height / BLIT_HEIGHT;
+	blit_count = BLIT_WIDTH * BLIT_HEIGHT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline void _flush(void)
+static inline void _mark_blit(uint32_t x, uint32_t y)
+{
+	uint32_t bx = (uint32_t)(x / blit_rect_width);
+	uint32_t by = (uint32_t)(y / blit_rect_height);
+	blit_mask[by * BLIT_WIDTH + bx] = 1;
+}
+
+static inline void _blit_rect(uint32_t x, uint32_t y, uint32_t x2, uint32_t y2)
 {
 	atom_t atom;
 	atomic_start(atom);
-	mmx_memcpy(vesa_buffer, buffer, screen_size);
+
+	uint32_t *source = buffer + (y*(screen_pitch/screen_bpp)) + x;
+	uint32_t *dest = vesa_buffer + (y*(screen_pitch/screen_bpp)) + x;
+	uint32_t length = (x2 - x) * screen_bpp;
+
+	for (uint32_t yy = y; yy < y2; ++yy) {
+		mmx_memcpy(dest, source, length);
+		dest += (screen_pitch / screen_bpp);
+		source += (screen_pitch / screen_bpp);
+	}
+
 	atomic_end(atom);
+}
+
+static inline void _blit(void)
+{
+	for (uint32_t blit_region = 0; blit_region < blit_count; ++blit_region) {
+		if (blit_mask[blit_region] == 0) continue;
+		uint32_t bx = ((uint32_t)(blit_region % BLIT_WIDTH)) * blit_rect_width;
+		uint32_t by = ((uint32_t)(blit_region / BLIT_WIDTH)) * blit_rect_height;
+		_blit_rect(bx, by, bx + blit_rect_width, by + blit_rect_height);
+		blit_mask[blit_region] = 0;
+	}
 }
 
 static inline void _fill_rect(
@@ -80,12 +123,34 @@ static inline void _fill_rect(
 		uint32_t start = ((uint32_t)buffer) + offset;
 		memsetd((void *)start, clr, screen_width);
 	}
-	_flush();
+	_blit();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg)
+{
+	uint32_t rx = x;
+	uint32_t ry = y;
+	uint8_t mask[] = { 1, 2, 4, 8, 16, 32, 64, 128};
+	uint8_t *glyph = bios_font + (int)c * 16;
+
+	uint32_t *ptr = buffer + (ry * (screen_pitch / screen_bpp)) + (rx + 8);
+	for (uint8_t cy = 0; cy < 16; ++cy) {
+		for (uint8_t cx = 0; cx < 8; ++cx) {
+			*(ptr--) = (glyph[cy] & mask[cx]) ? fg : bg;
+			_mark_blit(rx+8-cx, ry+cy);
+		}
+		ptr += (screen_pitch / screen_bpp) + 8;
+	}
+	_blit();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void clear_screen(uint32_t color)
 {
+	memset(blit_mask, 1, sizeof(blit_mask));
 	_fill_rect(0, 0, screen_width, screen_height, color);
 }

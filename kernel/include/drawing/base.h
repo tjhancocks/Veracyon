@@ -36,4 +36,6 @@ void drawing_prepare(struct boot_config *config);
  */
 void clear_screen(uint32_t color);
 
+void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg);
+
 #endif

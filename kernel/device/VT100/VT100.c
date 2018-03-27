@@ -22,6 +22,7 @@
 
 #include <device/VT100/VT100.h>
 #include <driver/vga/text.h>
+#include <driver/vesa/console.h>
 #include <ascii.h>
 #include <atomic.h>
 #include <memory.h>
@@ -53,6 +54,7 @@ struct VT100_info
 	} cursor;
 	struct {
 		uint16_t *ptr;
+		void(*redraw)(void);
 	} buffer;
 	struct {
 		int parsing;
@@ -69,7 +71,7 @@ struct VT100_info
 static struct device __vt100 = { 0 };
 static struct VT100_info __vt100_info = { 0 };
 
-static uint8_t vt100_color_map [] = {
+static uint8_t vt100_color_map[] = {
 	0x88, 0xCC, 0xAA, 0xEE, 0x99, 0xDD, 0xBB, 0xFF
 };
 
@@ -83,6 +85,9 @@ static void vt100_parse_control_char(struct VT100_info *vt100, const char c);
 static void vt100_update_cursor(struct VT100_info *vt100)
 {
 	vga_text_setpos(vt100->cursor.x, vt100->cursor.y, vt100->screen.cols);
+	
+	if (vt100->buffer.redraw)
+		vt100->buffer.redraw();
 }
 
 static void vt100_ascii_control_code(struct VT100_info *vt100, const char c)
@@ -286,11 +291,21 @@ void VT100_prepare(struct boot_config *config)
 		__vt100_info.screen.height = __vt100_info.screen.rows * 16;
 	}
 	else if (config->vesa_mode == vesa_mode_text) {
-		__vt100_info.buffer.ptr = config->front_buffer;
+		uint32_t buffer_size = config->screen_width * config->screen_height;
+		__vt100_info.buffer.ptr = kalloc(buffer_size * 2);
+		memsetw(__vt100_info.buffer.ptr, 0, buffer_size);
+
+		__vt100_info.buffer.redraw = vesa_console_redraw;
 		__vt100_info.screen.width = config->screen_width;
 		__vt100_info.screen.height = config->screen_height;
 		__vt100_info.screen.cols = __vt100_info.screen.width / 9;
 		__vt100_info.screen.rows = __vt100_info.screen.height / 16;
+		
+		vesa_console_prepare(
+			__vt100_info.buffer.ptr, 
+			__vt100_info.screen.cols,
+			__vt100_info.screen.rows
+		);
 	}
 	else {
 		struct panic_info info = (struct panic_info) {

@@ -40,6 +40,17 @@
 
 __attribute__((noreturn)) void kwork(void)
 {
+	// Some basic information to be shown to the user.
+	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
+	kprint("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
+	kprint("\n\n");
+
+	for (uint8_t n = 0; n < 8; ++n) {
+		kprint("\033[3%dm Text \033[0m\n", n);
+	}
+	kprint("\033[90m Text \033[0m\n");
+	kprint("\033[97m Text \033[0m\n");
+
 	while (1) {
 		__asm__ __volatile__("hlt");
 	}
@@ -51,15 +62,6 @@ __attribute__((noreturn)) void kmain(
 	// Install early devices/drivers (Phase 1). These are low level, minimal 
 	// support devices that will be required during system setup.
 	RS232_prepare();
-	VT100_prepare(config);
-	drawing_prepare(config);
-
-	clear_screen(0x00000000);
-
-	// Some basic information to be shown to the user.
-	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
-	kprint("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
-	kprint("\n");
 
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.
@@ -77,6 +79,15 @@ __attribute__((noreturn)) void kmain(
 	// Attempt to install each of the integral device drivers.
 	keyboard_driver_prepare();
 	pit_prepare();
+
+	// Prepare the VESA drawing layer if required
+	if (config->vesa_mode == vesa_mode_text) {
+		drawing_prepare(config);
+		clear_screen(0x00000000);
+	}
+
+	// Prepare the VT100 terminal layer.
+	VT100_prepare(config);
 
 	// Establish multitasking and processes
 	process_prepare();
