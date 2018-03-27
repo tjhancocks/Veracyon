@@ -25,8 +25,8 @@
 #include <atomic.h>
 #include <kprint.h>
 
-#define BLIT_WIDTH	80
-#define BLIT_HEIGHT	24
+#define BLIT_WIDTH	16
+#define BLIT_HEIGHT	16
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,13 +135,15 @@ void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg)
 	uint8_t mask[] = { 1, 2, 4, 8, 16, 32, 64, 128};
 	uint8_t *glyph = bios_font + (int)c * 16;
 
-	uint32_t *ptr = buffer + (ry * (screen_pitch / screen_bpp)) + (rx + 8);
+	uint32_t *ptr = buffer + (ry * (screen_pitch / screen_bpp)) + (rx + 9);
 	for (uint8_t cy = 0; cy < 16; ++cy) {
+		*(ptr--) = bg;
+		_mark_blit(rx+9, ry+cy);
 		for (uint8_t cx = 0; cx < 8; ++cx) {
 			*(ptr--) = (glyph[cy] & mask[cx]) ? fg : bg;
 			_mark_blit(rx+8-cx, ry+cy);
 		}
-		ptr += (screen_pitch / screen_bpp) + 8;
+		ptr += (screen_pitch / screen_bpp) + 9;
 	}
 	_blit();
 }
