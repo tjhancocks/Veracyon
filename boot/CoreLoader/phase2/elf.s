@@ -507,9 +507,12 @@ _elf_parse_load_section:
 		pop edi							; Restore location
 		pop ecx							; Restore amount of memory
 	.clear_memory:
-		xor eax, eax
-		shr ecx, 2						; Divide by 4, operate on dwords
-		rep stosd
+		;; TODO: There is a bug here when running in VMware Fusion.
+		;; This should be happening but it seems to work with out clearing
+		;; memory.
+		; xor eax, eax
+		; shr ecx, 2						; Divide by 4, operate on dwords
+		; rep stosd
 	.copy_section:
 		mov esi, [ebp + 8]				; Fetch the program header
 		mov edi, [esi + ELFPhdr.p_vaddr]; Get the virtual address of the section
