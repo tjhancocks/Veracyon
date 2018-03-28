@@ -52,6 +52,8 @@ void RS232_prepare(void)
 	__rs232.opts = DP_WRITE | DP_ATOMIC_WRITE;
 	__rs232.write_byte = rs232_write;
 	__rs232.can_write = rs232_ready;
+	__rs232.batch_commit = NULL;
+	__rs232.start_batch = NULL;
 
 	// Now initialise the RS232 port. Make sure it has the correct configuration
 	// TODO: We're still relying on the boot loader to have done this for us.

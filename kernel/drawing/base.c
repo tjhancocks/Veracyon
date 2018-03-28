@@ -66,12 +66,11 @@ void drawing_prepare(struct boot_config *config)
 
 	vesa_buffer = config->front_buffer;
 	buffer = config->back_buffer;
-	kdprint(COM1, "vesa_buffer = %p\n", vesa_buffer);
-	kdprint(COM1, "buffer = %p\n", buffer);
 
 	blit_rect_width = screen_width / BLIT_WIDTH;
 	blit_rect_height = screen_height / BLIT_HEIGHT;
 	blit_count = BLIT_WIDTH * BLIT_HEIGHT;
+	next_blit_time_ms = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +103,7 @@ static inline void _blit_rect(uint32_t x, uint32_t y, uint32_t x2, uint32_t y2)
 static inline void _blit(void)
 {
 	uint64_t time = system_uptime();
-	if (time < next_blit_time_ms)
+	if (time < next_blit_time_ms || next_blit_time_ms == 0)
 		return;
 	next_blit_time_ms = time + (1000/60);
 
