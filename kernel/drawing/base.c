@@ -24,6 +24,7 @@
 #include <memory.h>
 #include <atomic.h>
 #include <kprint.h>
+#include <time.h>
 
 #define BLIT_WIDTH	16
 #define BLIT_HEIGHT	16
@@ -42,6 +43,7 @@ static uint8_t blit_mask[BLIT_WIDTH * BLIT_HEIGHT] = { 1 };
 static uint32_t blit_rect_width;
 static uint32_t blit_rect_height;
 static uint32_t blit_count;
+static uint64_t next_blit_time_ms = 0;
 
 extern uint8_t bios_font[0x1000];
 
@@ -101,6 +103,11 @@ static inline void _blit_rect(uint32_t x, uint32_t y, uint32_t x2, uint32_t y2)
 
 static inline void _blit(void)
 {
+	uint64_t time = system_uptime();
+	if (time < next_blit_time_ms)
+		return;
+	next_blit_time_ms = time + (1000/60);
+
 	for (uint32_t blit_region = 0; blit_region < blit_count; ++blit_region) {
 		if (blit_mask[blit_region] == 0) continue;
 		uint32_t bx = ((uint32_t)(blit_region % BLIT_WIDTH)) * blit_rect_width;
@@ -123,7 +130,6 @@ static inline void _fill_rect(
 		uint32_t start = ((uint32_t)buffer) + offset;
 		memsetd((void *)start, clr, screen_width);
 	}
-	_blit();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,11 +151,15 @@ void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg)
 		}
 		ptr += (screen_pitch / screen_bpp) + 9;
 	}
-	_blit();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void blit(void)
+{
+	_blit();
+}
 
 void clear_screen(uint32_t color)
 {

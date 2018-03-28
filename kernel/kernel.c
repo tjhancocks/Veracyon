@@ -52,7 +52,8 @@ __attribute__((noreturn)) void kwork(void)
 	kprint("\033[97m Text \033[0m\n");
 
 	while (1) {
-		__asm__ __volatile__("hlt");
+		kprint("Hello, World\n");
+		sleep(50);
 	}
 }
 

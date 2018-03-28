@@ -28,6 +28,7 @@
 #include <memory.h>
 #include <task.h>
 #include <atomic.h>
+#include <drawing/base.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
 
@@ -45,6 +46,15 @@ int idle(void)
 {
 	while (1) {
 		__asm__ __volatile__("hlt");
+	}
+}
+
+int display(void)
+{
+	while (1) {
+		kdprint(COM1, "Attempting to blit the display!\n ");
+		blit();
+		sleep(8); // ~120 FPS
 	}
 }
 
@@ -71,6 +81,18 @@ void process_prepare(void)
 			"UNABLE TO INITIALISE IDLE PROCESS",
 			"The process header for the idle process could not be created. This"
 			" is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
+	// Spawn the display process
+	struct process *display_proc = process_launch("display", display, P_ROOT);
+	if (!display_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE DISPLAY PROCESS",
+			"The process header for the display process could not be created."
+			" This is a serious error."
 		};
 		panic(&info, NULL);
 	}
