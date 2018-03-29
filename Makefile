@@ -64,13 +64,13 @@ fat12-bochs: build/fat12.img
 build/fat12-vesa.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
-	make -C boot core-loader
+	make -C boot core-loader-2
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12.vesa.imgscript
 
 build/fat12-text.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
-	make -C boot core-loader
+	make -C boot core-loader-2
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12.text.imgscript
