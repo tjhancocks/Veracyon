@@ -23,7 +23,7 @@
 #include <driver/vga/text.h>
 #include <arch/arch.h>
 
-void vga_text_setpos(uint8_t x, uint8_t y, uint8_t width)
+void vga_text_setpos(uint32_t x, uint32_t y, uint32_t width)
 {
 	uint16_t pos = y * width + x;
 	outb(0x3D4, 0x0F);

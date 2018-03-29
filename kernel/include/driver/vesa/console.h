@@ -33,4 +33,14 @@ void vesa_console_prepare(uint16_t *buffer, uint32_t cols, uint32_t rows);
  */
 void vesa_console_redraw(void);
 
+/**
+ Set the cursor location in the VESA console. 
+ */
+void vesa_text_setpos(uint32_t x, uint32_t y, uint32_t width);
+
+/**
+ Trigger and updated redrawing of the cursor.
+ */
+void vesa_text_update_cursor();
+
 #endif

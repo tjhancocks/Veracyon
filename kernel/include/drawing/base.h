@@ -39,7 +39,17 @@ void clear_screen(uint32_t color);
 /**
 
  */
+void fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t clr);
+
+/**
+
+ */
 void blit(void);
+
+/**
+ Invalidate the specified region of the screen.
+ */
+void invalidate_region(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
 void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg);
 

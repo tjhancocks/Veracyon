@@ -32,6 +32,9 @@ static uint32_t text_cell_width = 0;
 static uint32_t text_cell_height = 0;
 static uint16_t *console_buffer = NULL;
 static uint16_t *console_mirror = NULL;
+static uint32_t cursor_x = 0;
+static uint32_t cursor_y = 0;
+static uint8_t cursor_blink = 0;
 
 // CGA
 // static uint32_t color_map[] = {
@@ -48,6 +51,18 @@ static uint32_t color_map[] = {
 	0x586e75, 0x268bd2, 0x859900, 0x2aa198,
 	0xdc322f, 0xd33682, 0xcb3b14, 0xfdf6e3
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+void vesa_cell_invalidate(uint32_t x, uint32_t y)
+{
+	invalidate_region(
+		x * text_cell_width, 
+		y * text_cell_height,
+		text_cell_width,
+		text_cell_height
+	);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +88,47 @@ void vesa_console_redraw(void)
 			color_map[(value >> 12) & 0x0F]
 		);
 		console_mirror[cell] = value;
+	}
+}
+
+void vesa_text_setpos(
+	uint32_t x, 
+	uint32_t y, 
+	uint32_t width __attribute__((unused))
+) {
+	vesa_cell_invalidate(cursor_x, cursor_y);
+	cursor_x = x;
+	cursor_y = y;
+	cursor_blink = 25;
+}
+
+void vesa_text_update_cursor()
+{
+	if (console_mirror == NULL)
+		return;
+
+	uint16_t value = console_buffer[cursor_y * text_console_width + cursor_x];
+	draw_char_bmp(
+		value & 0xFF, 
+		cursor_x * text_cell_width, 
+		cursor_y * text_cell_height, 
+		color_map[(value >> 8) & 0x0F],
+		color_map[(value >> 12) & 0x0F]
+	);
+
+	cursor_blink++;
+	if ((cursor_blink >= 25) && (cursor_blink <= 50)) {
+		fill_rect(
+			cursor_x * text_cell_width, 
+			(cursor_y * text_cell_height) + (text_cell_height - 2),
+			text_cell_width - 1, 
+			2,
+			color_map[(value >> 8) & 0x0F]
+		);
+		vesa_cell_invalidate(cursor_x, cursor_y);
+	}
+	else if (cursor_blink == 51) {
+		cursor_blink = 0;
 	}
 }
 

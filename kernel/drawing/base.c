@@ -125,13 +125,20 @@ static inline void _fill_rect(
 ) {
 	for (uint32_t n = 0; n < h; ++n) {
 		// Work out the starting address.
-		uint32_t offset = ((y + n) * screen_pitch + (x * (screen_bpp / 8)));
+		uint32_t offset = ((y + n) * screen_pitch + (x * screen_bpp));
 		uint32_t start = ((uint32_t)buffer) + offset;
-		memsetd((void *)start, clr, screen_width);
+		memsetd((void *)start, clr, w);
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void invalidate_region(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+{
+	for (uint32_t yy = 0; yy < height; ++yy)
+		for (uint32_t xx = 0; xx < width; ++xx)
+			_mark_blit(x + xx, y + yy);
+}
 
 void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg)
 {
@@ -140,13 +147,13 @@ void draw_char_bmp(uint8_t c, uint32_t x, uint32_t y, uint32_t fg, uint32_t bg)
 	uint8_t mask[] = { 1, 2, 4, 8, 16, 32, 64, 128};
 	uint8_t *glyph = bios_font + (int)c * 16;
 
-	uint32_t *ptr = buffer + (ry * (screen_pitch / screen_bpp)) + (rx + 9);
+	uint32_t *ptr = buffer + (ry * (screen_pitch / screen_bpp)) + (rx + 8);
 	for (uint8_t cy = 0; cy < 16; ++cy) {
 		*(ptr--) = bg;
-		_mark_blit(rx+9, ry+cy);
+		_mark_blit(rx+8, ry+cy);
 		for (uint8_t cx = 0; cx < 8; ++cx) {
 			*(ptr--) = (glyph[cy] & mask[cx]) ? fg : bg;
-			_mark_blit(rx+8-cx, ry+cy);
+			_mark_blit(rx+7-cx, ry+cy);
 		}
 		ptr += (screen_pitch / screen_bpp) + 9;
 	}
@@ -164,4 +171,9 @@ void clear_screen(uint32_t color)
 {
 	memset(blit_mask, 1, sizeof(blit_mask));
 	_fill_rect(0, 0, screen_width, screen_height, color);
+}
+
+void fill_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t clr) 
+{
+	_fill_rect(x, y, w, h, clr);
 }

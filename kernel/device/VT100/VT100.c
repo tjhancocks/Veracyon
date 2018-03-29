@@ -52,6 +52,7 @@ struct VT100_info
 		uint32_t y_stack[MAX_STACK];
 		uint8_t attr_stack[MAX_STACK];
 		uint32_t idx;
+		void(*update)(uint32_t, uint32_t, uint32_t);
 	} cursor;
 	struct {
 		uint16_t *ptr;
@@ -89,8 +90,14 @@ static void vt100_update_cursor(struct VT100_info *vt100)
 	if (vt100->buffer.batching)
 		return;
 
-	vga_text_setpos(vt100->cursor.x, vt100->cursor.y, vt100->screen.cols);
-	
+	if (vt100->cursor.update) {
+		vt100->cursor.update(
+			vt100->cursor.x, 
+			vt100->cursor.y, 
+			vt100->screen.cols
+		);
+	}
+
 	if (vt100->buffer.redraw)
 			vt100->buffer.redraw();
 }
@@ -315,6 +322,7 @@ void VT100_prepare(struct boot_config *config)
 		__vt100_info.screen.height = __vt100_info.screen.rows * 16;
 
 		__vt100_info.buffer.redraw = NULL;
+		__vt100_info.cursor.update = vga_text_setpos;
 	}
 	else if (config->vesa_mode == vesa_mode_text) {
 		uint32_t buffer_size = config->screen_width * config->screen_height;
@@ -326,6 +334,7 @@ void VT100_prepare(struct boot_config *config)
 		__vt100_info.screen.height = config->screen_height;
 		__vt100_info.screen.cols = __vt100_info.screen.width / 9;
 		__vt100_info.screen.rows = __vt100_info.screen.height / 16;
+		__vt100_info.cursor.update = vesa_text_setpos;
 		
 		vesa_console_prepare(
 			__vt100_info.buffer.ptr, 

@@ -28,6 +28,6 @@
 /**
  Set the position of the hardware cursor in the VGA text mode screen.
  */
-void vga_text_setpos(uint8_t x, uint8_t y, uint8_t width);
+void vga_text_setpos(uint32_t x, uint32_t y, uint32_t width);
 
 #endif

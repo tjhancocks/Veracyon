@@ -29,6 +29,7 @@
 #include <task.h>
 #include <atomic.h>
 #include <drawing/base.h>
+#include <driver/vesa/console.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
 
@@ -52,7 +53,7 @@ int idle(void)
 int display(void)
 {
 	while (1) {
-		kdprint(COM1, "Attempting to blit the display!\n ");
+		vesa_text_update_cursor();
 		blit();
 		sleep(8); // ~120 FPS
 	}
