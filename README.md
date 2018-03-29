@@ -1,5 +1,8 @@
 # Veracyon
-The Veracyon project is a hobby operating system project, intended as a learning and research platform for myself. The project will ultimately include both a custom boot loader and kernel.
+The Veracyon project is a hobby operating system project, intended as a learning and research platform for myself. The project will ultimately include both a custom boot loader & kernel, and be developed in a mixture of Assembly and C. It will be specific
+to the Intel 32-bit architecure and BIOS.
+
+![Veracyon Basic Shell](https://raw.githubusercontent.com/tjhancocks/Veracyon/reorganise/docs/images/veracyon-shell-basic.png)
 
 ### Boot Loader (CoreLoader)
 The boot loader of Veracyon is called _CoreLoader_. It is/will be a well defined piece of software that gets the computer into a known and defined state that the Kernel can then take advantage of.
@@ -36,7 +39,7 @@ Currently the build system for Veracyon is hard coded and not configurable. This
 
 ## License
 
-    Copyright (c) 2017 Tom Hancocks
+    Copyright (c) 2017-2018 Tom Hancocks
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
