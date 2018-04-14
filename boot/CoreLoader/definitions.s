@@ -18,7 +18,35 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[org 0x8000]
+	[bits	16]
 
-	%include "CoreLoader2/stage1_5/main.s"
-	%include "CoreLoader2/definitions.s"
+; This file contains the definitions to multiple aspects of CoreLoader, 
+; including structure definitions, CoreLoader memory layout and constants.
+
+BPB_ADDR	equ 0x7c00		; BIOS Parameter Block
+BC_SEG		equ 0x3000		; Boot Configuration Segment (Real Mode)
+BC_OFFSET	equ 0x0000 		; Boot Configuration Offset (Real Mode)
+BC_ADDR		equ 0x30000		; Boot Configuration Address (Protected Mode)
+MM_SEG		equ 0x7000		; Memory Map Segment (Real Mode)
+MM_OFFSET	equ 0x0000		; Memory Map Offset (Real Mode)
+MM_ADDR		equ 0x70000		; Memory Map Address (Protected Mode)
+
+FS_FAT12	equ	0x01		; FAT12 File System
+FS_FAT32	equ	0x02		; FAT32 File System
+
+; The Boot Configuration Structure is provided to the Kernel upon completion
+STRUC BootConf
+	.mmap_addr		resd 1	; Memory Map Address
+	.mmap_count		resd 1	; Size of memory map in bytes
+	.fs_type		resb 1	; The type of file system of boot device
+ENDSTRUC
+
+; E820 Memory Map Entry structure that is returned back from the BIOS.
+STRUC MMEntry
+	.base_lo		resd 1
+	.base_hi		resd 1
+	.len_lo			resd 1
+	.len_hi 		resd 1
+	.type			resd 1
+	.acpi			resd 1
+ENDSTRUC

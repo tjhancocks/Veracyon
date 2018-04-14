@@ -22,7 +22,7 @@
 	[org	0x7c00]
 
 ; This should only include some definitions and symbols, so should be safe!
-	%include "CoreLoader/phase1/defines.s"
+	%include "CoreLoader/definitions.s"
 
 _boot:
 	.entry:
@@ -65,8 +65,12 @@ _start:
 		mov ss, ax
 		mov sp, 0xFDFF
 	.set_config_filesystem:
-		mov edi, BOOT_CONFIG
-		mov byte[edi + BootConf.filesystem], FILE_SYSTEM_FAT12
+		push es
+		push word BC_SEG
+		pop es
+		mov edi, BC_OFFSET
+		mov byte[es:edi + BootConf.fs_type], FS_FAT12
+		pop es
 	.fdc_reset:
 		xor dx, dx
 		int 0x13

@@ -63,5 +63,5 @@ CoreLoader.Stage1_5.Strings:
 
 ; Include all supporting source files and objects.
 CoreLoader.Stage1_5.Supporting:
-	%include "CoreLoader2/Stage1_5/rs232.s"
-	%include "CoreLoader2/Stage1_5/memory.s"
+	%include "CoreLoader/Stage1_5/rs232.s"
+	%include "CoreLoader/Stage1_5/memory.s"

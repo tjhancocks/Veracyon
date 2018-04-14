@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# FAT12 Boot Sector
+# FAT12 Virtual Boot Record
 .PHONY: fat12-bootsector
 fat12-bootsector:
 	nasm -fbin -o ../build/core.fat12.bin fat12/bootsector.s
@@ -27,9 +27,4 @@ fat12-bootsector:
 .PHONY: core-loader
 core-loader:
 	nasm -fbin -o ../build/core.loader.bin CoreLoader/loader.s
-
-# CoreLoader2
-.PHONY: core-loader-2
-core-loader-2:
-	nasm -fbin -o ../build/core.loader.bin CoreLoader2/loader.s
 

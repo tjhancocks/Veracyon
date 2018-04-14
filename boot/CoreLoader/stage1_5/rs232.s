@@ -1,4 +1,4 @@
-; Copyright (c) 2017-2018 Tom Hancocks
+	; Copyright (c) 2017-2018 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,9 @@
 %define COM2_PORT			0x2F8
 %define COM3_PORT			0x3E8
 %define COM4_PORT			0x2E8
+
+; RS232 internal constants
+BUFFER_LEN equ 16
 
 ; Initialise the COM1 RS232 serial port for use. This will ensure we are using
 ; the correct baud rate and appropriate interrupts are configured.
@@ -92,3 +95,87 @@ rs232.send_bytes:
 		popa
 		ret
 
+; Write the value of a register to the COM1 RS232 serial port in a textual
+; representation.
+;
+; NOTE: If the value is specified to be in base-2 then the "b" prefix will
+; be applied. If the value is specified to be in base-8 then the "O" prefix
+; will be applied. Finally if the value is specified to be in the base-16
+; prefix then the "0x" will be applied.
+;
+;	IN: eax -> value to send
+;		bl -> the base of the value
+rs232.send_value:
+	.prologue:
+		pusha
+		push eax
+		push bx
+		push ds
+		pop es
+	.clear_buffer:
+		mov di, .buffer
+		xor ax, ax
+		mov cx, BUFFER_LEN
+		rep stosb
+	.is_prefix_required:
+		mov si, sp
+		mov bx, [ss:si]
+		cmp bx, 2
+		je .use_binary_prefix
+		cmp bx, 8
+		je .use_octal_prefix
+		cmp bx, 16
+		je .use_hex_prefix
+		jmp .parse_value
+	.use_binary_prefix:
+		mov si, .binary_prefix
+		call rs232.send_bytes
+		jmp .parse_value
+	.use_octal_prefix:
+		mov si, .octal_prefix
+		call rs232.send_bytes
+		jmp .parse_value
+	.use_hex_prefix:
+		mov si, .hex_prefix
+		call rs232.send_bytes
+		mov di, .buffer
+		mov ax, 0x30
+		mov cx, BUFFER_LEN
+		rep stosb
+	.parse_value:
+		mov si, sp
+		mov eax, dword[ss:si + 2]
+		mov di, .buffer + BUFFER_LEN
+	.next_digit:
+		mov si, sp
+		dec di
+		movzx ecx, word[ss:si]
+		xor edx, edx
+		idiv ecx
+		movzx bx, dl
+		mov si, .digits
+		mov dl, byte[si + bx]
+		mov byte[di], dl
+		cmp eax, 0
+		jnz .next_digit
+		cmp ecx, 16
+		jne .display_value
+		mov di, .buffer + BUFFER_LEN - 8
+	.display_value
+		mov si, di
+		call rs232.send_bytes
+	.epilogue:
+		pop bx
+		pop eax
+		popa
+		ret
+	.buffer:
+		times BUFFER_LEN + 1 db 0
+	.digits:
+		db "0123456789ABCDEF"
+	.binary_prefix:
+		db "b", 0
+	.octal_prefix:
+		db "O", 0
+	.hex_prefix:
+		db "0x", 0

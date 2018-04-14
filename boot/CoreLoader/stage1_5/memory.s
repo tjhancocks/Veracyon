@@ -71,7 +71,7 @@ memory.detect:
 		push BC_SEG
 		pop ds
 		mov si, BC_OFFSET
-		mov [ds:si + BootConf.mmap_count], bp
+		mov dword[ds:si + BootConf.mmap_count], ebp
 		mov dword[ds:si + BootConf.mmap_addr], MM_ADDR
 		pop ds
 		clc
@@ -96,17 +96,100 @@ memory.map.display:
 	.header:
 		mov si, .header_str
 		call rs232.send_bytes
+	.prepare:
+		push word BC_SEG
+		pop es
+		mov si, BC_OFFSET
+		mov ecx, dword[es:si + BootConf.mmap_count]
+		push word MM_SEG
+		pop es
+		mov si, MM_OFFSET
 	.next_item:
-
+		push ecx
+		push es
+		push si
+	.display_item
+		mov si, .single_space
+		call rs232.send_bytes
+		pop si
+		pop es
+		push es
+		push si
+		mov eax, dword[es:si + MMEntry.base_lo]
+		mov bl, 16
+		call rs232.send_value
+		mov si, .double_space
+		call rs232.send_bytes
+		pop si
+		pop es
+		push es
+		push si
+		mov eax, dword[es:si + MMEntry.len_lo]
+		mov bl, 16
+		call rs232.send_value
+		mov si, .double_space
+		call rs232.send_bytes
+		pop si
+		pop es
+		push es
+		push si
+		mov eax, dword[es:si + MMEntry.type]
+		call memory.map.display.purpose
+		mov si, .nl
+		call rs232.send_bytes
 	.footer:
-
+		pop si
+		pop es
+		pop ecx
+		add si, 24
+		dec ecx
+		or ecx, ecx
+		jnz .next_item
+		mov si, .footer_str
+		call rs232.send_bytes
 	.epilogue:
 		popa
 		ret
+	.single_space:
+		db " ", 0x0
+	.double_space:
+		db "  ", 0x0
+	.nl:
+		db 0xD, 0x0
 	.header_str:
 		db "System Memory Map:", 0xD
-		db " START       END         RESERVED? ", 0xD
-		db "===================================", 0xD, 0x0
+		db " START       LENGTH      RESERVED?         ", 0xD
+		db "===========================================", 0xD, 0x0
+	.footer_str:
+		db "===========================================", 0xD, 0xD, 0x0
+
+; Display the name of the memory region type specified.
+;	IN: al -> Memory Region Type Value
+memory.map.display.purpose:
+	.prologue:
+		pusha
+	.main:
+		shl ax, 1
+		mov si, ax
+		mov si, word[si + .look_up]
+		call rs232.send_bytes
+	.epilogue:
+		popa
+		ret
+	.look_up:
+		dw .type_0, .type_1, .type_2, .type_3, .type_4, .type_5
+	.type_0:
+		db "Unknown", 0x0
+	.type_1:
+		db "Free Memory", 0x0
+	.type_2:
+		db "Reserved", 0x0
+	.type_3:
+		db "ACPI Reclaimable", 0x0
+	.type_4:
+		db "ACPI Non-Volatile", 0x0
+	.type_5:
+		db "Bad Memory", 0x0
 
 ; Internal memory detection constants
 MMAP_TOKEN equ 0x534d4150

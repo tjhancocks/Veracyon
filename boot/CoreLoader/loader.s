@@ -1,4 +1,4 @@
-; Copyright (c) 2017 Tom Hancocks
+; Copyright (c) 2017-2018 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[org	0x8000]
+	[org 0x8000]
 
-	%include "CoreLoader/phase1.s"
-	%include "CoreLoader/phase2.s"
+	%include "CoreLoader/stage1_5/main.s"
+	%include "CoreLoader/definitions.s"
