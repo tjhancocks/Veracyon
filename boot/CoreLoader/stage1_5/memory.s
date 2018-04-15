@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits	16]
+	BITS  	16
 
 ; Queries the machine's BIOS using the E820 function to determine the memory
 ; map used by the BIOS. This memory map is used to ensure correct use of memory

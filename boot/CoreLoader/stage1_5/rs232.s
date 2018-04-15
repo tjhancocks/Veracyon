@@ -1,4 +1,4 @@
-	; Copyright (c) 2017-2018 Tom Hancocks
+; Copyright (c) 2017-2018 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits	16]
+	BITS 	16
 
 ; Serial Port definitions used on the x86 platform.
 %define COM1_PORT			0x3F8

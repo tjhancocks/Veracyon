@@ -18,8 +18,8 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits	16]
-	[org	0x7c00]
+	BITS 	16
+	ORG 	0x7c00
 
 ; This should only include some definitions and symbols, so should be safe!
 	%include "CoreLoader/definitions.s"

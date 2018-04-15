@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits 16]
+	BITS 	16
 
 ; CoreLoader entry point. The bootsector _should_ be dropping CPU control at
 ; this point.

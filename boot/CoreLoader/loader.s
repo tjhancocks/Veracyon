@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[org 0x8000]
+	ORG 	0x8000
 
 	%include "CoreLoader/stage1_5/main.s"
 	%include "CoreLoader/definitions.s"

@@ -18,7 +18,7 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	[bits	16]
+	BITS	16
 
 ; This file contains the definitions to multiple aspects of CoreLoader, 
 ; including structure definitions, CoreLoader memory layout and constants.
