@@ -35,6 +35,11 @@ CoreLoader.main:
 		; memory, and its specific mapping and layout. This will allow and help
 		; in placing the kernel and setting up a paging environment.
 		call memory.detect
+	.file_system:
+		; Load the appropriate file system driver for use. Each driver provides
+		; a set of common interfaces, which can be assigned to the appropriate
+		; stub interfaces.
+		call vfs.init
 	.config:
 		; The user may have supplied a boot configuration file. We need to fetch
 		; it from disk, read and parse it and then handle further loading as
@@ -65,3 +70,4 @@ CoreLoader.Stage1_5.Strings:
 CoreLoader.Stage1_5.Supporting:
 	%include "CoreLoader/Stage1_5/rs232.s"
 	%include "CoreLoader/Stage1_5/memory.s"
+	%include "CoreLoader/Stage1_5/fs.s"
