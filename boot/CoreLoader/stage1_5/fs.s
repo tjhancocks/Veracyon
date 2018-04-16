@@ -21,6 +21,7 @@
 	BITS 	16
 
 	%include "CoreLoader/stage1_5/fat12.s"
+	%include "CoreLoader/stage1_5/disk.s"
 
 ; Concrete File System pointers. The concrete file system should assign 
 ; appropriate sub-routine pointer values to these so that the virtual file 
@@ -42,9 +43,20 @@ vfs.init:
 		call rs232.send_bytes
 		mov si, BC_OFFSET
 		movzx si, byte[fs:si + BootConf.fs_type]
+		push si
 		shl si, 1
 		mov si, word[si + .fs_name_lookup]
 		call rs232.send_bytes
+		pop ax
+		cmp ax, FS_FAT12
+		je .install_fat12
+		mov si, .unsupported_fs
+		call rs232.send_bytes
+		cli
+		hlt
+	.install_fat12:
+		mov word[fs_driver.read_file], fat12.read_file
+		jmp .epilogue
 	.epilogue:
 		popa
 		ret
@@ -52,6 +64,8 @@ vfs.init:
 		db "Initialising Virtual File System... ", 0x0
 	.fs_name_lookup:
 		dw .unknown, .fat12_name, .fat32_name
+	.unsupported_fs:
+		db "Unsupported File System.", 0xD, 0x0
 	.unknown:
 		db "Unknown.", 0xD, 0x0
 	.fat12_name:
@@ -66,7 +80,7 @@ vfs.init:
 ;  OUT: ES:BX => File Buffer
 ;
 ; This _should_ set the carry flag if the file could not be found.
-; NOTE: This will trash the EAX register.
+; NOTE: This will likely clobber registers.
 vfs.read_file:
 	.main:
 		movzx eax, word[fs_driver.read_file]
