@@ -73,6 +73,34 @@ vfs.init:
 	.fat32_name:
 		db "FAT32.", 0xD, 0x0
 
+; Debug dumping of the file over RS232. This is not recommended for _large_
+; files.
+;
+;  IN: ES:BX => File Buffer
+;
+vfs.dump_file:
+	.prologue:
+		pusha
+		push ds
+		push es
+		push bx
+	.main:
+		mov si, .file_contents
+		call rs232.send_bytes
+		pop si
+		pop ds
+		call rs232.send_bytes
+		mov si, .nl
+		call rs232.send_bytes
+	.epilogue:
+		pop ds
+		popa
+		ret
+	.file_contents:
+		db 0xD, "FILE CONTENTS: ", 0xD, 0x0
+	.nl:
+		db 0xD, 0x0
+
 ; Read the specified file from the root directory into the specified
 ; file buffer
 ;

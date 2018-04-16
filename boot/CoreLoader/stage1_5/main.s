@@ -44,6 +44,9 @@ CoreLoader.main:
 		; The user may have supplied a boot configuration file. We need to fetch
 		; it from disk, read and parse it and then handle further loading as
 		; appropriate.
+		mov si, CoreLoader.Stage1_5.Files.config
+		call vfs.read_file
+		call vfs.dump_file
 	.display:
 		; We need to detect all present VESA/VBE modes, and switch to the most
 		; appropriate mode. This may be a graphical mode or a text mode 
@@ -65,6 +68,11 @@ CoreLoader.Stage1_5.Strings:
 	.version:	
 		db "CoreLoader Version 0.3-alpha", 0xD
 		db "Copyright (c) 2017-2018 Tom Hancocks. MIT License.", 0xD, 0xD, 0x0
+
+; Files & Dependancies
+CoreLoader.Stage1_5.Files:
+	.config:
+		db "BOOT    CLI", 0x0
 
 ; Include all supporting source files and objects.
 CoreLoader.Stage1_5.Supporting:
