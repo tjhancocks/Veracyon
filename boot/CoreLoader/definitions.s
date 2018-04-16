@@ -24,6 +24,12 @@
 ; including structure definitions, CoreLoader memory layout and constants.
 
 BPB_ADDR	equ 0x7c00		; BIOS Parameter Block
+TSB_SEG		equ	0x1000		; Temporary Storage Buffer Segment (Real Mode)
+TSB_OFFSET	equ	0x0000		; Temporary Storage Buffer Offset (Real Mode)
+TSB_ADDR	equ	0x10000		; Temporary Storage Buffer (Protected Mode)
+FILE_SEG	equ	0x2000		; File Buffer Segment (Real Mode)
+FILE_OFFSET	equ	0x0000		; File Buffer Offset (Real Mode)
+FILE_ADDR	equ	0x20000		; File Buffer (Protected Mode)
 BC_SEG		equ 0x3000		; Boot Configuration Segment (Real Mode)
 BC_OFFSET	equ 0x0000 		; Boot Configuration Offset (Real Mode)
 BC_ADDR		equ 0x30000		; Boot Configuration Address (Protected Mode)
@@ -49,4 +55,32 @@ STRUC MMEntry
 	.len_hi 		resd 1
 	.type			resd 1
 	.acpi			resd 1
+ENDSTRUC
+
+; BIOS Parameter Block structure used at the start of FAT file system.s
+STRUC BPB
+	.jmp_code		resb 3
+	.oem_id			resb 8
+	.bps			resw 1
+	.spc			resb 1
+	.reserved		resw 1
+	.fats			resb 1
+	.root_ents		resw 1
+	.sm_sectors		resw 1
+	.media			resb 1
+	.spf			resw 1
+	.spt 			resw 1
+	.heads			resw 1
+	.hidden			resd 1
+	.lg_sectors		resd 1
+ENDSTRUC
+
+STRUC EBPB
+	.bpb			resb 36
+	.drive			resb 1
+	.nt_flags		resb 1
+	.sig			resb 1
+	.volume_id		resd 1
+	.volume_label	resb 11
+	.sys_id			resb 8
 ENDSTRUC
