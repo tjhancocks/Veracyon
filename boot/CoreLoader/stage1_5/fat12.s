@@ -20,6 +20,26 @@
 
 	BITS 	16
 
+; FAT12 File System Constants
+
+FAT12_SFN_LEN	equ 11
+FAT12_DIR_LEN	equ	32
+
+STRUC FAT12Dir
+	.name	resb 11							; Name of the file "8:3" format
+	.attr	resb 1							; Attributes of the file
+	.nt		resb 1							; Reserved by Windows NT
+	.ts		resb 1							; Creation time tenths of a second
+	.ctime 	resw 1							; Creation time
+	.cdate	resw 1							; Creation date
+	.adate	resw 1							; Last access date
+	.hi_cls	resw 1							; Hi 16-bits of first cluster
+	.mtime	resw 1							; Last modified time
+	.mdate	resw 1							; Last modified date
+	.lo_cls	resw 1							; Lo 16-bits of first cluster
+	.size	resd 1							; Total size of file in bytes
+ENDSTRUC
+
 ; Read the specified file from the root directory into the specified
 ; file buffer
 ;
@@ -32,7 +52,7 @@ fat12.read_file:
 	.prologue:
 		push bp
 		mov bp, sp
-		push si
+		push si								; [bp - 2] File name
 	.load_root:
 		xor ecx, ecx
 		xor edx, edx
@@ -44,7 +64,7 @@ fat12.read_file:
 		movzx ax, byte[gs:si + BPB.fats]	; The number of FATs in volume
 		mul word[gs:si + BPB.spf]			; * sectors per FAT
 		add ax, word[gs:si + BPB.reserved]	; + reserved sectors
-		mov word[$DISK.base], ax			; Save the base of the root dir
+		mov word[$DISK.base], ax			; Save the data base of the root dir
 		add word[$DISK.base], cx			; + the size of the root dir
 		push ax
 		mov ax, TSB_SEG						; Prepare the Temporary Storage
@@ -55,29 +75,30 @@ fat12.read_file:
 	.find_file:
 		mov cx, word[gs:si + BPB.root_ents]	; Fetch the number of root entries
 		xor di, di
-	.L0:
-		push cx
-		mov cx, 11							; File names are 11 bytes long...
+	.next_file:
+		push cx								; Save the root dir counter
+		mov cx, FAT12_SFN_LEN				; File names are 11 bytes long
 		mov si, [bp - 2]					; Restore the file name from stack
-		push di
+		push di								; Save the root entry pointer
 		rep cmpsb							; Test for equivalence...
-		pop di
-		je .load_fat
-		pop cx
-		add di, 32							; Advance to the next entry
-		loop .L0
+		pop di								; Restore the root entry pointer
+		je .load_fat						; If equal then load the FAT...
+		pop cx								; Restore the root dir counter
+		add di, FAT12_DIR_LEN				; Advance to the next entry
+		loop .next_file						; If CX>0, then check the next item
 	.missing_file:							; We failed to find the file...
 		mov si, .missing_str
 		call rs232.send_bytes
 		mov si, [bp - 2]
 		call rs232.send_bytes
-		stc
+		stc 								; Set carry flag to indicate failure
 		mov sp, bp
 		pop bp
 		ret
 	.load_fat:
-		mov dx, word[es:di + 26]			; First cluster in the file
-		mov word[bp - 2], dx				; Save the cluster
+		add sp, 2							; Remove top element of stack
+		mov dx, [es:di + FAT12Dir.lo_cls]	; Get the first cluster in the file
+		mov word[bp - 2], dx				; and save it for now
 		mov si, BPB_ADDR
 		movzx ax, byte[gs:si + BPB.fats]	; Get the number of FATs.
 		mul word[gs:si + BPB.spf]			; * sectors per FAT.

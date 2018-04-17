@@ -33,7 +33,7 @@ $DISK:
 		dw 0x0000
 
 ; Read the specified number of sectors from the boot disk. This relies
-; on the BIOS and should be agnosti of specific disk media.
+; on the BIOS and should be agnostic of specific disk media.
 ;
 ;	IN:    AX => Starting Sector
 ;	IN:    CX => Number of Sectors
