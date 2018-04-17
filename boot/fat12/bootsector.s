@@ -70,6 +70,7 @@ _start:
 		pop es
 		mov edi, BC_OFFSET
 		mov byte[es:edi + BootConf.fs_type], FS_FAT12
+		mov byte[es:edi + BootConf.boot_media], dl
 		pop es
 	.fdc_reset:
 		xor dx, dx

@@ -42,6 +42,7 @@ FS_FAT32	equ	0x02		; FAT32 File System
 
 ; The Boot Configuration Structure is provided to the Kernel upon completion
 STRUC BootConf
+	.boot_media		resb 1	; The type of boot media used for the boot disk
 	.mmap_addr		resd 1	; Memory Map Address
 	.mmap_count		resd 1	; Size of memory map in bytes
 	.fs_type		resb 1	; The type of file system of boot device
