@@ -47,6 +47,16 @@ CoreLoader.main:
 		mov si, CoreLoader.Stage1_5.Files.config
 		call vfs.read_file
 		call config.parse_file
+		jc .config_error
+		mov si, CoreLoader.Stage1_5.Strings.config_loaded
+		call rs232.send_bytes
+		jmp .display
+	.config_error:
+		; If we land here then there was a problem with the config file.
+		mov si, CoreLoader.Stage1_5.Strings.config_error
+		call rs232.send_bytes
+		cli
+		hlt
 	.display:
 		; We need to detect all present VESA/VBE modes, and switch to the most
 		; appropriate mode. This may be a graphical mode or a text mode 
@@ -68,6 +78,10 @@ CoreLoader.Stage1_5.Strings:
 	.version:	
 		db "CoreLoader Version 0.3-alpha", 0xD
 		db "Copyright (c) 2017-2018 Tom Hancocks. MIT License.", 0xD, 0xD, 0x0
+	.config_loaded:
+		db "BOOT.CLI successfully loaded and parsed.", 0xD, 0x0
+	.config_error:
+		db "BOOT.CLI could not be loaded successfully.", 0xD, 0x0
 
 ; Files & Dependancies
 CoreLoader.Stage1_5.Files:

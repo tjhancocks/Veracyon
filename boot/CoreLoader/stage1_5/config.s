@@ -45,6 +45,8 @@ config.parse_file:
 		je .is_comment
 		cmp al, '%'
 		je .is_key_value					; If AL is '%' then its a key-value
+		cmp al, 0
+		je .epilogue
 		jmp .syntax_error					; Unreconised character found!
 	.is_key_value:
 		call config.parse_key_value			; Parse out the key...
@@ -54,11 +56,9 @@ config.parse_file:
 		mov [bp - 4], si					; Update the file offset
 		jmp .next_line						; Loop around to the next line
 	.syntax_error:
-		mov si, .unexpected_char
-		call rs232.send_bytes
-		hlt
-		cli
+		stc
 	.epilogue:
+		pop ds								; Restore the original DS value
 		mov sp, bp
 		pop bp
 		ret
