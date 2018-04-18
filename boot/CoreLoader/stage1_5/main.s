@@ -53,6 +53,8 @@ CoreLoader.main:
 		jmp .display
 	.config_error:
 		; If we land here then there was a problem with the config file.
+		; TODO: This should be handled better than this at some point, but for
+		; now it will suffice.
 		mov si, CoreLoader.Stage1_5.Strings.config_error
 		call rs232.send_bytes
 		cli

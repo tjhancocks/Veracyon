@@ -45,6 +45,10 @@ config.parse_file:
 		je .is_comment
 		cmp al, '%'
 		je .is_key_value					; If AL is '%' then its a key-value
+		cmp al, 0xD							; Ignore a blank line
+		je .next_line
+		cmp al, 0xA							; Ignore a blank line
+		je .next_line
 		cmp al, 0
 		je .epilogue
 		jmp .syntax_error					; Unreconised character found!
@@ -133,6 +137,8 @@ config.parse_key_value:
 		mov ax, word[bx + .key_handler]		; Get the handler for this key
 		mov si, word[bp - 6]				; Fetch the value from file
 		mov cx, word[bp - 8]				; Fetch the value length
+		push ds
+		pop gs								; Copy DS into GS for the handler
 		pop ds								; Restore the parser DS value
 		call ax								; Call the handler for the key
 		clc
@@ -149,13 +155,17 @@ config.parse_key_value:
 		pop bp
 		ret
 	.key_count:
-		db 1
+		db 3
 	.key_list:
-		dw .echo_key
+		dw .echo_key, .vid_mode_key, .kernel_key
 	.key_handler:
-		dw config.echo
+		dw config.echo, config.vid_mode, config.kernel
 	.echo_key:
 		db "echo", 0x0
+	.vid_mode_key:
+		db "vid-mode", 0x0
+	.kernel_key:
+		db "kernel", 0x0
 
 config.echo:
 	.next_char:
@@ -165,4 +175,61 @@ config.echo:
 	.done:
 		mov al, 0xD
 		call rs232.send_byte				; Send a newline character
+		ret
+
+config.vid_mode:
+	.prepare:
+		push bp
+		mov bp, sp
+		push si								; [bp - 2] Value pointer
+		push cx								; [bp - 4] Value length
+		push 0								; [bp - 6] Desired mode number
+		movzx cx, byte[.mode_count]			; Get the number of known modes
+	.check_mode:
+		push ds								; Keep track of original DS
+		push gs								; Transfer GS into DS
+		pop ds
+		push cx								; Save the number of remaining modes
+		mov bx, cx							; Copy it into BX
+		dec bx								; --BX
+		shl bx, 1							; * 2
+		mov si, word[bx + .mode_str_lookup] ; Look up mode string in table
+		mov cx, word[bp - 4]				; Get the value length
+		mov di, word[bp - 2]				; Get the value
+		rep cmpsb							; Compare them for equality
+		pop ds								; Restore original DS
+		je .mode_found						; Did we match? If so jump.
+		pop cx								; Restore the remaining mode count
+		loop .check_mode
+		jmp .use_mode						; We couldn't identify the requested
+											; mode. Set the default mode.
+	.mode_found:
+		shr bx, 1							; BX / 2 to get mode number
+		mov word[bp - 6], bx				; Save the desired mode number
+	.use_mode:
+		push BC_SEG
+		pop gs
+		xor si, si
+		mov ax, word[bp - 6]				; Fetch the desired mode number
+		mov byte[gs:si + BootConf.vmode], al; Add it to the BootConf
+	.done:
+		add sp, 2
+		pop cx
+		pop si
+		mov sp, bp
+		pop bp
+		ret
+	.mode_count:
+		db 3
+	.mode_str_lookup:
+		dw .text_str, .native_str, .graph_str
+	.text_str:
+		db "text", 0x0
+	.native_str:
+		db "native", 0x0
+	.graph_str:
+		db "graph", 0x0
+
+config.kernel:
+	.main:
 		ret

@@ -40,9 +40,14 @@ MM_ADDR		equ 0x70000		; Memory Map Address (Protected Mode)
 FS_FAT12	equ	0x01		; FAT12 File System
 FS_FAT32	equ	0x02		; FAT32 File System
 
+VID_TEXT	equ 0x00 		; VGA Text Video Mode
+VID_NATIVE	equ 0x01 		; Native VESA Video Mode, running text console
+VID_GRAPH	equ 0x02 		; NAtive VESA Video Mode, running graphical ui
+
 ; The Boot Configuration Structure is provided to the Kernel upon completion
 STRUC BootConf
 	.boot_media		resb 1	; The type of boot media used for the boot disk
+	.vmode		resb 1		; The desired video mode for the system.
 	.mmap_addr		resd 1	; Memory Map Address
 	.mmap_count		resd 1	; Size of memory map in bytes
 	.fs_type		resb 1	; The type of file system of boot device
