@@ -85,8 +85,6 @@ vfs.dump_file:
 		push es
 		push bx
 	.main:
-		mov si, .file_contents
-		call rs232.send_bytes
 		pop si
 		pop ds
 		call rs232.send_bytes
@@ -96,8 +94,6 @@ vfs.dump_file:
 		pop ds
 		popa
 		ret
-	.file_contents:
-		db 0xD, "FILE CONTENTS: ", 0xD, 0x0
 	.nl:
 		db 0xD, 0x0
 

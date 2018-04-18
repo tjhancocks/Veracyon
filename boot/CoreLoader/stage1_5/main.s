@@ -46,7 +46,7 @@ CoreLoader.main:
 		; appropriate.
 		mov si, CoreLoader.Stage1_5.Files.config
 		call vfs.read_file
-		call vfs.dump_file
+		call config.parse_file
 	.display:
 		; We need to detect all present VESA/VBE modes, and switch to the most
 		; appropriate mode. This may be a graphical mode or a text mode 
@@ -79,3 +79,4 @@ CoreLoader.Stage1_5.Supporting:
 	%include "CoreLoader/Stage1_5/rs232.s"
 	%include "CoreLoader/Stage1_5/memory.s"
 	%include "CoreLoader/Stage1_5/fs.s"
+	%include "CoreLoader/Stage1_5/config.s"
