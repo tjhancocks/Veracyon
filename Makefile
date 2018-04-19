@@ -26,30 +26,29 @@ clean:
 ################################################################################
 # FAT12
 
-.PHONY: fat12 fat12-text fat12-vesa
-fat12: fat12-text
+.PHONY: fat12 fat12-debug
+
+fat12: clean build/fat12.img
 	@echo
 
-fat12-text: build/fat12-text.img
-	mv $^ build/fat12.img
-
-fat12-vesa: build/fat12-vesa.img
-	mv $^ build/fat12.img
+fat12-debug: clean build/fat12-debug.img
+	@echo
 
 ################################################################################
 # BOCHS
 
-.PHONY: fat12-bochs fat12-text-bochs fat12-vesa-bochs bochs
+.PHONY: fat12-bochs fat12-debug-bochs
 
-fat12-text-bochs: clean fat12-text fat12-bochs
-	@echo
-
-fat12-vesa-bochs: clean fat12-vesa fat12-bochs
-	@echo
-
-fat12-bochs: build/fat12.img
-	-mkdir -p debug
+fat12-bochs: clean build/fat12.img
 	bochs -q "boot:a" "floppya: 1_44=build/fat12.img, status=inserted" \
+			 "debug: action=ignore, floppy=report" \
+			 "memory: guest=512, host=256" \
+			 "cpuid: model=pentium_mmx, level=6, mmx=1" \
+			 "clock: sync=realtime"
+
+fat12-debug-bochs: clean build/fat12-debug.img
+	-mkdir -p debug
+	bochs -q "boot:a" "floppya: 1_44=build/fat12-debug.img, status=inserted" \
 			 "debug: action=ignore, floppy=report" \
 			 "magic_break: enabled=1" \
 			 "com1: enabled=1, mode=file, dev=debug/bochs.log" \
@@ -61,16 +60,16 @@ fat12-bochs: build/fat12.img
 ################################################################################
 # IMAGES
 
-build/fat12-vesa.img:
+build/fat12.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader
 	make -C kernel vkernel-elf
-	imgtool -s support/imgtool/fat12.vesa.imgscript
+	imgtool -s support/imgtool/fat12.imgscript
 
-build/fat12-text.img:
+build/fat12-debug.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
-	make -C boot core-loader
+	make -C boot core-loader-debug
 	make -C kernel vkernel-elf
-	imgtool -s support/imgtool/fat12.text.imgscript
+	imgtool -s support/imgtool/fat12-debug.imgscript

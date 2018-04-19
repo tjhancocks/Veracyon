@@ -46,8 +46,9 @@ VID_GRAPH	equ 0x02 		; NAtive VESA Video Mode, running graphical ui
 
 ; The Boot Configuration Structure is provided to the Kernel upon completion
 STRUC BootConf
+	.kernel_image	resb 64	; The name of the kernel image to load
 	.boot_media		resb 1	; The type of boot media used for the boot disk
-	.vmode		resb 1		; The desired video mode for the system.
+	.vmode			resb 1	; The desired video mode for the system.
 	.mmap_addr		resd 1	; Memory Map Address
 	.mmap_count		resd 1	; Size of memory map in bytes
 	.fs_type		resb 1	; The type of file system of boot device

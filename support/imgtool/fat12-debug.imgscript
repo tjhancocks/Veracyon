@@ -20,13 +20,13 @@
 
 # This will create a 1.44MiB Floppy Disk with a FAT12 partition upon it. It will
 # also install the `core.fat12.bin` bootsector and `core.loader.bin` bootloader.
-attach build/fat12-text.img
+attach build/fat12-debug.img
 init -b512 -c2880
 format fat12 build/core.fat12.bin build/core.loader.bin
 
 # Install the FAT12 Boot Configuration file
 mount
-import kernel/boot/fat12.boot.text.config
+import kernel/boot/boot.config
 write boot.cli
 import build/vkernel
 write vkernel

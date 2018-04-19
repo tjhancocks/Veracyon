@@ -197,9 +197,9 @@ config.vid_mode:
 		mov cx, word[bp - 4]				; Get the value length
 		mov di, word[bp - 2]				; Get the value
 		rep cmpsb							; Compare them for equality
+		pop cx								; Restore the remaining mode count
 		pop ds								; Restore original DS
 		je .mode_found						; Did we match? If so jump.
-		pop cx								; Restore the remaining mode count
 		loop .check_mode
 		jmp .use_mode						; We couldn't identify the requested
 											; mode. Set the default mode.
@@ -213,9 +213,8 @@ config.vid_mode:
 		mov ax, word[bp - 6]				; Fetch the desired mode number
 		mov byte[gs:si + BootConf.vmode], al; Add it to the BootConf
 	.done:
-		add sp, 2
-		pop cx
-		pop si
+		mov si, word[bp - 2]				; Restore original SI value
+		mov cx, word[bp - 4]				; Restore original CX value
 		mov sp, bp
 		pop bp
 		ret
@@ -231,5 +230,24 @@ config.vid_mode:
 		db "graph", 0x0
 
 config.kernel:
+	.prepare:
+		push bp
+		mov bp, sp
+		push si								; [bp - 2] Value pointer
+		push cx								; [bp - 4] Value length
+		push es								; [bp - 6] Original ES
 	.main:
+		push BC_SEG							; We want to access the BootConfig
+		pop es
+		mov di, BootConf.kernel_image		; ...specifically the kernel name
+		mov cx, 64							; 64 Character Name maximum
+		xor ax, ax							; NULL bytes
+		rep stosb							; Clear the current kernel name
+		mov di, BootConf.kernel_image		; Get back to the start 
+		mov cx, word[bp - 4]				; Get the kernel name length
+		rep movsb							; Copy it into the config
+	.done:
+		pop es								; Restore ES to its original value
+		mov sp, bp
+		pop bp
 		ret
