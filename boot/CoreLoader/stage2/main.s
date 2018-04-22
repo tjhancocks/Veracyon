@@ -24,6 +24,18 @@
 ; this location.
 CoreLoader.Stage2.main:
 	.start:
-		xchg bx, bx
-		nop
+		push CoreLoader.Stage2.Strings.pmode_text
+		call _rs232.send_bytes
+		add esp, 4
+	.catch:
+		cli
 		hlt
+
+; Strings used in Stage2 of CoreLoader.
+CoreLoader.Stage2.Strings:
+	.pmode_text:	
+		db "CoreLoader is now running in 32bit Protected Mode!", 0xD, 0x0
+
+; Include all supporting source files and objects.
+CoreLoader.Stage2.Supporting:
+	%include "CoreLoader/Stage2/rs232.s"
