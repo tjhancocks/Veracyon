@@ -95,6 +95,25 @@ rs232.send_bytes:
 		popa
 		ret
 
+; Write a stream of n bytes to the COM1 RS232 serial port, until a NUL byte is
+; encountered.
+; 	IN: si -> address of the first byte to send
+; 	IN  cx -> The number of bytes to send
+rs232.send_counted_bytes:
+	.prologue:
+		pusha
+	.next_byte:
+		push cx
+		lodsb
+		or al, al
+		jz .epilogue
+		call rs232.send_byte
+		pop cx
+		loop .next_byte
+	.epilogue:
+		popa
+		ret
+
 ; Write the value of a register to the COM1 RS232 serial port in a textual
 ; representation.
 ;

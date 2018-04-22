@@ -51,7 +51,6 @@ LIBGCC := $(shell i586-elf-gcc -print-file-name=libgcc.a)
 # vkernel-elf
 .PHONY: vkernel-elf
 vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC)
-	echo $(C-KERNEL-OBJS-TMP)
 	$(LD) -T./kernel.ld $(LDFLAGS) -o ../build/vkernel $^
 
 # Helpers
