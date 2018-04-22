@@ -57,7 +57,6 @@ gdt.init:
 		call gdt.set_gate
 		add sp, 14
 	.setup_pointer:
-		xchg bx, bx
 		mov di, GDTPTR_ADDR			
 		mov word[cs:di], 0x0017			; Size of the GDT in bytes, minus 1
 		mov dword[cs:di + 2], GDT_ADDR
