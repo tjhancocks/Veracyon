@@ -42,7 +42,7 @@ gdt.init:
 		add sp, 14
 	.kernel_code:
 		push 0x0C
-		push 0x99
+		push 0x9A
 		push dword 0xFFFFF
 		push dword 0x00000000
 		push 1
@@ -50,20 +50,17 @@ gdt.init:
 		add sp, 14
 	.kernel_data:
 		push 0x0C
-		push 0x93
+		push 0x92
 		push dword 0xFFFFF
 		push dword 0x00000000
 		push 2
 		call gdt.set_gate
 		add sp, 14
 	.setup_pointer:
-		mov ax, BC_SEG
-		mov es, ax
-		mov di, BC_OFFSET
-		mov ax, (8 * 3) - 1				; Size of the GDT in bytes, minus 1
-		mov word[es:di + BootConf.gdt_size], ax
-		mov eax, GDT_ADDR
-		mov dword[es:di + BootConf.gdt_base], eax
+		xchg bx, bx
+		mov di, GDTPTR_ADDR			
+		mov word[cs:di], 0x0017			; Size of the GDT in bytes, minus 1
+		mov dword[cs:di + 2], GDT_ADDR
 	.epilogue:
 		mov sp, bp
 		pop bp

@@ -18,12 +18,11 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	BITS	16
-
 ; This file contains the definitions to multiple aspects of CoreLoader, 
 ; including structure definitions, CoreLoader memory layout and constants.
 
 BPB_ADDR	equ 0x7c00		; BIOS Parameter Block
+GDTPTR_ADDR equ 0x7e00		; Global Descriptor Table Pointer address
 TSB_SEG		equ	0x1000		; Temporary Storage Buffer Segment (Real Mode)
 TSB_OFFSET	equ	0x0000		; Temporary Storage Buffer Offset (Real Mode)
 TSB_ADDR	equ	0x10000		; Temporary Storage Buffer (Protected Mode)
@@ -54,8 +53,6 @@ STRUC BootConf
 	.vmode			resb 1	; The desired video mode for the system.
 	.mmap_addr		resd 1	; Memory Map Address
 	.mmap_count		resd 1	; Size of memory map in bytes
-	.gdt_size		resw 1	; Global Descriptor Table size
-	.gdt_base		resd 1  ; Global Descriptor Table offset
 	.fs_type		resb 1	; The type of file system of boot device
 ENDSTRUC
 

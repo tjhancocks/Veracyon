@@ -18,8 +18,12 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-	ORG 	0x8000
+	BITS 	32
 
-	%include "CoreLoader/stage1_5/main.s"
-	%include "CoreLoader/stage2/main.s"
-	%include "CoreLoader/definitions.s"
+; CoreLoader Stage2 entry point. We should be entering 32bit protected mode at
+; this location.
+CoreLoader.Stage2.main:
+	.start:
+		xchg bx, bx
+		nop
+		hlt
