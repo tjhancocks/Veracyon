@@ -33,6 +33,9 @@ FILE_ADDR	equ	0x20000		; File Buffer (Protected Mode)
 BC_SEG		equ 0x3000		; Boot Configuration Segment (Real Mode)
 BC_OFFSET	equ 0x0000 		; Boot Configuration Offset (Real Mode)
 BC_ADDR		equ 0x30000		; Boot Configuration Address (Protected Mode)
+CPU_SEG		equ 0x4000		; CPU Data Structures Segment (Real Mode)
+GDT_OFFSET	equ 0x0000 		; GDT Offset in CPU Segment (Real Mode)
+GDT_ADDR	equ 0x40000		; GDT Address (Protected Mode)
 MM_SEG		equ 0x7000		; Memory Map Segment (Real Mode)
 MM_OFFSET	equ 0x0000		; Memory Map Offset (Real Mode)
 MM_ADDR		equ 0x70000		; Memory Map Address (Protected Mode)
@@ -51,6 +54,8 @@ STRUC BootConf
 	.vmode			resb 1	; The desired video mode for the system.
 	.mmap_addr		resd 1	; Memory Map Address
 	.mmap_count		resd 1	; Size of memory map in bytes
+	.gdt_size		resw 1	; Global Descriptor Table size
+	.gdt_base		resd 1  ; Global Descriptor Table offset
 	.fs_type		resb 1	; The type of file system of boot device
 ENDSTRUC
 

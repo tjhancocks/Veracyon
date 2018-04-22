@@ -47,14 +47,6 @@ $cfg_keys:
 	.kernel_cmd:
 		db "kernel", 0
 
-; Helper macro for setting a segment
-%macro srmov 2
-	push ax
-	mov ax, %2
-	mov %1, ax
-	pop ax
-%endmacro
-
 ; Helper macro for saving file offset/segment
 %macro pushfp 2
 	mov word[cs:$cfg.file_seg], %1

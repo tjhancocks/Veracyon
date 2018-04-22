@@ -71,6 +71,7 @@ CoreLoader.main:
 	.protected_mode:
 		; Get the CPU in to protected mode. For this the Global Descriptor 
 		; Table, A20 Address Line and Protected Mode flags need to be installed.
+		call gdt.init
 	.catch:
 		cli
 		hlt
@@ -92,7 +93,9 @@ CoreLoader.Stage1_5.Files:
 
 ; Include all supporting source files and objects.
 CoreLoader.Stage1_5.Supporting:
+	%include "CoreLoader/Stage1_5/macro.s"
 	%include "CoreLoader/Stage1_5/rs232.s"
 	%include "CoreLoader/Stage1_5/memory.s"
 	%include "CoreLoader/Stage1_5/fs.s"
 	%include "CoreLoader/Stage1_5/config.s"
+	%include "CoreLoader/Stage1_5/gdt.s"
