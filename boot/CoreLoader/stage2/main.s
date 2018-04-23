@@ -32,6 +32,7 @@ CoreLoader.Stage2.main:
 		; handlers for Interrupt Service Routines (ISRs) and Interrupt Requests
 		; (IRQs).
 		call _idt.init
+		call _idt.isrs.init
 	.catch:
 		cli
 		hlt
