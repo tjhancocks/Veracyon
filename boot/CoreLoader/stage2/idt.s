@@ -74,9 +74,36 @@ _idt.isrs.init:
 		add edx, _idt.isr1 - _idt.isr0	; ...and the next handler pointer.
 		loop .@@
 	.epilogue:
-		sti
-		int 0x8
-		xchg bx, bx
+		mov esp, ebp
+		pop ebp
+		ret
+
+; Install all CPU Interrupt Request handlers into the Interrupt Descriptor 
+; Table.
+;
+;	void _idt.irq.init(void)
+;
+_idt.irq.init:
+	.proglogue:
+		push ebp
+		mov ebp, esp
+	.prepare:
+		mov edi, IDT_ADDR + (0x20 * 8)	; Get the base address for IRQs in IDT
+		mov ecx, 0x10					; There are 16 IRQs
+		mov edx, _idt.irq0				; A pointer to the first IRQ handler.
+	.@@:
+		mov ebx, edx					; Copy EDX into EBX
+		mov word[edi], bx				; Write the lo-word of the handler base
+		shr ebx, 16						; EBX >> 16, shift the upper half down
+		mov word[edi + 6], bx			; Write the hi-word of the handler base
+		mov word[edi + 2], 0x08			; The CS selector value to use
+		mov byte[edi + 4], 0x00			; The zero value
+		mov byte[edi + 5], 0x8E			; Flags
+	.next:
+		add edi, 8						; Move to the next gate...
+		add edx, _idt.irq1 - _idt.irq0	; ...and the next handler pointer.
+		loop .@@
+	.epilogue:
 		mov esp, ebp
 		pop ebp
 		ret
@@ -123,6 +150,31 @@ _idt:
 		push eax						; Arg#0: 'interrupt_number'
 		call .panic_handler				; Call out to the panic handler
 		add esp, 4
+		pop gs							; Restore the segment registers.
+		pop fs
+		pop es
+		pop ds
+		popad 							; Restore all general purpose registers
+		add esp, 8						; Clean up the stack
+		iretd 							; Return from the interrupt safely.
+	.generic_irq_handler:
+		pushad 							; Save all general purpose registers
+		push ds							; Save the segment registers so they
+		push es							; can be restored at the end of the
+		push fs							; interrupt.
+		push gs							;
+		mov ax, 0x10					; We need to ensure we're in the
+		mov ds, ax						; supervisor data segment. Fix it.
+		mov es, ax
+		mov fs, ax
+		mov gs, ax
+		mov ebx, [esp + INTFrame.int]	; Fetch the interrupt number from stack
+		mov al, 0x20
+		cmp ebx, 0x8					; Is less then IRQ 8, then ignore slave
+		jl .ack_master_irq
+		out 0xa0, al					; ACK the Slave PIC
+	.ack_master_irq:
+		out 0x20, al					; ACK the Master PIC
 		pop gs							; Restore the segment registers.
 		pop fs
 		pop es
@@ -297,3 +349,83 @@ _idt:
 		push byte 0						; Error Code
 		push byte 31					; Interrupt Number
 		jmp .isr_handler
+	.irq0:								; #0: Programmable Interrupt Timer
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq1:								; #1: Keyboard
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq2:								; #2: Cascade (never raised)
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq3:								; #3: COM2 (if enabled)
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq4:								; #4: COM1 (if enabled)
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq5:								; #5: LPT2 (if enabled)
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq6:								; #6: Floppy Disk
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq7:								; #7: LPT1 / Unreliable spurious INT.
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq8:								; #8: CMOS real-time clock (if enabled)
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq9:								; #9: Free for peripherals / legacy SCSI
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq10:								; #10: Free for peripherals / SCSI
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq11:								; #11: Free for peripherals / SCSI
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq12:								; #12: PS/2 Mouse
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq13:								; #13: FPU / Coprocessor
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq14:								; #14: Primary ATA Hard Disk
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler
+	.irq15:								; #15: Secondary ATA Hard Disk
+		cli
+		push byte 0						; Error Code - always zero in IRQ
+		push byte 0						; IRQ Number
+		jmp .generic_irq_handler

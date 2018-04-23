@@ -33,6 +33,14 @@ CoreLoader.Stage2.main:
 		; (IRQs).
 		call _idt.init
 		call _idt.isrs.init
+		call _idt.irq.init
+		sti 							; Enable maskable interrupts
+		in al, 0x70						; Also enable Non-maskable interrupts
+		and al, 0x7F
+		out 0x70, al
+		push CoreLoader.Stage2.Strings.interrupts_enabled
+		call _rs232.send_bytes
+		add esp, 4
 	.catch:
 		cli
 		hlt
@@ -41,6 +49,9 @@ CoreLoader.Stage2.main:
 CoreLoader.Stage2.Strings:
 	.pmode_text:	
 		db "CoreLoader is now running in 32bit Protected Mode!", 0xD, 0x0
+	.interrupts_enabled:
+		db "Interrupts are now enabled. "
+		db "ISRs & IRQs are being handled.", 0xD, 0x0
 
 ; Include all supporting source files and objects.
 CoreLoader.Stage2.Supporting:
