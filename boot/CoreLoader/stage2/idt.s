@@ -20,28 +20,32 @@
 
 	BITS 	32
 
-; CoreLoader Stage2 entry point. We should be entering 32bit protected mode at
-; this location.
-CoreLoader.Stage2.main:
-	.start:
-		push CoreLoader.Stage2.Strings.pmode_text
-		call _rs232.send_bytes
-		add esp, 4
-	.interrupt_handlers:
-		; Setup the Interrupt Descriptor Table (IDT) and install the relevant
-		; handlers for Interrupt Service Routines (ISRs) and Interrupt Requests
-		; (IRQs).
-		call _idt.init
-	.catch:
-		cli
-		hlt
+; Interrupt Descriptor Table internal constants
+_IDT_GATE_COUNT	equ 128
 
-; Strings used in Stage2 of CoreLoader.
-CoreLoader.Stage2.Strings:
-	.pmode_text:	
-		db "CoreLoader is now running in 32bit Protected Mode!", 0xD, 0x0
-
-; Include all supporting source files and objects.
-CoreLoader.Stage2.Supporting:
-	%include "CoreLoader/Stage2/rs232.s"
-	%include "CoreLoader/Stage2/idt.s"
+; Setup the Interrupt Descriptor Table (IDT) and install it into the CPU.
+;
+;	void _idt.init()
+;
+_idt.init:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.clear_table:
+		mov edi, IDT_ADDR				; The location of the IDT in memory.
+		mov ecx, 8 * _IDT_GATE_COUNT	; 256 Entries, multiplied by 8 bytes
+		shr ecx, 2						; Divide by 4 to get the DWORD count
+		xor eax, eax
+		rep stosd						; Fill the table with NUL bytes.
+	.configure_idtptr:
+		mov edi, IDTPTR_ADDR			; Get the address for the IDT Pointer
+		mov dword[edi], _IDT_GATE_COUNT * 8; We want 256 potential entries in it
+		mov dword[edi+2], IDT_ADDR		; The location of the IDT in memory.
+	.install:
+		mov eax, IDTPTR_ADDR			; Install the IDT. Must still not enable
+		lidt [eax]						; interrupts yet!
+	.epilogue:
+		xchg bx, bx
+		mov esp, ebp
+		pop ebp
+		ret

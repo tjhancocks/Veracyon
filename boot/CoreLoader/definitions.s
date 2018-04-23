@@ -23,6 +23,7 @@
 
 BPB_ADDR	equ 0x7c00		; BIOS Parameter Block
 GDTPTR_ADDR equ 0x7e00		; Global Descriptor Table Pointer address
+IDTPTR_ADDR equ 0x7e10		; Interrupt Descriptor Table Pointer address
 TSB_SEG		equ	0x1000		; Temporary Storage Buffer Segment (Real Mode)
 TSB_OFFSET	equ	0x0000		; Temporary Storage Buffer Offset (Real Mode)
 TSB_ADDR	equ	0x10000		; Temporary Storage Buffer (Protected Mode)
@@ -35,6 +36,7 @@ BC_ADDR		equ 0x30000		; Boot Configuration Address (Protected Mode)
 CPU_SEG		equ 0x4000		; CPU Data Structures Segment (Real Mode)
 GDT_OFFSET	equ 0x0000 		; GDT Offset in CPU Segment (Real Mode)
 GDT_ADDR	equ 0x40000		; GDT Address (Protected Mode)
+IDT_ADDR	equ 0x40A00		; IDT Address (Protected Mode)
 MM_SEG		equ 0x7000		; Memory Map Segment (Real Mode)
 MM_OFFSET	equ 0x0000		; Memory Map Offset (Real Mode)
 MM_ADDR		equ 0x70000		; Memory Map Address (Protected Mode)
