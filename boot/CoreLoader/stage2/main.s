@@ -27,6 +27,17 @@ CoreLoader.Stage2.main:
 		push CoreLoader.Stage2.Strings.pmode_text
 		call _rs232.send_bytes
 		add esp, 4
+		call _screen.init				; Initialise the screen for output
+	.loading_message:
+		; Display a message to the user about loading the kernel image.
+		;	"CoreLoader is loading: vkernel"
+		push CoreLoader.Stage2.Strings.loading_str
+		call _screen.puts
+		push BC_ADDR					; The kernel name is start of BootConf
+		call _screen.puts
+		push 0xD
+		call _screen.putch
+		add esp, 12
 	.interrupt_handlers:
 		; Setup the Interrupt Descriptor Table (IDT) and install the relevant
 		; handlers for Interrupt Service Routines (ISRs) and Interrupt Requests
@@ -52,8 +63,11 @@ CoreLoader.Stage2.Strings:
 	.interrupts_enabled:
 		db "Interrupts are now enabled. "
 		db "ISRs & IRQs are being handled.", 0xD, 0x0
+	.loading_str:
+		db "CoreLoader is loading: ", 0x0
 
 ; Include all supporting source files and objects.
 CoreLoader.Stage2.Supporting:
 	%include "CoreLoader/Stage2/rs232.s"
 	%include "CoreLoader/Stage2/idt.s"
+	%include "CoreLoader/Stage2/screen.s"
