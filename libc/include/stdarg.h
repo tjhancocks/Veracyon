@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,14 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_VA_ARGS__
-#define __VKERNEL_VA_ARGS__
+#ifndef _STDARG_H
+#define _STDARG_H
+
+#include <sys/cdefs.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef __builtin_va_list va_list;
 
@@ -29,5 +35,9 @@ typedef __builtin_va_list va_list;
 #define va_end(ap) __builtin_va_end(ap)
 #define va_arg(ap,type) __builtin_va_arg(ap,type)
 #define va_copy(dest, src) __builtin_va_copy(dest,src)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

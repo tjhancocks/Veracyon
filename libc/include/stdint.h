@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,29 @@
  SOFTWARE.
 */
 
-#include <kprint.h>
+#ifndef _STDINT_H
+#define _STDINT_H
 
-void kdprint(device_t dev, const char *restrict fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	kdprintv(dev, fmt, args);
-	va_end(args);
+#include <sys/cdefs.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef unsigned char uint8_t;
+typedef signed char int8_t;
+typedef unsigned short uint16_t;
+typedef signed short int16_t;
+typedef unsigned int uint32_t;
+typedef signed int int32_t;
+typedef unsigned long long uint64_t;
+typedef signed long long int64_t;
+
+typedef uint32_t uintptr_t;
+typedef int32_t intptr_t;
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

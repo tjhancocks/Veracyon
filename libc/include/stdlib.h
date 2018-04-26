@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,23 @@
  SOFTWARE.
 */
 
-#include <kprint.h>
+#ifndef _STDLIB_H
+#define _STDLIB_H
 
-void kdprint(device_t dev, const char *restrict fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	kdprintv(dev, fmt, args);
-	va_end(args);
+#include <sys/cdefs.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef NULL
+#	define NULL ((void *)0)
+#endif
+
+__attribute__((noreturn)) void abort(void);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif

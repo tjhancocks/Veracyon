@@ -21,7 +21,6 @@
 */
 
 #include <kprint.h>
-#include <va_args.h>
 
 void kprint(const char *restrict fmt, ...)
 {

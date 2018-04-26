@@ -23,7 +23,6 @@
 #ifndef __VKERNEL_KPRINT__
 #define __VKERNEL_KPRINT__
 
-#include <va_args.h>
 #include <kern_types.h>
 #include <device/device.h>
 

@@ -37,6 +37,14 @@ fat12-vesa: build/fat12-vesa.img
 	mv $^ build/fat12.img
 
 ################################################################################
+# LIBK / LIBC
+
+.PHONY: libk
+
+libk:
+	make -C libc libk
+
+################################################################################
 # BOCHS
 
 .PHONY: fat12-bochs fat12-text-bochs fat12-vesa-bochs bochs
@@ -65,6 +73,7 @@ build/fat12-vesa.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader
+	make -C libc libk
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12.vesa.imgscript
 
@@ -72,5 +81,6 @@ build/fat12-text.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader
+	make -C libc libk
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12.text.imgscript

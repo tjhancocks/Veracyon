@@ -33,6 +33,8 @@
 #include <process.h>
 #include <drawing/base.h>
 
+#include <stdlib.h>
+
 #include <device/device.h>
 #include <device/RS232/RS232.h>
 #include <device/VT100/VT100.h>
@@ -94,6 +96,8 @@ __attribute__((noreturn)) void kmain(
 
 	// Establish multitasking and processes
 	process_prepare();
+
+	abort();
 
 	// init_shell();
 	kwork();

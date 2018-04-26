@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Tom Hancocks
+# Copyright (c) 2017-2018 Tom Hancocks
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,49 +18,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-C-KERNEL-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
-C-KERNEL-OBJS-TMP := $(addsuffix .o, $(basename $(C-KERNEL-SRCS)))
-C-KERNEL-OBJS := $(addprefix ../build, $(C-KERNEL-OBJS-TMP:$(CURDIR)%=%))
-S-KERNEL-SRCS := $(shell find $(CURDIR) -type f \( -name "*.s" \))
-S-KERNEL-OBJS-TMP := $(addsuffix .s.o, $(basename $(S-KERNEL-SRCS)))
-S-KERNEL-OBJS := $(addprefix ../build, $(S-KERNEL-OBJS-TMP:$(CURDIR)%=%))
+LIBC-C-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
+LIBC-C-OBJS-TMP := $(addsuffix .libc.o, $(basename $(LIBC-C-SRCS)))
+LIBC-C-OBJS := $(addprefix ../build, $(LIBC-C-OBJS-TMP:$(CURDIR)%=%))
+LIBC-S-SRCS := $(shell find $(CURDIR) -type f \( -name "*.s" \))
+LIBC-S-OBJS-TMP := $(addsuffix .libc.s.o, $(basename $(LIBC-S-SRCS)))
+LIBC-S-OBJS := $(addprefix ../build, $(LIBC-S-OBJS-TMP:$(CURDIR)%=%))
+
+LIBK-C-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
+LIBK-C-OBJS-TMP := $(addsuffix .libk.o, $(basename $(LIBK-C-SRCS)))
+LIBK-C-OBJS := $(addprefix ../build/libk, $(LIBK-C-OBJS-TMP:$(CURDIR)%=%))
+LIBK-S-SRCS := $(shell find $(CURDIR) -type f \( -name "*.s" \))
+LIBK-S-OBJS-TMP := $(addsuffix .libk.s.o, $(basename $(LIBK-S-SRCS)))
+LIBK-S-OBJS := $(addprefix ../build/libk, $(LIBK-S-OBJS-TMP:$(CURDIR)%=%))
 
 # Bad form... declaring environment tools here...
 CC := i686-elf-gcc
-LD := i686-elf-gcc
+AR := i686-elf-ar
 AS := nasm
 
-BUILD_TIME := $(shell date)
-BUILD_VERSION := 0.2
-BUILD_COMMIT := $(shell git log -1 --pretty=format:"%H")
-BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-
 # Flags
-CCFLAGS := -I./include -I../boot/includes -I../libc/include\
+CCFLAGS :=  -I./include\
 			-ffreestanding -Wall -Wextra\
             -nostdlib -nostdinc -fno-builtin -fno-stack-protector\
             -nostartfiles -nodefaultlibs -m32 -finline-functions -std=c99\
-            -O0 -fstrength-reduce -fomit-frame-pointer \
-            -D__BUILD_TIME__="\"$(BUILD_TIME)\"" \
-            -D__BUILD_VERSION__="\"$(BUILD_VERSION)\"" \
-            -D__BUILD_COMMIT__="\"$(BUILD_COMMIT) ($(BUILD_BRANCH))\""
+            -O0 -fstrength-reduce -fomit-frame-pointer
 
-LDFLAGS := -ffreestanding -O0 -nostdlib -lgcc -lk -L../build
+CCFLAGS-LIBC := $(CCFLAGS) -D__libc__
+CCFLAGS-LIBK := $(CCFLAGS) -D__libk__
 
-LIBGCC := $(shell i686-elf-gcc -print-file-name=libgcc.a)
-LIBK := ../build/libk.a
-
-# vkernel-elf
-.PHONY: vkernel-elf
-vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC) $(LIBK)
-	echo $(C-KERNEL-OBJS-TMP)
-	$(LD) -T./kernel.ld $(LDFLAGS) -o ../build/vkernel $^
+# libk
+.PHONY: libk
+libk: $(LIBK-C-OBJS) $(LIBK-S-OBJS)
+	$(AR) rcs ../build/libk.a $(LIBK-C-OBJS) $(LIBK-S-OBJS)
 
 # Helpers
-../build/%.s.o: %.s
+../build/libk/%.libk.s.o: %.s
 	-mkdir -p $(dir $@)
 	$(AS) -felf -o $@ $<
 
-../build/%.o: %.c
+../build/libk/%.libk.o: %.c
 	-mkdir -p $(dir $@)
-	$(CC) $(CCFLAGS) -o $@ -c $<
+	$(CC) $(CCFLAGS-LIBK) -o $@ -c $<

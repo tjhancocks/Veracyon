@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,17 @@
  SOFTWARE.
 */
 
-#include <kprint.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-void kdprint(device_t dev, const char *restrict fmt, ...)
+extern void panic(void *, void *);
+
+__attribute__((noreturn)) void abort(void)
 {
-	va_list args;
-	va_start(args, fmt);
-	kdprintv(dev, fmt, args);
-	va_end(args);
+#if __libk__
+	panic(NULL, NULL);
+#endif
+
+	__asm__ __volatile__("cli; hlt");
+	while (1);
 }
