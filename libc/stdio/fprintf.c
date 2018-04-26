@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,17 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_SERIAL_COM1__
-#define __VKERNEL_SERIAL_COM1__
-
-/**
- Configure the COM1 serial to allow for kernel debugging facilities.
- */
-void serial_prepare(void);
-
+#if __libk__
+#include <device/device.h>
+#include <kprint.h>
 #endif
+
+#include <stdio.h>
+
+void fprintf(FILE *fd, const char *restrict fmt)
+{
+#if __libk__
+	device_t dev = get_device(*((uint32_t *)fd));
+	dv_write(dev, fmt);
+#endif
+}

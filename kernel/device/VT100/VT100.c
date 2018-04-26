@@ -354,7 +354,7 @@ void VT100_prepare(struct boot_config *config)
 	vt100_restore(&__vt100_info);
 
 	// Setup the VT100 device.
-	__vt100.dev_id = device_next_id();
+	__vt100.dev_id = __VT100_ID;
 	__vt100.name = "VT100";
 	__vt100.kind = device_VT100;
 	__vt100.opts = DP_WRITE | DP_ATOMIC_WRITE | DP_ALLOWS_ANSI;

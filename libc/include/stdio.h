@@ -24,12 +24,19 @@
 #define _STDIO_H
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct __vFILE;
+typedef struct __vFILE FILE;
 
+void fprintf(FILE *, const char *restrict);
+
+
+FILE *stdout;
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,29 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_SERIAL_COM1__
-#define __VKERNEL_SERIAL_COM1__
+#include <stdio.h>
 
-/**
- Configure the COM1 serial to allow for kernel debugging facilities.
- */
-void serial_prepare(void);
+struct __vFILE {
+	uintptr_t descriptor;
+};
+
+#if __libk__
+#include <device/device.h>
+
+
+FILE __stdin = { __KBD_ID };
+FILE __stdout = { __VT100_ID };
+FILE __stderr = { __COM1_ID };
+
+#else
+
+FILE __stdin = { 0 };
+FILE __stdout = { 0 };
+FILE __stderr = { 0 };
 
 #endif
+
+
+FILE *stdin = &__stdin;
+FILE *stdout = &__stdout;
+FILE *stderr = &__stderr;

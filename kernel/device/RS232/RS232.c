@@ -46,7 +46,7 @@ int rs232_ready(struct device *dev __attribute__((unused)))
 void RS232_prepare(void)
 {
 	// We need to configure the RS232 device.
-	__rs232.dev_id = device_next_id();
+	__rs232.dev_id = __COM1_ID;
 	__rs232.name = "COM1";
 	__rs232.kind = device_COM1;
 	__rs232.opts = DP_WRITE | DP_ATOMIC_WRITE;

@@ -36,10 +36,21 @@ extern device_t COM1;	// Output only
 extern device_t KBD; 	// Input only
 extern device_t VT100;	// Output only
 
+enum {
+	__COM1_ID = 1,
+	__KBD_ID = 2,
+	__VT100_ID = 3,
+};
+
 /**
  Bind the provided device driver information to the specified device handle.
  */
 void device_bind(device_t *handle, void *device);
+
+/**
+ Look up device based on id.
+ */
+device_t get_device(uint32_t dev_id);
 
 ////////////////////////////////////////////////////////////////////////////////
 

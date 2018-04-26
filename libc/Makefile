@@ -38,7 +38,7 @@ AR := i686-elf-ar
 AS := nasm
 
 # Flags
-CCFLAGS :=  -I./include\
+CCFLAGS :=  -I./include -I../kernel/include\
 			-ffreestanding -Wall -Wextra\
             -nostdlib -nostdinc -fno-builtin -fno-stack-protector\
             -nostartfiles -nodefaultlibs -m32 -finline-functions -std=c99\

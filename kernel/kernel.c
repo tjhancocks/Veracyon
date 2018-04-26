@@ -34,6 +34,7 @@
 #include <drawing/base.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <device/device.h>
 #include <device/RS232/RS232.h>
@@ -51,7 +52,9 @@ __attribute__((noreturn)) void kwork(void)
 		kprint("\033[3%dm Text \033[0m\n", n);
 	}
 	kprint("\033[90m Text \033[0m\n");
-	kprint("\033[97m Text \033[0m\n");
+	kprint("\033[97m Text \033[0m\n\n");
+
+	fprintf(stdout, "Hello, stdout!\n");
 
 	while (1) {
 		sleep(50);
@@ -96,9 +99,7 @@ __attribute__((noreturn)) void kmain(
 
 	// Establish multitasking and processes
 	process_prepare();
-
-	abort();
-
+	
 	// init_shell();
 	kwork();
 }
