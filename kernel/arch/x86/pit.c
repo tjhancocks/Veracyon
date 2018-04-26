@@ -24,7 +24,7 @@
 #include <arch/x86/port.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/interrupt_frame.h>
-#include <kprint.h>
+#include <stdio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ static void pit_set_frequency(uint32_t freq)
 {
 	int32_t divisor = 1193180 / freq;
 
-	kdprint(COM1, 
+	fprintf(COM1, 
 		"Setting frequency of Programmable Interrupt Timer to %dHz\n",
 		freq);
 
@@ -69,7 +69,7 @@ static void pit_interrupt_event(
 
 void pit_prepare(void)
 {
-	kdprint(COM1, "Installing the Programmable Interrupt Timer.\n");
+	fprintf(COM1, "Installing the Programmable Interrupt Timer.\n");
 	pit_info.phase = 1000;
 
 	pit_set_frequency(pit_info.phase);

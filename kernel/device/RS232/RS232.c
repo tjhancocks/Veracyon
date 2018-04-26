@@ -62,7 +62,7 @@ void RS232_prepare(void)
 	dv_write(&__rs232, "\nCOM1 Serial Port Started...\n");
 
 	// Bind the device to the appropriate handle.
-	device_bind(&COM1, &__rs232);
+	device_bind(&_COM1, &__rs232);
 }
 
 struct device *RS232_get_device(void)

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,16 @@
  SOFTWARE.
 */
 
-#include <kprint.h>
+#if __libk__
+#include <device/device.h>
+#endif
 
-void kprint(const char *restrict fmt, ...)
+#include <stdio.h>
+
+void sprintf(char *out, const char *restrict fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	kdprintv(VT100, fmt, args);
+	vsprintf(out, fmt, args);
 	va_end(args);
 }

@@ -22,7 +22,7 @@
 
 #include <process.h>
 #include <kheap.h>
-#include <kprint.h>
+#include <stdio.h>
 #include <panic.h>
 #include <macro.h>
 #include <memory.h>
@@ -136,7 +136,7 @@ struct process *process_launch(
 	}
 
 
-	kdprint(COM1, "Process %d (%s) established with page directory: %p\n",
+	fprintf(COM1, "Process %d (%s) established with page directory: %p\n",
 		proc->pid, proc->name, proc->page_dir);
 
 	atomic_end(atom);
@@ -148,7 +148,7 @@ struct process *process_launch(
 
 struct process *process_spawn(const char *name, int(*_entry)(void))
 {
-	kdprint(COM1, "Spawning new process: %s\n", name);
+	fprintf(COM1, "Spawning new process: %s\n", name);
 
 	// Create a new blank process and prepare to populate it with the 
 	// appropriate information.
@@ -158,20 +158,20 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	// Basic metadata
 	proc->name = name;	// TODO: Copy the name string into the process.
 	proc->pid = next_pid++;
-	kdprint(COM1, "   * assigning pid: %d\n", proc->pid);
+	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
 
 	// Standard Pipes
 	proc->stdin.size = 1024;
 	proc->stdin.buffer = kalloc(proc->stdin.size);
 	proc->stdin.r_idx = 0;
 	proc->stdin.w_idx = 0;
-	kdprint(COM1, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
+	fprintf(COM1, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
 
 	proc->kbdin.size = 64;
 	proc->kbdin.buffer = kalloc(proc->kbdin.size);
 	proc->kbdin.r_idx = 0;
 	proc->kbdin.w_idx = 0;
-	kdprint(COM1, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
+	fprintf(COM1, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -203,11 +203,11 @@ struct thread *process_spawn_thread(
 	// owning process is the kernel. Even then the kernel, must not yet have a 
 	// thread.
 	if (!owner) {
-		kdprint(COM1, "WARNING: Attempting to create an orphaned thread.\n");
+		fprintf(COM1, "WARNING: Attempting to create an orphaned thread.\n");
 		return NULL;
 	}
 	else if (owner->threads.main && start == NULL) {
-		kdprint(COM1, "WARNING: Attempting to create an invalid thread.\n");
+		fprintf(COM1, "WARNING: Attempting to create an invalid thread.\n");
 		return NULL;
 	}
 
@@ -230,7 +230,7 @@ struct thread *process_spawn_thread(
 
 	// Create a task for the thread.
 	if (task_create(thread) == 0) {
-		kdprint(COM1, "Failed to create task for thread %d.\n", thread->tid);
+		fprintf(COM1, "Failed to create task for thread %d.\n", thread->tid);
 	}
 
 	// Return the new thread to the caller.

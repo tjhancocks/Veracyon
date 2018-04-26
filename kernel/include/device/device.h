@@ -32,9 +32,9 @@ typedef void *device_t;
 // If they are available, then they will be configured to represent the 
 // appropriate device.
 
-extern device_t COM1;	// Output only
-extern device_t KBD; 	// Input only
-extern device_t VT100;	// Output only
+extern device_t _COM1;	// Output only
+extern device_t _KBD; 	// Input only
+extern device_t _VT100;	// Output only
 
 enum {
 	__COM1_ID = 1,

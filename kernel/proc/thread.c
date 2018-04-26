@@ -22,7 +22,7 @@
 
 #include <thread.h>
 #include <kheap.h>
-#include <kprint.h>
+#include <stdio.h>
 #include <memory.h>
 #include <panic.h>
 #include <macro.h>
@@ -38,7 +38,7 @@ static uint32_t next_tid = 0;
 
 struct thread *thread_create(const char *label, int(*start)(void))
 {
-	kdprint(COM1, "Creating new thread: %s\n", label ?: "(unnamed)");
+	fprintf(COM1, "Creating new thread: %s\n", label ?: "(unnamed)");
 
 	// Construct the basic thread.
 	struct thread *thread = kalloc(sizeof(*thread));
@@ -56,7 +56,7 @@ struct thread *thread_create(const char *label, int(*start)(void))
 
 	thread->start = start;
 
-	kdprint(COM1, "   * assigning tid: %d\n", thread->tid);
+	fprintf(COM1, "   * assigning tid: %d\n", thread->tid);
 	return thread;
 }
 
@@ -79,7 +79,7 @@ static void _thread_start(void)
 		panic(&info, NULL);
 	}
 
-	kdprint(COM1, "Starting thread execution: %d (%p)\n",
+	fprintf(COM1, "Starting thread execution: %d (%p)\n",
 		this->tid, this);
 
 	// Call the main function of the thread. We should remain inside this
@@ -110,7 +110,7 @@ int thread_stack_init(struct thread *thread, uint32_t size)
 	uint32_t off = 1;
 	memset(stack, 0, size * sizeof(*stack));
 
-	kdprint(COM1, "Initialising stack for thread: %d (%p)\n",
+	fprintf(COM1, "Initialising stack for thread: %d (%p)\n",
 		thread->tid, thread);
 
 	// The _thread_start function needs parameters to exist on the stack.

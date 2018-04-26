@@ -46,3 +46,5 @@ FILE __stderr = { 0 };
 FILE *stdin = &__stdin;
 FILE *stdout = &__stdout;
 FILE *stderr = &__stderr;
+FILE *COM1 = &__stderr;
+FILE *VT100 = &__stdout;

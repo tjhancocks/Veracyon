@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,19 @@
  SOFTWARE.
 */
 
-#include <kprint.h>
-#include <memory.h>
+#if __libk__
+#include <device/device.h>
+#endif
 
-#define BUFFER_LEN 1024
-#define DIGIT_SOURCE "0123456789ABCDEF"
+#include <stdio.h>
+
+#ifndef __DIGIT_SOURCE
+#	define __DIGIT_SOURCE "0123456789ABCDEF"
+#endif
+
+#ifndef __PRINTF_BUFFER_LEN
+#	define __PRINTF_BUFFER_LEN 1024
+#endif
 
 static uint32_t __kd_usn_to_str(char *restrict, uint32_t, uint8_t);
 static uint32_t __kd_sn_to_str(char *restrict, int32_t, uint8_t);
@@ -43,13 +51,13 @@ enum token
 	token_upper = 1 << 10
 };
 
-void kdprintv(device_t dev, const char *restrict fmt, va_list args)
+void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
 {
-	char buffer[BUFFER_LEN + 1] = { 0 };
+	uint32_t buffer_len = n;
 	register char *out = buffer;
 	register const char *in = fmt;
 
-	while (*in && ((out - buffer) < BUFFER_LEN)) {
+	while (*in && ((uint32_t)(out - buffer) < buffer_len)) {
 
 		// Check for a format marker.
 		if (*in++ != '%') {
@@ -129,8 +137,8 @@ void kdprintv(device_t dev, const char *restrict fmt, va_list args)
 
 		// We're now at a point where we can interpret the mask and print out
 		// the information.
-		char sub_buffer[BUFFER_LEN + 1] = { 0 };
-		char tmp[BUFFER_LEN + 1] = { 0 };
+		char sub_buffer[__PRINTF_BUFFER_LEN + 1] = { 0 };
+		char tmp[__PRINTF_BUFFER_LEN + 1] = { 0 };
 		uint32_t tmp_len = 0;
 		uint32_t sub_len = 0;
 		uint32_t positive = 0;
@@ -156,7 +164,7 @@ void kdprintv(device_t dev, const char *restrict fmt, va_list args)
 		}
 		else if (mask & token_type_string) {
 			const char *str = (const char *)va_arg(args, uintptr_t);
-			while (*str && tmp_len < BUFFER_LEN)
+			while (*str && tmp_len < buffer_len)
 				tmp[tmp_len++] = *str++;
 		}
 		else if (mask & token_type_char) {
@@ -188,14 +196,11 @@ void kdprintv(device_t dev, const char *restrict fmt, va_list args)
 		while (*ptr)
 			*out++ = *ptr++;
 	}
-
-	// Finished constructing the output. Send it to the requested device.
-	dv_write(dev, buffer);
 }
 
 static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)
 {
-	const char *digits = DIGIT_SOURCE;
+	const char *digits = __DIGIT_SOURCE;
 
 	if (num == 0) {
 		*str = *digits;
@@ -228,7 +233,7 @@ static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)
 
 static uint32_t __kd_sn_to_str(char *restrict str, int32_t num, uint8_t base)
 {
-	const char *digits = DIGIT_SOURCE;
+	const char *digits = __DIGIT_SOURCE;
 
 	if (num == 0) {
 		*str = *digits;
@@ -263,4 +268,3 @@ static uint32_t __kd_sn_to_str(char *restrict str, int32_t num, uint8_t base)
 	memcpy(str, ptr + 1, len);
 	return len - 1;
 }
-

@@ -365,7 +365,7 @@ void VT100_prepare(struct boot_config *config)
 	__vt100.info = &__vt100_info;
 
 	// Bind the device to the appropriate handle.
-	device_bind(&VT100, &__vt100);
+	device_bind(&_VT100, &__vt100);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

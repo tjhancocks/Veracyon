@@ -22,15 +22,14 @@
 
 #if __libk__
 #include <device/device.h>
-#include <kprint.h>
 #endif
 
 #include <stdio.h>
 
-void fprintf(FILE *fd, const char *restrict fmt)
+void fprintf(FILE *fd, const char *restrict fmt, ...)
 {
-#if __libk__
-	device_t dev = get_device(*((uint32_t *)fd));
-	dv_write(dev, fmt);
-#endif
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(fd, fmt, args);
+	va_end(args);
 }

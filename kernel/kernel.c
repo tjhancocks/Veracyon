@@ -21,7 +21,6 @@
 */
 
 #include <boot_config.h>
-#include <kprint.h>
 #include <physical.h>
 #include <virtual.h>
 #include <kheap.h>
@@ -44,17 +43,15 @@
 __attribute__((noreturn)) void kwork(void)
 {
 	// Some basic information to be shown to the user.
-	kprint("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
-	kprint("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
-	kprint("\n\n");
+	printf("\033[96mVERACYON VERSION %s\033[0m\n", __BUILD_VERSION__);
+	printf("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
+	printf("\n\n");
 
 	for (uint8_t n = 0; n < 8; ++n) {
-		kprint("\033[3%dm Text \033[0m\n", n);
+		printf("\033[3%dm Text \033[0m\n", n);
 	}
-	kprint("\033[90m Text \033[0m\n");
-	kprint("\033[97m Text \033[0m\n\n");
-
-	fprintf(stdout, "Hello, stdout!\n");
+	printf("\033[90m Text \033[0m\n");
+	printf("\033[97m Text \033[0m\n\n");
 
 	while (1) {
 		sleep(50);

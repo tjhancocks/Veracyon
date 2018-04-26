@@ -25,6 +25,7 @@
 
 #include <sys/cdefs.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,10 +34,21 @@ extern "C" {
 struct __vFILE;
 typedef struct __vFILE FILE;
 
-void fprintf(FILE *, const char *restrict);
+void printf(const char *restrict, ...);
+void fprintf(FILE *, const char *restrict, ...);
+void vfprintf(FILE *, const char *restrict, va_list);
+void vprintf(const char *restrict, va_list);
+void vsprintf(char *, const char *restrict, va_list);
+void vsnprintf(char *, size_t, const char *restrict, va_list);
+void sprintf(char *, const char *restrict, ...);
+void snprintf(char *, size_t, const char *restrict, ...);
 
-
+FILE *stdin;
 FILE *stdout;
+FILE *stderr;
+
+FILE *COM1;
+FILE *VT100;
 
 #ifdef __cplusplus
 }

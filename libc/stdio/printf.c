@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,40 +20,16 @@
  SOFTWARE.
 */
 
-#include <arch/arch.h>
-#include <device/PS2/keyboard.h>
-#include <device/keyboard/keyboard.h>
+#if __libk__
+#include <device/device.h>
+#endif
+
 #include <stdio.h>
-#include <kheap.h>
-#include <panic.h>
 
-////////////////////////////////////////////////////////////////////////////////
-
-void ps2_keybaord_wait(void)
+void printf(const char *restrict fmt, ...)
 {
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
-}
-
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
-}
-
-void ps2_keyboard_reset(void)
-{
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
-}
-
-void ps2_keyboard_initialise(void)
-{
-	fprintf(COM1, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stdout, fmt, args);
+	va_end(args);
 }

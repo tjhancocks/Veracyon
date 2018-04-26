@@ -22,7 +22,7 @@
 
 #include <panic.h>
 #include <kern_types.h>
-#include <kprint.h>
+#include <stdio.h>
 #include <macro.h>
 
 static const char *exception_name[] = {
@@ -66,8 +66,8 @@ static uintptr_t *panic_handler = NULL;
 
 void render_register(const char *name, uint32_t value, uint32_t x, uint32_t y)
 {
-	kprint("\t\033[94m%8s: ", name);
-	kprint("\033[96m%08x\n", value);
+	printf("\t\033[94m%8s: ", name);
+	printf("\033[96m%08x\n", value);
 }
 
 __attribute__((noreturn)) void panic(
@@ -87,16 +87,16 @@ __attribute__((noreturn)) void panic(
 
 	// We need to clear the screen and get back into a basic terminal 
 	// presentation.
-	kprint("\033[44m\033[2J\n");
+	printf("\033[44m\033[2J\n");
 
 	if (frame && frame->interrupt < 0x20)
-		kprint(" CPU Exception:");
-	kprint("\033[97m %s\n", info->title);
+		printf(" CPU Exception:");
+	printf("\033[97m %s\n", info->title);
 
 	// The message is the next bit of information to be displayed. This needs
 	// be printed so that it can word wrap to subsequent in a clean way.
 	// TODO: Word wrapping.
-	kprint("\033[94m %s\n\n", info->message);
+	printf("\033[94m %s\n\n", info->message);
 
 	// Finally we want to start displaying register information. This will help
 	// with debugging and knowing state.
@@ -147,6 +147,6 @@ void prepare_panic_handler(
 ) {
 	panic_handler = config->panic_handler;
 	*panic_handler = (uintptr_t)panic;
-	kdprint(COM1, "Registered panic handler %p at %p\n", 
+	fprintf(COM1, "Registered panic handler %p at %p\n", 
 		*panic_handler, panic_handler);
 }
