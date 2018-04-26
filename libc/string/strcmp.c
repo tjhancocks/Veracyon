@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,13 @@
  SOFTWARE.
 */
 
-#include <memory.h>
-#include <arch/arch.h>
-#include <kprint.h>
+#include <string.h>
 
-////////////////////////////////////////////////////////////////////////////////
-
-void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
+int strcmp(const char *restrict s0, const char *restrict s1)
 {
-	register uint16_t *d0 = (uint16_t *)dst;
-
-	while (n--)
-		*d0++ = value;
-
-	return dst;
+	while (*s0 == *s1++) {
+		if (*s0++ == '\0')
+			return 0;
+	}
+	return (*(const uint8_t *)s0 - *(const uint8_t *)(s1 - 1));
 }
-
-void *memsetd(void *restrict dst, uint32_t value, uint32_t n)
-{
-	register uint32_t *d0 = (uint32_t *)dst;
-
-	while (n--)
-		*d0++ = value;
-
-	return dst;
-}
-

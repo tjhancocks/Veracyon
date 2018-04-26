@@ -23,9 +23,9 @@
 #include <arch/x86/port.h>
 #include <arch/x86/interrupt.h>
 #include <arch/x86/interrupt_frame.h>
+#include <stdlib.h>
 #include <kprint.h>
 #include <kheap.h>
-#include <null.h>
 #include <memory.h>
 #include <task.h>
 #include <macro.h>

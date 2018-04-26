@@ -41,6 +41,8 @@ typedef signed long long int64_t;
 typedef uint32_t uintptr_t;
 typedef int32_t intptr_t;
 
+typedef uint32_t size_t;
+
 #ifdef __cplusplus
 }
 #endif

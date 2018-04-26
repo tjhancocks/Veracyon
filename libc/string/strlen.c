@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,11 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_NULL__
-#define __VKERNEL_NULL__
+#include <string.h>
 
-#ifndef NULL
-#	define NULL ((void *)0x00)
-#endif
-
-#endif
+size_t strlen(const char *restrict str)
+{
+	const char *s0 = str;
+	while (*s0++);
+	return (size_t)(s0 - str);
+}

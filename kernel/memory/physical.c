@@ -22,7 +22,7 @@
 
 #include <physical.h>
 #include <kprint.h>
-#include <null.h>
+#include <stdlib.h>
 #include <panic.h>
 
 extern uintptr_t *kernel_end;

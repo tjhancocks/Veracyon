@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,25 @@
  SOFTWARE.
 */
 
-#include <memory.h>
-#include <arch/arch.h>
-#include <kprint.h>
+#ifndef _STDBOOL_H
+#define _STDBOOL_H
 
-////////////////////////////////////////////////////////////////////////////////
+#include <sys/cdefs.h>
 
-void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
-{
-	register uint16_t *d0 = (uint16_t *)dst;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-	while (n--)
-		*d0++ = value;
+#define false 	0
+#define true 	1
+#define bool  	_Bool
 
-	return dst;
+#if __STDC_VERSION__ < 19990L && __GNUC__ < 3
+typedef int _Bool;
+#endif
+
+#ifdef __cplusplus
 }
+#endif
 
-void *memsetd(void *restrict dst, uint32_t value, uint32_t n)
-{
-	register uint32_t *d0 = (uint32_t *)dst;
-
-	while (n--)
-		*d0++ = value;
-
-	return dst;
-}
-
+#endif

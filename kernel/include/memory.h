@@ -36,7 +36,6 @@
  RETURNS:
  	A pointer to the copy destination.
  */
-void *memcpy(void *restrict dst, const void *restrict src, uint32_t n);
 void *mmx_memcpy(void *restrict dst, const void *restrict src, uint32_t n);
 
 /**
@@ -73,19 +72,6 @@ void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n);
  	- n: The number of double quad words to copy.
  */
 extern int sse_memcpy(void *dst, void *src, uint32_t count);
-
-/**
- Write the value into each byte starting at the specified destination, repeating
- for the required number of bytes.
-
- 	- dst: The destination of the set operation.
- 	- value: The byte value to write into memory.
- 	- n: The number of bytes to iterate over.
-
- RETURNS:
- 	A pointer to the copy destination.
- */
-void *memset(void *restrict dst, uint8_t value, uint32_t n);
 
 /**
  Write the value into each word starting at the specified destination, repeating

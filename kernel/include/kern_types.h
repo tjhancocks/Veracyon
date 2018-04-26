@@ -23,9 +23,12 @@
 #ifndef __VKERNEL_TYPES__
 #define __VKERNEL_TYPES__
 
-#include <null.h>
-
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdarg.h>
 
 #endif
