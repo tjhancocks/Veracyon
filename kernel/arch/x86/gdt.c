@@ -22,11 +22,13 @@
 
 #include <arch/arch.h>
 #include <kprint.h>
+#include <memory.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static struct gdt_segment _segments[6] = { 0 };
 static struct gdt_pointer _gdt = { 0 };
+static struct tss _tss = { 0 };
 
 extern void gdt_load(struct gdt_pointer *);
 
@@ -53,6 +55,27 @@ static void gdt_set_descriptor(
 	_segments[n].granularity = (flags & 0x0F);
 }
 
+void gdt_set_tss_descriptor(uint8_t n, uint32_t ss0, uint32_t esp0)
+{
+	kdprint(COM1, "Set GDT::TSS Descriptor(%d)\n", n);
+	uintptr_t base = (uintptr_t)&_tss;
+	uintptr_t limit = (uintptr_t)base + sizeof(_tss);
+
+	gdt_set_descriptor(n, base, limit, 0xE9, 0x00);
+
+	memset(&_tss, 0x00, sizeof(_tss));
+
+	_tss.ss0 = ss0;
+	_tss.esp0 = esp0;
+	_tss.cs = 0x8;
+	_tss.ss = 0x10;
+	_tss.ds = 0x10;
+	_tss.es = 0x10;
+	_tss.fs = 0x10;
+	_tss.gs = 0x10;
+	_tss.iopb = sizeof(_tss);
+}
+
 void gdt_prepare(void)
 {
 	kdprint(COM1, "Preparing kernel Global Descriptor Table\n");
@@ -71,6 +94,9 @@ void gdt_prepare(void)
 
 	// Userland Data Segment
 	gdt_set_descriptor(4, 0, 0xFFFFF, 0xF2, 0xC);
+
+	// TSS
+	gdt_set_tss_descriptor(5, 0x10, 0x0);
 
 	// Make sure the pointer is correct, and load it.
 	_gdt.size = (sizeof(_segments) - 1);
