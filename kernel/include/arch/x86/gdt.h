@@ -20,15 +20,30 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_X86_GDT__
+#define __VKERNEL_X86_GDT__
 
-#include <arch/x86/gdt.h>
-#include <arch/x86/features.h>
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
+#include <kern_types.h>
+
+struct gdt_segment {
+	uint16_t limit_lo;
+	uint16_t base_lo;
+	uint8_t base_mid;
+	uint8_t access;
+	uint8_t limit_hi:4;
+	uint8_t granularity:4;
+	uint8_t base_hi;
+} __attribute__((packed));
+
+struct gdt_pointer {
+	uint16_t size;
+	uint32_t offset;
+} __attribute__((packed));
+
+/**
+ Prepare the Global Descriptor Table for the main CPU, using a flat memory 
+ model.
+ */
+void gdt_prepare(void);
 
 #endif

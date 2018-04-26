@@ -63,6 +63,9 @@ __attribute__((noreturn)) void kmain(
 	// support devices that will be required during system setup.
 	RS232_prepare();
 
+	// Make sure the architecture is prepared.
+	gdt_prepare();
+
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.
 	prepare_panic_handler(config);
