@@ -20,23 +20,31 @@
  SOFTWARE.
 */
 
-#include <arch/x86/port.h>
+#ifndef __VKERNEL_i386_INTERRUPT_FRAME__
+#define __VKERNEL_i386_INTERRUPT_FRAME__
 
-void outb(uint16_t port, uint8_t value)
-{
-	__asm__ __volatile__(
-		"outb %1, %0"
-		:: "dN"(port), "a"(value)
-	);
-}
+#include <stdint.h>
 
-uint8_t inb(uint16_t port)
-{
-	uint8_t result = 0;
-	__asm__ __volatile__(
-		"inb %1, %0"
-		: "=a"(result)
-		: "dN"(port)
-	);
-	return result;
-}
+struct interrupt_frame {
+	uint32_t gs;
+	uint32_t fs;
+	uint32_t es;
+	uint32_t ds;
+	uint32_t eax;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t ebx;
+	uint32_t esp;
+	uint32_t ebp;
+	uint32_t esi;
+	uint32_t edi;
+	uint32_t interrupt;
+	uint32_t error_code;
+	uint32_t eip;
+	uint32_t cs;
+	uint32_t eflags;
+	uint32_t user_esp;
+	uint32_t ss;
+} __attribute__((packed));
+
+#endif

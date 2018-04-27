@@ -20,49 +20,17 @@
  SOFTWARE.
 */
 
-#include <arch/x86/features.h>
-#include <stdint.h>
+#ifndef __VKERNEL_i386_FEATURES__
+#define __VKERNEL_i386_FEATURES__
 
-#define CPUID_GETFEATURES	1
+/**
+ Test to see if the CPU has SSE capabilities.
+ */
+int cpu_sse_available(void);
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ Test to see if the CPU has MMX capabilities.
+ */
+int cpu_mmx_available(void);
 
-enum cpuid_features
-{
-	CPUID_FEATURE_EDX_MMX	= 1 << 23,
-	CPUID_FEATURE_EDX_SSE 	= 1 << 25,
-	CPUID_FEATURE_EDX_SSE2	= 1 << 26,
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-static inline void cpuid(
-	int code, 
-	uint32_t *a, 
-	uint32_t *b, 
-	uint32_t *c, 
-	uint32_t *d
-) {
-	__asm__ __volatile__(
-		"cpuid"
-		: "=a"(*a), "=b"(*b), "=c"(*c), "=d"(*d)
-		: "a"(code)
-	);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-int cpu_sse_available(void)
-{
-	return 0;
-	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
-	return ((edx & CPUID_FEATURE_EDX_SSE) == 1);
-}
-
-int cpu_mmx_available(void)
-{
-	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
-	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
-	return ((edx & CPUID_FEATURE_EDX_MMX) == 1);
-}
+#endif

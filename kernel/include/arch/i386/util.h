@@ -20,8 +20,8 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_x86_UTIL__
-#define __VKERNEL_x86_UTIL__
+#ifndef __VKERNEL_i386_UTIL__
+#define __VKERNEL_i386_UTIL__
 
 #include <stdint.h>
 

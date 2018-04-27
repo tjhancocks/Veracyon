@@ -20,8 +20,8 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_X86_GDT__
-#define __VKERNEL_X86_GDT__
+#ifndef __VKERNEL_i386_GDT__
+#define __VKERNEL_i386_GDT__
 
 #include <stdint.h>
 

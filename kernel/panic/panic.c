@@ -20,13 +20,13 @@
  SOFTWARE.
 */
 
+#include <arch/i386/interrupt_frame.h>
 #include <panic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <macro.h>
 #include <boot_config.h>
-#include <arch/x86/interrupt_frame.h>
 
 static const char *exception_name[] = {
 	"Divide-by-zero Error",

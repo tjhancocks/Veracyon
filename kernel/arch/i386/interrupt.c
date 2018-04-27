@@ -20,9 +20,9 @@
  SOFTWARE.
 */
 
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/interrupt_frame.h>
+#include <arch/i386/port.h>
+#include <arch/i386/interrupt.h>
+#include <arch/i386/interrupt_frame.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>

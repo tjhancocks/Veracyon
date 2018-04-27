@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,68 +20,49 @@
  SOFTWARE.
 */
 
-#include <arch/x86/pit.h>
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/interrupt_frame.h>
-#include <stdio.h>
+#include <arch/i386/features.h>
+#include <stdint.h>
+
+#define CPUID_GETFEATURES	1
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {
-	uint32_t phase;
-	uint32_t subticks;
-	uint32_t ticks;
-} pit_info;
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-static void pit_set_frequency(uint32_t freq)
+enum cpuid_features
 {
-	int32_t divisor = 1193180 / freq;
-
-	fprintf(COM1, 
-		"Setting frequency of Programmable Interrupt Timer to %dHz\n",
-		freq);
-
-	outb(0x43, 0x36);
-	outb(0x40, divisor & 0xFF);
-	outb(0x40, (divisor >> 8) & 0xFF);
-}
-
+	CPUID_FEATURE_EDX_MMX	= 1 << 23,
+	CPUID_FEATURE_EDX_SSE 	= 1 << 25,
+	CPUID_FEATURE_EDX_SSE2	= 1 << 26,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void pit_interrupt_event(
-	struct interrupt_frame *frame __attribute__((unused))
+static inline void cpuid(
+	int code, 
+	uint32_t *a, 
+	uint32_t *b, 
+	uint32_t *c, 
+	uint32_t *d
 ) {
-	if (++pit_info.subticks >= pit_info.phase) {
-		pit_info.subticks = 0;
-		++pit_info.ticks;
-	}
-
-	// TODO: Send notification to timers.
+	__asm__ __volatile__(
+		"cpuid"
+		: "=a"(*a), "=b"(*b), "=c"(*c), "=d"(*d)
+		: "a"(code)
+	);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void pit_prepare(void)
+int cpu_sse_available(void)
 {
-	fprintf(COM1, "Installing the Programmable Interrupt Timer.\n");
-	pit_info.phase = 1000;
-
-	pit_set_frequency(pit_info.phase);
-	interrupt_handler_add(0x20, pit_interrupt_event);
+	return 0;
+	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
+	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
+	return ((edx & CPUID_FEATURE_EDX_SSE) == 1);
 }
 
-uint32_t pit_get_ticks(void)
+int cpu_mmx_available(void)
 {
-	return pit_info.ticks;
-}
-
-uint32_t pit_get_subticks(void)
-{
-	return pit_info.subticks;
+	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
+	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
+	return ((edx & CPUID_FEATURE_EDX_MMX) == 1);
 }

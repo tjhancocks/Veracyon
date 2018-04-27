@@ -20,24 +20,42 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_X86_PIT__
-#define __VKERNEL_X86_PIT__
+#ifndef __VKERNEL_i386_INTERRUPT__
+#define __VKERNEL_i386_INTERRUPT__
 
 #include <stdint.h>
+#include <boot_config.h>
+#include <arch/i386/interrupt_frame.h>
+
+typedef void(*interrupt_handler_t)(struct interrupt_frame *);
 
 /**
- Configure and prepare the Programmable Interrupt Timer for use.
+ Prepare the kernel for using and adding interrupt handlers. This will simply
+ check the boot configuration to determine where the interrupt handler look up
+ table is located.
+
+ 	- config: A valid boot configuration structure.
  */
-void pit_prepare(void);
+void interrupt_handlers_prepare(struct boot_config *config);
 
 /**
- Reports the current tick count.
+ Specify a function to be an interrupt handler for the specified interrupt.
+ Interrupts are in the range of 0x00 - 0xFF, and the handler function should
+ have the prototype:
+
+ 	void function(struct interrupted_cpu_state *);
+
+ To remove an existing interrupt handler, NULL should be passed in place of a
+ function pointer.
+
+ 	- interrupt: The interrupt number of which the handler will be for.
+ 	- handler: A function pointer to the function that will handle the interrupt
  */
-uint32_t pit_get_ticks(void);
+void interrupt_handler_add(uint8_t interrupt, interrupt_handler_t handler);
 
 /**
- Reports the current subtick count.
+ Request that the current task be preempted at the next system tick.
  */
-uint32_t pit_get_subticks(void);
+void request_preemption(void);
 
 #endif

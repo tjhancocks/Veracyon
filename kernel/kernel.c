@@ -66,7 +66,7 @@ __attribute__((noreturn)) void kmain(
 	RS232_prepare();
 
 	// Make sure the architecture is prepared.
-	gdt_prepare();
+	architecture_prepare(config);
 
 	// Make sure we have a panic handler in place before starting on the meat of
 	// the kernel.
