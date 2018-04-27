@@ -20,10 +20,10 @@
 
 LIBC-C-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
 LIBC-C-OBJS-TMP := $(addsuffix .libc.o, $(basename $(LIBC-C-SRCS)))
-LIBC-C-OBJS := $(addprefix ../build, $(LIBC-C-OBJS-TMP:$(CURDIR)%=%))
+LIBC-C-OBJS := $(addprefix ../build/libc, $(LIBC-C-OBJS-TMP:$(CURDIR)%=%))
 LIBC-S-SRCS := $(shell find $(CURDIR) -type f \( -name "*.s" \))
 LIBC-S-OBJS-TMP := $(addsuffix .libc.s.o, $(basename $(LIBC-S-SRCS)))
-LIBC-S-OBJS := $(addprefix ../build, $(LIBC-S-OBJS-TMP:$(CURDIR)%=%))
+LIBC-S-OBJS := $(addprefix ../build/libc, $(LIBC-S-OBJS-TMP:$(CURDIR)%=%))
 
 LIBK-C-SRCS := $(shell find $(CURDIR) -type f \( -name "*.c" \))
 LIBK-C-OBJS-TMP := $(addsuffix .libk.o, $(basename $(LIBK-C-SRCS)))
@@ -52,6 +52,11 @@ CCFLAGS-LIBK := $(CCFLAGS) -D__libk__
 libk: $(LIBK-C-OBJS) $(LIBK-S-OBJS)
 	$(AR) rcs ../build/libk.a $(LIBK-C-OBJS) $(LIBK-S-OBJS)
 
+# libc
+.PHONY: libc
+libc: $(LIBC-C-OBJS) $(LIBC-S-OBJS)
+	$(AR) rcs ../build/libc.a $(LIBC-C-OBJS) $(LIBC-S-OBJS)
+
 # Helpers
 ../build/libk/%.libk.s.o: %.s
 	-mkdir -p $(dir $@)
@@ -60,3 +65,11 @@ libk: $(LIBK-C-OBJS) $(LIBK-S-OBJS)
 ../build/libk/%.libk.o: %.c
 	-mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS-LIBK) -o $@ -c $<
+
+../build/libc/%.libc.s.o: %.s
+	-mkdir -p $(dir $@)
+	$(AS) -felf -o $@ $<
+
+../build/libc/%.libc.o: %.c
+	-mkdir -p $(dir $@)
+	$(CC) $(CCFLAGS-LIBC) -o $@ -c $<

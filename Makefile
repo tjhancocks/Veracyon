@@ -39,10 +39,13 @@ fat12-vesa: build/fat12-vesa.img
 ################################################################################
 # LIBK / LIBC
 
-.PHONY: libk
+.PHONY: libk libc
 
 libk:
 	make -C libc libk
+
+libc:
+	make -C libc libc
 
 ################################################################################
 # BOCHS
