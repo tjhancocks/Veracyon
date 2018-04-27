@@ -23,8 +23,8 @@
 #ifndef __VKERNEL_X86_INTERRUPT__
 #define __VKERNEL_X86_INTERRUPT__
 
+#include <stdint.h>
 #include <boot_config.h>
-#include <kern_types.h>
 #include <arch/x86/interrupt_frame.h>
 
 typedef void(*interrupt_handler_t)(struct interrupt_frame *);

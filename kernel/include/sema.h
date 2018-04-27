@@ -23,8 +23,6 @@
 #ifndef __VKERNEL_SEMAPHORE__
 #define __VKERNEL_SEMAPHORE__
 
-#include <kern_types.h>
-
 typedef volatile int spin_lock_t[2];
 
 /**

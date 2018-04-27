@@ -24,6 +24,8 @@
 #include <arch/x86/interrupt.h>
 #include <arch/x86/interrupt_frame.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
 #include <stdio.h>
 #include <kheap.h>
 #include <memory.h>

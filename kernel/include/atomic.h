@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_ATOMIC__
 #define __VKERNEL_ATOMIC__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <macro.h>
 
 typedef uint32_t atom_t;

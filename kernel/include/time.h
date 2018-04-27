@@ -23,12 +23,12 @@
 #ifndef __VKERNEL_TIME__
 #define __VKERNEL_TIME__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Reports the current system uptime in seconds (does not include time spent in 
  bootloader)
  */
-uint64_t system_uptime(void);
+time_t system_uptime(void);
 
 #endif

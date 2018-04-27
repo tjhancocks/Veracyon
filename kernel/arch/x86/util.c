@@ -20,8 +20,8 @@
  SOFTWARE.
 */
 
-#include <kern_types.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 uint32_t __kregister_read(const char *restrict name)

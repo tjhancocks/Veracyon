@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_MACROS__
 #define __VKERNEL_MACROS__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 extern uint32_t __kregister_read(const char *name);
 extern uint32_t get_eflags(void);

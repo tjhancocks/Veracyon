@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_STD_MEMORY__
 #define __VKERNEL_STD_MEMORY__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Copy the specified number of bytes of memory, byte by byte from the source to
@@ -36,7 +36,7 @@
  RETURNS:
  	A pointer to the copy destination.
  */
-void *mmx_memcpy(void *restrict dst, const void *restrict src, uint32_t n);
+void *mmx_memcpy(void *restrict dst, const void *restrict src, size_t n);
 
 /**
  Copy the specified number of dwords of memory, dword by dwords from the 
@@ -49,7 +49,7 @@ void *mmx_memcpy(void *restrict dst, const void *restrict src, uint32_t n);
  RETURNS:
  	A pointer to the copy destination.
  */
-void *memcpyd(void *restrict dst, const void *restrict src, uint32_t n);
+void *memcpyd(void *restrict dst, const void *restrict src, size_t n);
 
 /**
  Copy the specified number of qwords of memory, qword by qword from the 
@@ -62,7 +62,7 @@ void *memcpyd(void *restrict dst, const void *restrict src, uint32_t n);
  RETURNS:
  	A pointer to the copy destination.
  */
-void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n);
+void *memcpyq(void *restrict dst, const void *restrict src, size_t n);
 
 /**
  Perform an SSE memory copy if SSE functionality is available.
@@ -71,7 +71,7 @@ void *memcpyq(void *restrict dst, const void *restrict src, uint32_t n);
  	- src: The source of the copy operation.
  	- n: The number of double quad words to copy.
  */
-extern int sse_memcpy(void *dst, void *src, uint32_t count);
+extern int sse_memcpy(void *dst, void *src, size_t count);
 
 /**
  Write the value into each word starting at the specified destination, repeating
@@ -84,7 +84,7 @@ extern int sse_memcpy(void *dst, void *src, uint32_t count);
  RETURNS:
  	A pointer to the copy destination.
  */
-void *memsetw(void *restrict dst, uint16_t value, uint32_t n);
+void *memsetw(void *restrict dst, uint16_t value, size_t n);
 
 /**
  Write the value into each double word starting at the specified destination, 
@@ -97,6 +97,6 @@ void *memsetw(void *restrict dst, uint16_t value, uint32_t n);
  RETURNS:
  	A pointer to the copy destination.
  */
-void *memsetd(void *restrict dst, uint32_t value, uint32_t n);
+void *memsetd(void *restrict dst, uint32_t value, size_t n);
 
 #endif

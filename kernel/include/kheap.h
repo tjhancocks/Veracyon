@@ -23,7 +23,6 @@
 #ifndef __VKERNEL_KHEAP__
 #define __VKERNEL_KHEAP__
 
-#include <kern_types.h>
 #include <stdint.h>
 
 #define kHEAP_ALLOC_MAGIC	0xA110CA7E

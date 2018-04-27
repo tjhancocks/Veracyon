@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_X86_INTERRUPT_FRAME__
 #define __VKERNEL_X86_INTERRUPT_FRAME__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 struct interrupt_frame {
 	uint32_t gs;

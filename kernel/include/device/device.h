@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_DEVICE__
 #define __VKERNEL_DEVICE__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 typedef void *device_t;
 

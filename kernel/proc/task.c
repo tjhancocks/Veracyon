@@ -23,6 +23,8 @@
 #include <task.h>
 #include <kheap.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <string.h>
 #include <memory.h>
 #include <panic.h>
 #include <time.h>
@@ -131,7 +133,7 @@ static int task_can_resume(struct task *task)
 	// I/O tasks.)
 	switch (task->thread->state.reason) {
 		case reason_sleep:
-			return (system_uptime() >= task->thread->state.info);
+			return (system_uptime() >= (uint32_t)task->thread->state.info);
 
 		case reason_process:
 		case reason_irq_wait:

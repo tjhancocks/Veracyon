@@ -24,6 +24,7 @@
 #include <memory.h>
 #include <atomic.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <time.h>
 
 #define BLIT_WIDTH	16

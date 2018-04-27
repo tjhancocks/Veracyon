@@ -21,9 +21,9 @@
 */
 
 #include <modules/shell.h>
-#include <kern_types.h>
-// #include <read.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <kheap.h>
 #include <time.h>
@@ -103,10 +103,10 @@ void shell_prompt(void)
 
 int shell_main(void)
 {
-	printf(COM1, "====== SHELL STARTED ======\n");
 	while (shell_terminated == 0) {
 		shell_prompt();
 	}
+	return 0;
 }
 
 

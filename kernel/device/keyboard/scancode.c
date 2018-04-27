@@ -24,6 +24,7 @@
 #include <device/keyboard/keycode.h>
 #include <kheap.h>
 #include <memory.h>
+#include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 

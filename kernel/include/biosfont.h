@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_BIOS_FONT__
 #define __VKERNEL_BIOS_FONT__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 #define BIOS_FONT_WIDTH  8
 #define BIOS_FONT_HEIGHT 16

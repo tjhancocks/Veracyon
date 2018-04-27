@@ -26,6 +26,7 @@
 #include <arch/arch.h>
 #include <kheap.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <task.h>
 
 ////////////////////////////////////////////////////////////////////////////////

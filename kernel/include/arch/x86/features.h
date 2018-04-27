@@ -23,8 +23,6 @@
 #ifndef __VKERNEL_X86_FEATURES__
 #define __VKERNEL_X86_FEATURES__
 
-#include <kern_types.h>
-
 /**
  Test to see if the CPU has SSE capabilities.
  */

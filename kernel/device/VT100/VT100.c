@@ -23,6 +23,8 @@
 #include <device/VT100/VT100.h>
 #include <driver/vga/text.h>
 #include <driver/vesa/console.h>
+#include <string.h>
+#include <stddef.h>
 #include <ascii.h>
 #include <atomic.h>
 #include <memory.h>

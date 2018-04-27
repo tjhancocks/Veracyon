@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_X86_GDT__
 #define __VKERNEL_X86_GDT__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 struct gdt_segment {
 	uint16_t limit_lo;

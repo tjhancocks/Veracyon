@@ -23,6 +23,8 @@
 #include <process.h>
 #include <kheap.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <string.h>
 #include <panic.h>
 #include <macro.h>
 #include <memory.h>

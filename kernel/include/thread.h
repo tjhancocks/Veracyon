@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_THREAD__
 #define __VKERNEL_THREAD__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <arch/arch.h>
 #include <process.h>
 

@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_VIRTUAL_MEMORY_MANAGER__
 #define __VKERNEL_VIRTUAL_MEMORY_MANAGER__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <boot_config.h>
 
 #define kPAGE_ALLOC_OK      1

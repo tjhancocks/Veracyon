@@ -31,7 +31,7 @@
 static struct {
 	uint32_t phase;
 	uint32_t subticks;
-	uint64_t ticks;
+	uint32_t ticks;
 } pit_info;
 
 
@@ -76,7 +76,7 @@ void pit_prepare(void)
 	interrupt_handler_add(0x20, pit_interrupt_event);
 }
 
-uint64_t pit_get_ticks(void)
+uint32_t pit_get_ticks(void)
 {
 	return pit_info.ticks;
 }

@@ -23,6 +23,7 @@
 #include <physical.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <panic.h>
 
 extern uintptr_t *kernel_end;
@@ -31,7 +32,7 @@ static uintptr_t kernel_end_addr = (uintptr_t)&kernel_end;
 
 static uintptr_t working_memory = 0;
 
-static const uint32_t frame_size = 0x1000; // 4 KiB Frames
+static const size_t frame_size = 0x1000; // 4 KiB Frames
 static uint32_t frame_total = 0;
 static uint32_t free_frame_count = 0;
 static uint32_t *free_frame_stack = NULL;
@@ -58,7 +59,7 @@ uintptr_t kernel_end_address(void)
 	return kernel_end_addr;
 }
 
-uintptr_t reserve_kernel_working_memory(uint32_t length)
+uintptr_t reserve_kernel_working_memory(size_t length)
 {
 	if ((working_memory + length) > kernel_end_address()) {
 		struct panic_info info = (struct panic_info) {

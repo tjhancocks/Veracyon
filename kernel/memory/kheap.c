@@ -24,8 +24,10 @@
 #include <virtual.h>
 #include <memory.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <panic.h>
 #include <sema.h>
+#include <string.h>
 
 #define kPAGE_SIZE	0x1000
 
@@ -59,7 +61,6 @@ static struct kheap_block *kheap_allocate_block(size_t size);
 
 static struct kheap_block *heap_first = NULL;
 static struct kheap_block *heap_last = NULL;
-static uint32_t heap_page_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 

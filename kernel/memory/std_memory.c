@@ -25,7 +25,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
+void *memsetw(void *restrict dst, uint16_t value, size_t n)
 {
 	register uint16_t *d0 = (uint16_t *)dst;
 
@@ -35,7 +35,7 @@ void *memsetw(void *restrict dst, uint16_t value, uint32_t n)
 	return dst;
 }
 
-void *memsetd(void *restrict dst, uint32_t value, uint32_t n)
+void *memsetd(void *restrict dst, uint32_t value, size_t n)
 {
 	register uint32_t *d0 = (uint32_t *)dst;
 

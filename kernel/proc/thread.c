@@ -23,6 +23,9 @@
 #include <thread.h>
 #include <kheap.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <string.h>
 #include <memory.h>
 #include <panic.h>
 #include <macro.h>
@@ -103,7 +106,7 @@ int thread_stack_init(struct thread *thread, uint32_t size)
 {
 	// Ensure the thread reference that we were given is actually correct.
 	if (!thread)
-		return 0;
+		return false;
 
 	// Construct a new stack
 	uint32_t *stack = kalloc(size * sizeof(*stack));
@@ -143,6 +146,8 @@ int thread_stack_init(struct thread *thread, uint32_t size)
 	// Setup the stack information in the thread.
 	thread->stack.ebp = (uint32_t)stack + (size * sizeof(*stack));
 	thread->stack.esp = thread->stack.ebp - (off * sizeof(*stack));
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
