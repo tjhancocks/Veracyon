@@ -30,8 +30,8 @@
 
 static struct {
 	uint32_t phase;
-	uint32_t subticks;
-	uint32_t ticks;
+	uint64_t subticks;
+	uint64_t ticks;
 } pit_info;
 
 
@@ -78,10 +78,17 @@ void pit_prepare(void)
 
 uint32_t pit_get_ticks(void)
 {
-	return pit_info.ticks;
+	return (uint32_t)pit_info.ticks;
 }
 
 uint32_t pit_get_subticks(void)
 {
-	return pit_info.subticks;
+	return (uint32_t)pit_info.subticks;
+}
+
+void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase)
+{
+	if (ticks) *ticks = pit_info.ticks;
+	if (subticks) *subticks = pit_info.subticks;
+	if (phase) *phase = pit_info.phase;
 }

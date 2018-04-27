@@ -20,29 +20,40 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#include <sys/info.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
 
-#if __i386__
-#	include <arch/i386/features.h>
-#	include <arch/i386/util.h>
-#	include <arch/i386/interrupt_frame.h>
-#	include <arch/i386/tss.h>
-#	include <arch/i386/port.h>
-#	include <arch/i386/gdt.h>
-#	include <arch/i386/interrupt.h>
-#	include <arch/i386/pit.h>
-#else
-#	error Architecture is not supported by Veracyon
+#if __libk__
+#include <arch/arch.h>
+#include <panic.h>
 #endif
 
-struct boot_config;
-
-void architecture_prepare(struct boot_config *config);
-
-/**
- Provides information about the architecture's internal tick count.
- */
-void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase);
-
+void get_sysinfo(sysinfo_t *info)
+{
+	if (!info) {
+#if __libk__
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"NULL argument on get_sysinfo()",
+			"get_sysinfo() must be provided a valid sysinfo_t structure."
+		};
+		panic(&info, NULL);
 #endif
+		return;
+	}
+
+	// Get the time information
+#if __libk__
+	uint64_t ticks = 0;
+	uint64_t subticks = 0;
+	uint64_t phase = 0;
+	
+	arch_get_ticks(&ticks, &subticks, &phase);
+
+	// Get the microseconds, assuming a phase of 1000Hz
+	info->uptime_s = (subticks >= 500) ? ticks + 1 : ticks;
+	info->uptime_u = ((ticks * phase) + subticks) * 1000;
+#endif
+}

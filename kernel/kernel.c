@@ -34,6 +34,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/info.h>
 
 #include <device/device.h>
 #include <device/RS232/RS232.h>
@@ -54,7 +55,10 @@ __attribute__((noreturn)) void kwork(void)
 	printf("\033[97m Text \033[0m\n\n");
 
 	while (1) {
-		sleep(50);
+		sleep(1000);
+		sysinfo_t info;
+		get_sysinfo(&info);
+		printf("uptime: %ds (%dus)\n", (uint32_t)info.uptime_s, (uint32_t)info.uptime_u);
 	}
 }
 

@@ -46,6 +46,12 @@ typedef __veracyon_size_t 		size_t;
 typedef __veracyon_ssize_t 		ssize_t;
 
 typedef __veracyon_time_t 		time_t;
+typedef __veracyon_useconds_t 	useconds_t;
+typedef __veracyon_suseconds_t	suseconds_t;
+
+typedef uint32_t 				id_t;
+typedef id_t	 				pid_t;
+typedef id_t 	 				dev_t;
 
 #define INT8_MAX				0x7F
 #define INT16_MAX				0x7FFF

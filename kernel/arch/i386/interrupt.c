@@ -23,6 +23,7 @@
 #include <arch/i386/port.h>
 #include <arch/i386/interrupt.h>
 #include <arch/i386/interrupt_frame.h>
+#include <boot_config.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>

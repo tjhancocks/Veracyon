@@ -23,8 +23,9 @@
 #ifndef __VKERNEL_i386_INTERRUPT__
 #define __VKERNEL_i386_INTERRUPT__
 
+struct boot_config;
+
 #include <stdint.h>
-#include <boot_config.h>
 #include <arch/i386/interrupt_frame.h>
 
 typedef void(*interrupt_handler_t)(struct interrupt_frame *);
