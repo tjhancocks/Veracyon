@@ -33,7 +33,7 @@
 void vfprintf(FILE *fd, const char *restrict fmt, va_list args)
 {
 	char buffer[__PRINTF_BUFFER_LEN] = { 0 };
-	vsnprintf(&buffer, __PRINTF_BUFFER_LEN, fmt, args);
+	vsnprintf((void *)&buffer, __PRINTF_BUFFER_LEN, fmt, args);
 	buffer[__PRINTF_BUFFER_LEN - 1] = '\0';
 	
 #if __libk__

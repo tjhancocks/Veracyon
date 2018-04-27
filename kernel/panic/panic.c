@@ -21,7 +21,8 @@
 */
 
 #include <panic.h>
-#include <kern_types.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <macro.h>
 

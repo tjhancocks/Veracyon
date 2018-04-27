@@ -29,10 +29,6 @@
 extern "C" {
 #endif
 
-#ifndef NULL
-#	define NULL ((void *)0)
-#endif
-
 __attribute__((noreturn)) void abort(void);
 
 #ifdef __cplusplus

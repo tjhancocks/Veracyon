@@ -22,7 +22,7 @@
 
 #include <string.h>
 
-void *memset(void *restrict dst, uint8_t value, uint32_t n)
+void *memset(void *restrict dst, uint8_t value, size_t n)
 {
 	register uint8_t *d0 = (uint8_t *)dst;
 

@@ -20,8 +20,7 @@
  SOFTWARE.
 */
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 extern void panic(void *, void *);
 

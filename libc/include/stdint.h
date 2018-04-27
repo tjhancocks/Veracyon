@@ -24,24 +24,46 @@
 #define _STDINT_H
 
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned int uint32_t;
-typedef signed int int32_t;
-typedef unsigned long long uint64_t;
-typedef signed long long int64_t;
+typedef __uint8_t				uint8_t;
+typedef __int8_t				int8_t;
+typedef __uint16_t				uint16_t;
+typedef __int16_t				int16_t;
+typedef __uint32_t				uint32_t;
+typedef __int32_t				int32_t;
+typedef __uint64_t				uint64_t;
+typedef __int64_t				int64_t;
 
-typedef uint32_t uintptr_t;
-typedef int32_t intptr_t;
+typedef __veracyon_unative_t	uintptr_t;
+typedef __veracyon_native_t 	intptr_t;
 
-typedef uint32_t size_t;
+typedef __veracyon_size_t 		size_t;
+typedef __veracyon_ssize_t 		ssize_t;
+
+typedef __veracyon_time_t 		time_t;
+
+#define INT8_MAX				0x7F
+#define INT16_MAX				0x7FFF
+#define INT32_MAX				0x7FFFFFFF
+#define INT64_MAX				0x7FFFFFFFFFFFFFFFLL
+#define INT8_MIN				(-INT8_MAX-1)
+#define INT16_MIN				(-INT16_MAX-1)
+#define INT32_MIN				(-INT32_MAX-1)
+#define INT64_MIN				(-INT64_MAX-1)
+#define UINT8_MAX				0xFF
+#define UINT16_MAX				0xFFFF
+#define UINT32_MAX				0xFFFFFFFF
+#define UINT64_MAX				0xFFFFFFFFFFFFFFFFLL
+
+#define INTPTR_MAX				INT32_MAX
+#define INTPTR_MIN				INT32_MIN
+#define UINTPTR_MAX				UINT32_MAX
+#define SIZE_MAX				UINT32_MAX
 
 #ifdef __cplusplus
 }

@@ -20,21 +20,27 @@
  SOFTWARE.
 */
 
-#ifndef _STDDEF_H
-#define _STDDEF_H
+#ifndef _SYS_TYPES_H
+#define _SYS_TYPES_H
 
-#include <sys/cdefs.h>
+typedef unsigned char 			__uint8_t;
+typedef signed char 			__int8_t;
+typedef unsigned short 			__uint16_t;
+typedef signed short 			__int16_t;
+typedef unsigned int 			__uint32_t;
+typedef signed int 				__int32_t;
+typedef unsigned long long 		__uint64_t;
+typedef signed long long 		__int64_t;
 
-#ifdef __cplusplus
-extern "C" {
+#ifndef __SIZE_TYPE__
+#	define __SIZE_TYPE__ 		__uint32_t 
 #endif
+typedef __SIZE_TYPE__ 			__veracyon_size_t;
 
-#ifndef NULL
-#	define NULL ((void *)0)
-#endif
+typedef __int32_t 				__veracyon_ssize_t;
+typedef __int32_t 				__veracyon_time_t;
 
-#ifdef __cplusplus
-}
-#endif
+typedef __int32_t 				__veracyon_native_t;
+typedef __uint32_t 				__veracyon_unative_t;
 
 #endif

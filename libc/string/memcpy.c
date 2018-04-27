@@ -22,7 +22,7 @@
 
 #include <string.h>
 
-void *memcpy(void *restrict dst, const void *restrict src, uint32_t n)
+void *memcpy(void *restrict dst, const void *restrict src, size_t n)
 {
 	register uint8_t *d0 = (uint8_t *)dst;
 	register uint8_t *s0 = (uint8_t *)src;
