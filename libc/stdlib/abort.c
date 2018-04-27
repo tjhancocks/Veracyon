@@ -22,7 +22,9 @@
 
 #include <stddef.h>
 
-extern void panic(void *, void *);
+#if __libk__
+#include <panic.h>
+#endif
 
 __attribute__((noreturn)) void abort(void)
 {

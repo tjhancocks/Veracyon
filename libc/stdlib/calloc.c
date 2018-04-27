@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,42 +20,21 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_KHEAP__
-#define __VKERNEL_KHEAP__
-
-#include <kern_types.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 
-#define kHEAP_ALLOC_MAGIC	0xA110CA7E
-#define kHEAP_AVAIL_MAGIC	0xF7EEF7EE
-
-struct kheap_block  {
-	uint32_t magic;
-	struct kheap_block *prev;
-	struct kheap_block *next;
-	size_t size;
-} __attribute__((packed));
-
-/**
- Allocate a block of memory that is of the specified length.
-
- 	- length: The number of bytes to be allocated.
-
- Returns:
- 	Pointer to the start of the allocated memory
- */
-void *kalloc(size_t length);
-
-/**
- Free the specified allocated memory.
-
- 	- ptr: A pointer to the start of allocated memory that is to be free'd.
- */
-void kfree(void *ptr);
-
-/**
- Describe the structure of the kernel heap.
- */
-void kheap_dump_structure(void);
-
+#if __libk__
+#include <kheap.h>
 #endif
+
+void *calloc(size_t count, size_t size)
+{
+	register size_t n = count * size;
+	register void *ptr = NULL;
+#if __libk__
+	ptr = kalloc(n);
+#endif
+	return memset(ptr, 0, n);
+}

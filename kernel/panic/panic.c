@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <macro.h>
+#include <boot_config.h>
+#include <arch/x86/interrupt_frame.h>
 
 static const char *exception_name[] = {
 	"Divide-by-zero Error",

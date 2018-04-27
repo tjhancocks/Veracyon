@@ -37,11 +37,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_expand(uint32_t size);
+static struct kheap_block *kheap_expand(size_t size);
 static struct kheap_block *kheap_expand_pages(uint32_t pages);
 static struct kheap_block *kheap_make_block(
 	uintptr_t raw_address, 
-	uint32_t raw_size
+	size_t raw_size
 );
 static void kheap_describe_block(struct kheap_block *block);
 static void kheap_describe_structure(void);
@@ -51,9 +51,9 @@ static int kheap_collect_block(
 );
 static int kheap_split_block(
 	struct kheap_block *block, 
-	uint32_t real_size
+	size_t real_size
 );
-static struct kheap_block *kheap_allocate_block(uint32_t size);
+static struct kheap_block *kheap_allocate_block(size_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +70,7 @@ void kheap_dump_structure(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *kalloc(uint32_t size)
+void *kalloc(size_t size)
 {
 	struct kheap_block *block = kheap_allocate_block(size);
 	if (!block) {
@@ -116,7 +116,7 @@ void kfree(void *ptr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_expand(uint32_t size)
+static struct kheap_block *kheap_expand(size_t size)
 {
 	uint32_t pages = ((size + kPAGE_SIZE) & ~(kPAGE_SIZE - 1)) >> 12;
 	return kheap_expand_pages(pages);
@@ -148,7 +148,7 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	// fprintf(COM1, "   * Configuring newly allocated pages for heap use.\n");
 
 	uintptr_t raw_address = first_page;
-	uint32_t raw_size = pages * kPAGE_SIZE;
+	size_t raw_size = pages * kPAGE_SIZE;
 	// fprintf(COM1, "      Raw address: %p, Raw size: %d bytes\n",
 	// 	raw_address, raw_size);
 
@@ -213,11 +213,11 @@ static void kheap_describe_structure(void)
 
 static struct kheap_block *kheap_make_block(
 	uintptr_t raw_address, 
-	uint32_t raw_size
+	size_t raw_size
 ) {
 	struct kheap_block *block = (void *)raw_address;
-	uint32_t block_header_size = sizeof(*block);
-	uint32_t block_real_size = raw_size - block_header_size;
+	size_t block_header_size = sizeof(*block);
+	size_t block_real_size = raw_size - block_header_size;
 
 	// fprintf(COM1, "Making kernel heap block [header-size: %d bytes]\n",
 	// 	block_header_size);
@@ -282,7 +282,7 @@ static int kheap_collect_block(
 
 static int kheap_split_block(
 	struct kheap_block *block, 
-	uint32_t real_size
+	size_t real_size
 ) {
 	// Perform checks to ensure that the specified block is real, free and large
 	// enough to be split. The size of the block must be at least real_size +
@@ -300,7 +300,7 @@ static int kheap_split_block(
 	// the remaining space of the old block.
 	uintptr_t new_block_raw_address = (uintptr_t)block + real_size 
 									+ sizeof(*block);
-	uint32_t new_block_raw_size = block->size - real_size;
+	size_t new_block_raw_size = block->size - real_size;
 	
 	struct kheap_block *new_block = kheap_make_block(
 		new_block_raw_address, 
@@ -330,9 +330,9 @@ static int kheap_split_block(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_allocate_block(uint32_t size)
+static struct kheap_block *kheap_allocate_block(size_t size)
 {
-	uint32_t required_split_size = size + (sizeof(struct kheap_block) * 2);
+	size_t required_split_size = size + (sizeof(struct kheap_block) * 2);
 	// fprintf(COM1, "Finding heap block for allocation of %d bytes.\n", size);
 
 	// The first step is to search all current blocks for the first available
