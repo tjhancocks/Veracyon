@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_DRAWING_BASE__
 #define __VKERNEL_DRAWING_BASE__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <boot_config.h>
 
 /**

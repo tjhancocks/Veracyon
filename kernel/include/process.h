@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_PROCESS__
 #define __VKERNEL_PROCESS__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <thread.h>
 
 enum process_launch_flags
@@ -49,14 +49,14 @@ struct process
 		char *buffer;
 		uint32_t r_idx;
 		uint32_t w_idx;
-		uint32_t size;
+		size_t size;
 	} stdin;
 
 	struct {
 		uint8_t *buffer;
 		uint32_t r_idx;
 		uint32_t w_idx;
-		uint32_t size;
+		size_t size;
 	} kbdin;
 
 	struct {

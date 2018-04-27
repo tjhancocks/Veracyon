@@ -22,7 +22,7 @@
 
 #include <kheap.h>
 #include <drawing/base.h>
-#include <kprint.h>
+#include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,19 +37,11 @@ static uint32_t cursor_y = 0;
 static uint8_t cursor_blink = 0;
 
 // CGA
-// static uint32_t color_map[] = {
-// 	0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
-// 	0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA,
-// 	0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
-// 	0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
-// };
-
-// Solarized Dark
 static uint32_t color_map[] = {
-	0x002b36, 0x268bd2, 0x859900, 0x2aa198,
-	0xdc322f, 0xd33682, 0xcb3b14, 0x839496,
-	0x586e75, 0x268bd2, 0x859900, 0x2aa198,
-	0xdc322f, 0xd33682, 0xcb3b14, 0xfdf6e3
+	0x292E3D, 0x0000AA, 0x00AA00, 0x00AAAA,
+	0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA,
+	0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
+	0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF
 };
 
 ////////////////////////////////////////////////////////////////////////////////

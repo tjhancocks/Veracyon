@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
 
 #ifndef __VKERNEL_DEVICE_PS2_KEYBOARD__
 #define __VKERNEL_DEVICE_PS2_KEYBOARD__
-
-#include <kern_types.h>
 
 /**
  Initialises and prepares the PS/2 keyboard driver for use. This will ensure the

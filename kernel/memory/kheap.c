@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -23,9 +23,11 @@
 #include <kheap.h>
 #include <virtual.h>
 #include <memory.h>
-#include <kprint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <panic.h>
 #include <sema.h>
+#include <string.h>
 
 #define kPAGE_SIZE	0x1000
 
@@ -37,11 +39,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_expand(uint32_t size);
+static struct kheap_block *kheap_expand(size_t size);
 static struct kheap_block *kheap_expand_pages(uint32_t pages);
 static struct kheap_block *kheap_make_block(
 	uintptr_t raw_address, 
-	uint32_t raw_size
+	size_t raw_size
 );
 static void kheap_describe_block(struct kheap_block *block);
 static void kheap_describe_structure(void);
@@ -51,15 +53,14 @@ static int kheap_collect_block(
 );
 static int kheap_split_block(
 	struct kheap_block *block, 
-	uint32_t real_size
+	size_t real_size
 );
-static struct kheap_block *kheap_allocate_block(uint32_t size);
+static struct kheap_block *kheap_allocate_block(size_t size);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static struct kheap_block *heap_first = NULL;
 static struct kheap_block *heap_last = NULL;
-static uint32_t heap_page_count = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +71,7 @@ void kheap_dump_structure(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *kalloc(uint32_t size)
+void *kalloc(size_t size)
 {
 	struct kheap_block *block = kheap_allocate_block(size);
 	if (!block) {
@@ -85,14 +86,14 @@ void *kalloc(uint32_t size)
 
 	// Calculate the absolute start of the allocated memory.
 	uintptr_t address = (uintptr_t)block + sizeof(*block);
-	// kdprint(COM1, "Allocated memory (%d bytes) at %p\n", size, address);
+	// fprintf(COM1, "Allocated memory (%d bytes) at %p\n", size, address);
 
 	return (void *)address;
 }
 
 void kfree(void *ptr)
 {
-	// kdprint(COM1, "Attempting to free memory at pointer: %p\n", ptr);
+	// fprintf(COM1, "Attempting to free memory at pointer: %p\n", ptr);
 
 	// Make sure we're attempting to free a valid memory pointer. Warn if we're
 	// not.
@@ -100,7 +101,7 @@ void kfree(void *ptr)
 	struct kheap_block *block = (void *)address;
 
 	if (block->magic != kHEAP_ALLOC_MAGIC) {
-		kdprint(COM1, "WARNING: Attempting to free an invalid pointer.\n");
+		fprintf(COM1, "WARNING: Attempting to free an invalid pointer.\n");
 		return;
 	}
 
@@ -116,7 +117,7 @@ void kfree(void *ptr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_expand(uint32_t size)
+static struct kheap_block *kheap_expand(size_t size)
 {
 	uint32_t pages = ((size + kPAGE_SIZE) & ~(kPAGE_SIZE - 1)) >> 12;
 	return kheap_expand_pages(pages);
@@ -124,15 +125,15 @@ static struct kheap_block *kheap_expand(uint32_t size)
 
 static struct kheap_block *kheap_expand_pages(uint32_t pages)
 {
-	// kdprint(COM1, "Expanding kernel heap by %d page(s).\n", pages);
+	// fprintf(COM1, "Expanding kernel heap by %d page(s).\n", pages);
 
 	uintptr_t first_page = find_available_contiguous_kernel_pages(pages);
-	// kdprint(COM1, "	* Starting at page address %p\n", first_page);
+	// fprintf(COM1, "	* Starting at page address %p\n", first_page);
 
 	// Prepare to allocate each of the pages.
 	for (uint32_t n = 0; n < pages; ++n) {
 		uintptr_t address = first_page + (kPAGE_SIZE * n);
-		// kdprint(COM1, "      * allocating %p\n", address);
+		// fprintf(COM1, "      * allocating %p\n", address);
 
 		if (kpage_alloc(address) == kPAGE_ALLOC_ERROR) {
 			struct panic_info info = (struct panic_info) {
@@ -145,11 +146,11 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 
 	// Configure the newly allocated pages correctly.
-	// kdprint(COM1, "   * Configuring newly allocated pages for heap use.\n");
+	// fprintf(COM1, "   * Configuring newly allocated pages for heap use.\n");
 
 	uintptr_t raw_address = first_page;
-	uint32_t raw_size = pages * kPAGE_SIZE;
-	// kdprint(COM1, "      Raw address: %p, Raw size: %d bytes\n",
+	size_t raw_size = pages * kPAGE_SIZE;
+	// fprintf(COM1, "      Raw address: %p, Raw size: %d bytes\n",
 	// 	raw_address, raw_size);
 
 	struct kheap_block *block = kheap_make_block(raw_address, raw_size);
@@ -157,14 +158,14 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	// Add the newly constructed block into the heap chain. If this is the first
 	// block, then mark it as such.
 	if (!heap_first) {
-		// kdprint(COM1, "   * No first block in kernel heap. Setting it.\n");
+		// fprintf(COM1, "   * No first block in kernel heap. Setting it.\n");
 		heap_first = heap_last = block;
 	}
 
 	// Attempt to collect the block into the current last block. If the 
 	// operation is successful, the report it and finish.
 	else if (kheap_collect_block(heap_last, block) == kHEAP_COLLECT_OK) {
-		// kdprint(COM1, "   * Collecting block into previous last block.\n");
+		// fprintf(COM1, "   * Collecting block into previous last block.\n");
 		block = heap_last;
 	}
 
@@ -186,7 +187,7 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 	
 	// Return the block to the caller.
-	// kdprint(COM1, "***\n");
+	// fprintf(COM1, "***\n");
 	return block;
 }
 
@@ -194,34 +195,34 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 
 static void kheap_describe_block(struct kheap_block *block)
 {
-	kprint("HEAP-BLOCK:: %08X | %p <- %p -> %p | %d bytes\n",
+	printf("HEAP-BLOCK:: %08X | %p <- %p -> %p | %d bytes\n",
 		block->magic, block->prev, block, block->next, block->size);
 }
 
 static void kheap_describe_structure(void)
 {
-	kdprint(COM1, "===============\n");
+	fprintf(COM1, "===============\n");
 	struct kheap_block *block = heap_first;
 	while (block) {
 		kheap_describe_block(block);
 		block = block->next;
 	}
-	kdprint(COM1, "===============\n");
+	fprintf(COM1, "===============\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static struct kheap_block *kheap_make_block(
 	uintptr_t raw_address, 
-	uint32_t raw_size
+	size_t raw_size
 ) {
 	struct kheap_block *block = (void *)raw_address;
-	uint32_t block_header_size = sizeof(*block);
-	uint32_t block_real_size = raw_size - block_header_size;
+	size_t block_header_size = sizeof(*block);
+	size_t block_real_size = raw_size - block_header_size;
 
-	// kdprint(COM1, "Making kernel heap block [header-size: %d bytes]\n",
+	// fprintf(COM1, "Making kernel heap block [header-size: %d bytes]\n",
 	// 	block_header_size);
-	// kdprint(COM1, "   * Raw size: %d bytes, Real size: %d\n",
+	// fprintf(COM1, "   * Raw size: %d bytes, Real size: %d\n",
 	// 	raw_size, block_real_size);
 
 	block->magic = kHEAP_AVAIL_MAGIC;
@@ -229,7 +230,7 @@ static struct kheap_block *kheap_make_block(
 	block->next = NULL;
 	block->size = block_real_size;
 
-	// kdprint(COM1, "   * Block constructed\n");
+	// fprintf(COM1, "   * Block constructed\n");
 
 	return block;
 }
@@ -282,7 +283,7 @@ static int kheap_collect_block(
 
 static int kheap_split_block(
 	struct kheap_block *block, 
-	uint32_t real_size
+	size_t real_size
 ) {
 	// Perform checks to ensure that the specified block is real, free and large
 	// enough to be split. The size of the block must be at least real_size +
@@ -300,7 +301,7 @@ static int kheap_split_block(
 	// the remaining space of the old block.
 	uintptr_t new_block_raw_address = (uintptr_t)block + real_size 
 									+ sizeof(*block);
-	uint32_t new_block_raw_size = block->size - real_size;
+	size_t new_block_raw_size = block->size - real_size;
 	
 	struct kheap_block *new_block = kheap_make_block(
 		new_block_raw_address, 
@@ -330,10 +331,10 @@ static int kheap_split_block(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct kheap_block *kheap_allocate_block(uint32_t size)
+static struct kheap_block *kheap_allocate_block(size_t size)
 {
-	uint32_t required_split_size = size + (sizeof(struct kheap_block) * 2);
-	// kdprint(COM1, "Finding heap block for allocation of %d bytes.\n", size);
+	size_t required_split_size = size + (sizeof(struct kheap_block) * 2);
+	// fprintf(COM1, "Finding heap block for allocation of %d bytes.\n", size);
 
 	// The first step is to search all current blocks for the first available
 	// block that is large enough to accomodate the requested allocation, and
@@ -347,12 +348,12 @@ static struct kheap_block *kheap_allocate_block(uint32_t size)
 
 	// Failed to find a suitable block in the heap. Attempt to expand the heap
 	// in order to get one.
-	// kdprint(COM1, "Failed to find suitable heap block. Expanding heap.\n");
+	// fprintf(COM1, "Failed to find suitable heap block. Expanding heap.\n");
 	block = kheap_expand(size + sizeof(*block));
 
 	// Perform a sanity check to ensure the reported block is actually suitable.
 	if (block->magic != kHEAP_AVAIL_MAGIC || block->size < size) {
-		// kdprint(COM1, "   * Serious error. Failed to make suitable block!\n");
+		// fprintf(COM1, "   * Serious error. Failed to make suitable block!\n");
 		return NULL;
 	}
 
@@ -360,17 +361,17 @@ BLOCK_FOUND:
 	// If the block is far larger than needed then we need to split it, so that
 	// we do not waste too much space.
 	if (block->size > required_split_size) {
-		// kdprint(COM1, "   * Block too large (%d>%d). Attempting to split.\n",
+		// fprintf(COM1, "   * Block too large (%d>%d). Attempting to split.\n",
 		// 	block->size, required_split_size);
 		if (kheap_split_block(block, size) != kHEAP_SPLIT_OK) {
-			// kdprint(COM1, "   * Failed to split heap block. Leaving.\n");
+			// fprintf(COM1, "   * Failed to split heap block. Leaving.\n");
 		}
 	}
 
 	// The block reference is now of the requested size and needs to be marked
 	// as allocated and returned the caller.
 	block->magic = kHEAP_ALLOC_MAGIC;
-	// kdprint(COM1, "***\n");
+	// fprintf(COM1, "***\n");
 
 	return block;
 }

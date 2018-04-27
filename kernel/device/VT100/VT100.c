@@ -23,6 +23,8 @@
 #include <device/VT100/VT100.h>
 #include <driver/vga/text.h>
 #include <driver/vesa/console.h>
+#include <string.h>
+#include <stddef.h>
 #include <ascii.h>
 #include <atomic.h>
 #include <memory.h>
@@ -354,7 +356,7 @@ void VT100_prepare(struct boot_config *config)
 	vt100_restore(&__vt100_info);
 
 	// Setup the VT100 device.
-	__vt100.dev_id = device_next_id();
+	__vt100.dev_id = __VT100_ID;
 	__vt100.name = "VT100";
 	__vt100.kind = device_VT100;
 	__vt100.opts = DP_WRITE | DP_ATOMIC_WRITE | DP_ALLOWS_ANSI;
@@ -365,7 +367,7 @@ void VT100_prepare(struct boot_config *config)
 	__vt100.info = &__vt100_info;
 
 	// Bind the device to the appropriate handle.
-	device_bind(&VT100, &__vt100);
+	device_bind(&_VT100, &__vt100);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

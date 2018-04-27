@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Tom Hancocks
+# Copyright (c) 2017-2018 Tom Hancocks
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,8 @@ BUILD_COMMIT := $(shell git log -1 --pretty=format:"%H")
 BUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 # Flags
-CCFLAGS := -I./include -I../boot/includes -ffreestanding -Wall -Wextra\
+CCFLAGS := -I./include -I../boot/includes -I../libc/include\
+			-ffreestanding -Wall -Wextra\
             -nostdlib -nostdinc -fno-builtin -fno-stack-protector\
             -nostartfiles -nodefaultlibs -m32 -finline-functions -std=c99\
             -O0 -fstrength-reduce -fomit-frame-pointer \
@@ -44,13 +45,14 @@ CCFLAGS := -I./include -I../boot/includes -ffreestanding -Wall -Wextra\
             -D__BUILD_VERSION__="\"$(BUILD_VERSION)\"" \
             -D__BUILD_COMMIT__="\"$(BUILD_COMMIT) ($(BUILD_BRANCH))\""
 
-LDFLAGS := -ffreestanding -O0 -nostdlib -lgcc
+LDFLAGS := -ffreestanding -O0 -nostdlib -lgcc -lk -L../build
 
-LIBGCC := $(shell i586-elf-gcc -print-file-name=libgcc.a)
+LIBGCC := $(shell i686-elf-gcc -print-file-name=libgcc.a)
+LIBK := ../build/libk.a
 
 # vkernel-elf
 .PHONY: vkernel-elf
-vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC)
+vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC) $(LIBK)
 	$(LD) -T./kernel.ld $(LDFLAGS) -o ../build/vkernel $^
 
 # Helpers

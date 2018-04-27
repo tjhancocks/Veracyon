@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -23,11 +23,21 @@
 #ifndef __VKERNEL_ARCH__
 #define __VKERNEL_ARCH__
 
-#include <arch/x86/features.h>
-#include <arch/x86/port.h>
-#include <arch/x86/interrupt_frame.h>
-#include <arch/x86/interrupt.h>
-#include <arch/x86/util.h>
-#include <arch/x86/pit.h>
+#if __i386__
+#	include <arch/i386/features.h>
+#	include <arch/i386/util.h>
+#	include <arch/i386/interrupt_frame.h>
+#	include <arch/i386/tss.h>
+#	include <arch/i386/port.h>
+#	include <arch/i386/gdt.h>
+#	include <arch/i386/interrupt.h>
+#	include <arch/i386/pit.h>
+#else
+#	error Architecture is not supported by Veracyon
+#endif
+
+struct boot_config;
+
+void architecture_prepare(struct boot_config *config);
 
 #endif

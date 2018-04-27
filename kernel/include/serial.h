@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,20 +27,5 @@
  Configure the COM1 serial to allow for kernel debugging facilities.
  */
 void serial_prepare(void);
-
-/**
- Write a single character to the COM1 serial output port.
-
- 	- c: The character to write the COM1 serial port
- */
-void kputc_serial(const char c);
-
-/**
- Write a string of characters to the COM1 serial output port.
-
- 	- str: A pointer to a string containing the characters to write to the COM 1
- 		serial port.
- */
-void kputs_serial(const char *restrict str);
 
 #endif

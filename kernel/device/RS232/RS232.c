@@ -22,6 +22,7 @@
 
 #include <device/RS232/RS232.h>
 #include <arch/arch.h>
+#include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +47,7 @@ int rs232_ready(struct device *dev __attribute__((unused)))
 void RS232_prepare(void)
 {
 	// We need to configure the RS232 device.
-	__rs232.dev_id = device_next_id();
+	__rs232.dev_id = __COM1_ID;
 	__rs232.name = "COM1";
 	__rs232.kind = device_COM1;
 	__rs232.opts = DP_WRITE | DP_ATOMIC_WRITE;
@@ -62,7 +63,7 @@ void RS232_prepare(void)
 	dv_write(&__rs232, "\nCOM1 Serial Port Started...\n");
 
 	// Bind the device to the appropriate handle.
-	device_bind(&COM1, &__rs232);
+	device_bind(&_COM1, &__rs232);
 }
 
 struct device *RS232_get_device(void)

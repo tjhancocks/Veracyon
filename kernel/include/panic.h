@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -23,8 +23,8 @@
 #ifndef __VKERNEL_PANIC__
 #define __VKERNEL_PANIC__
 
-#include <boot_config.h>
-#include <arch/x86/interrupt_frame.h>
+struct boot_config;
+struct interrupt_frame;
 
 enum panic_type
 {

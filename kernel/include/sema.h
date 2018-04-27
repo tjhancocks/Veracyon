@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
 
 #ifndef __VKERNEL_SEMAPHORE__
 #define __VKERNEL_SEMAPHORE__
-
-#include <kern_types.h>
 
 typedef volatile int spin_lock_t[2];
 

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,8 @@
 #include <device/ps2/keyboard.h>
 #include <arch/arch.h>
 #include <kheap.h>
-#include <kprint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <task.h>
 
 ////////////////////////////////////////////////////////////////////////////////

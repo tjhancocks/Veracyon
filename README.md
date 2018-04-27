@@ -1,5 +1,8 @@
 # Veracyon
-The Veracyon project is a hobby operating system project, intended as a learning and research platform for myself. The project will ultimately include both a custom boot loader, file system and kernel.
+The Veracyon project is a hobby operating system project, intended as a learning and research platform for myself. The project will ultimately include both a custom boot loader & kernel, and be developed in a mixture of Assembly and C. It will be specific
+to the Intel 32-bit architecure and BIOS.
+
+![Veracyon Basic Shell](https://raw.githubusercontent.com/tjhancocks/Veracyon/reorganise/docs/images/veracyon-shell-basic.png)
 
 
 ### Building

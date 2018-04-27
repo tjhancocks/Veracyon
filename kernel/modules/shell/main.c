@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,9 @@
 */
 
 #include <modules/shell.h>
-#include <kern_types.h>
-// #include <read.h>
-#include <kprint.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <kheap.h>
 #include <time.h>
@@ -39,11 +39,11 @@ static uint8_t shell_terminated = 0;
 
 static void kernel_about(void)
 {
-	kprint("Veracyon OS %s\n", __BUILD_VERSION__);
-	kprint("%8s: %s\n", "Kernel", "vkernel");
-	kprint("%8s: %s\n", "Built", __BUILD_TIME__);
-	kprint("%8s: %s\n", "Commit", __BUILD_COMMIT__);
-	kprint("\n");
+	printf("Veracyon OS %s\n", __BUILD_VERSION__);
+	printf("%8s: %s\n", "Kernel", "vkernel");
+	printf("%8s: %s\n", "Built", __BUILD_TIME__);
+	printf("%8s: %s\n", "Commit", __BUILD_COMMIT__);
+	printf("\n");
 }
 
 static void kernel_uptime(void)
@@ -60,21 +60,21 @@ static void kernel_uptime(void)
 	time_d %= 24;
 
 	if (time_d) {
-		kprint("\t%02dd, %02dm, %02dm, %02ds, %03dms\n", 
+		printf("\t%02dd, %02dm, %02dm, %02ds, %03dms\n", 
 			time_d, time_h, time_m, time_s, time_ms);
 	}
 	else if (time_h) {
-		kprint("\t%02dm, %02dm, %02ds, %03dms\n", 
+		printf("\t%02dm, %02dm, %02ds, %03dms\n", 
 			time_h, time_m, time_s, time_ms);
 	}
 	else if (time_m) {
-		kprint("\t%02dm, %02ds, %03dms\n", time_m, time_s, time_ms);
+		printf("\t%02dm, %02ds, %03dms\n", time_m, time_s, time_ms);
 	}
 	else if (time_s) {
-		kprint("\t%02ds, %03dms\n", time_s, time_ms);
+		printf("\t%02ds, %03dms\n", time_s, time_ms);
 	}
 	else {
-		kprint("\t%03dms\n", time_ms);
+		printf("\t%03dms\n", time_ms);
 	}
 }
 
@@ -83,7 +83,7 @@ static void kernel_uptime(void)
 
 void shell_prompt(void)
 {
-	kdprint(VT100, "> ");
+	fprintf(VT100, "> ");
 
 	const char *input = NULL;//read_user_input();
 
@@ -103,10 +103,10 @@ void shell_prompt(void)
 
 int shell_main(void)
 {
-	kdprint(COM1, "====== SHELL STARTED ======\n");
 	while (shell_terminated == 0) {
 		shell_prompt();
 	}
+	return 0;
 }
 
 

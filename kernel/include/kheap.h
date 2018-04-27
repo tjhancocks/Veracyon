@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_KHEAP__
 #define __VKERNEL_KHEAP__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 #define kHEAP_ALLOC_MAGIC	0xA110CA7E
 #define kHEAP_AVAIL_MAGIC	0xF7EEF7EE
@@ -32,7 +32,7 @@ struct kheap_block  {
 	uint32_t magic;
 	struct kheap_block *prev;
 	struct kheap_block *next;
-	uint32_t size;
+	size_t size;
 } __attribute__((packed));
 
 /**
@@ -43,7 +43,7 @@ struct kheap_block  {
  Returns:
  	Pointer to the start of the allocated memory
  */
-void *kalloc(uint32_t length);
+void *kalloc(size_t length);
 
 /**
  Free the specified allocated memory.

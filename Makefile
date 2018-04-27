@@ -1,4 +1,4 @@
-# Copyright (c) 2017 Tom Hancocks
+# Copyright (c) 2017-2018 Tom Hancocks
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,17 @@ fat12-debug: clean build/fat12-debug.img
 	@echo
 
 ################################################################################
+# LIBK / LIBC
+
+.PHONY: libk libc
+
+libk:
+	make -C libc libk
+
+libc:
+	make -C libc libc
+
+################################################################################
 # BOCHS
 
 .PHONY: fat12-bochs fat12-debug-bochs
@@ -64,6 +75,7 @@ build/fat12.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader
+	make -C libc libk
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12.imgscript
 
@@ -71,5 +83,6 @@ build/fat12-debug.img:
 	-mkdir -p build
 	make -C boot fat12-bootsector
 	make -C boot core-loader-debug
+	make -C libc libk
 	make -C kernel vkernel-elf
 	imgtool -s support/imgtool/fat12-debug.imgscript
