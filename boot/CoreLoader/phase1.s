@@ -1,4 +1,4 @@
-; Copyright (c) 2017 Tom Hancocks
+; Copyright (c) 2017-2018 Tom Hancocks
 ; 
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -109,7 +109,7 @@ start:
 strings16:
 	.welcome_serial:
 		db "CORELOADER VERSION 0.2", 0xA
-		db "Copyright (c) 2017 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
+		db "Copyright (c) 2017-2018 Tom Hancocks. MIT License.", 0xA, 0xA, 0x0
 	.building_boot_configuration:
 		db "Building default boot configuration... ", 0x0
 	.a20_line:
