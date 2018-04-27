@@ -23,7 +23,8 @@
 #include <drawing/base.h>
 #include <memory.h>
 #include <atomic.h>
-#include <kprint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <time.h>
 
 #define BLIT_WIDTH	16
@@ -61,7 +62,7 @@ void drawing_prepare(struct boot_config *config)
 	screen_size = config->screen_size;
 	screen_bpp = config->bytes_per_pixel;
 
-	kdprint(COM1, "Screen is %dx%d %d-bpp\n", 
+	fprintf(COM1, "Screen is %dx%d %d-bpp\n", 
 		screen_width, screen_height, screen_bpp);
 
 	vesa_buffer = config->front_buffer;

@@ -25,7 +25,8 @@
 #include <device/ps2/keyboard.h>
 #include <arch/arch.h>
 #include <kheap.h>
-#include <kprint.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <task.h>
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_x86_PORT__
 #define __VKERNEL_x86_PORT__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Write the specified byte value to the specified CPU port.

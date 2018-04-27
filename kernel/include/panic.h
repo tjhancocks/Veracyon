@@ -23,8 +23,8 @@
 #ifndef __VKERNEL_PANIC__
 #define __VKERNEL_PANIC__
 
-#include <boot_config.h>
-#include <arch/x86/interrupt_frame.h>
+struct boot_config;
+struct interrupt_frame;
 
 enum panic_type
 {

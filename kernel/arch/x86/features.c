@@ -21,6 +21,7 @@
 */
 
 #include <arch/x86/features.h>
+#include <stdint.h>
 
 #define CPUID_GETFEATURES	1
 
@@ -56,12 +57,12 @@ int cpu_sse_available(void)
 	return 0;
 	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
 	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
-	return (edx & CPUID_FEATURE_EDX_SSE == 1);
+	return ((edx & CPUID_FEATURE_EDX_SSE) == 1);
 }
 
 int cpu_mmx_available(void)
 {
 	uint32_t eax = 0, ebx = 0, ecx = 0, edx = 0;
 	cpuid(CPUID_GETFEATURES, &eax, &ebx, &ecx, &edx);
-	return (edx & CPUID_FEATURE_EDX_MMX == 1);
+	return ((edx & CPUID_FEATURE_EDX_MMX) == 1);
 }

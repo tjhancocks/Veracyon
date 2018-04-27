@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_X86_PIT__
 #define __VKERNEL_X86_PIT__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Configure and prepare the Programmable Interrupt Timer for use.
@@ -33,7 +33,7 @@ void pit_prepare(void);
 /**
  Reports the current tick count.
  */
-uint64_t pit_get_ticks(void);
+uint32_t pit_get_ticks(void);
 
 /**
  Reports the current subtick count.

@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_PHYSICAL_MEMORY_MANAGER__
 #define __VKERNEL_PHYSICAL_MEMORY_MANAGER__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <boot_config.h>
 
 /**
@@ -43,7 +43,7 @@ uintptr_t kernel_end_address(void);
  RETURNS:
  	The starting address of the working memory reserved.
  */
-uintptr_t reserve_kernel_working_memory(uint32_t length);
+uintptr_t reserve_kernel_working_memory(size_t length);
 
 /**
  Setup and prepare the physical memory manager. This is an involved function and

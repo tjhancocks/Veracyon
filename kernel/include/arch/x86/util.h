@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_x86_UTIL__
 #define __VKERNEL_x86_UTIL__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Returns the current value of the EFLAGS register.

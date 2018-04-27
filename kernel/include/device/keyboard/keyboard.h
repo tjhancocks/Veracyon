@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_KEYBOARD__
 #define __VKERNEL_KEYBOARD__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <device/keyboard/scancode.h>
 
 /**

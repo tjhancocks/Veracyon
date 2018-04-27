@@ -21,16 +21,17 @@
 */
 
 #include <device/device.h>
-#include <null.h>
+#include <stdlib.h>
+#include <stddef.h>
 #include <atomic.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-device_t COM1 = 0;
-device_t KBD = 0;
-device_t VT100 = 0;
+device_t _COM1 = 0;
+device_t _KBD = 0;
+device_t _VT100 = 0;
 
-static uint32_t next_device_id = 0;
+static uint32_t next_device_id = 0x1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +45,16 @@ void device_bind(device_t *handle, void *device)
 uint32_t device_next_id(void)
 {
 	return ++next_device_id;
+}
+
+device_t get_device(uint32_t dev_id)
+{
+	switch (dev_id) {
+		case __COM1_ID: return _COM1;
+		case __KBD_ID: return _KBD;
+		case __VT100_ID: return _VT100;
+	}
+	return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

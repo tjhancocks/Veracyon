@@ -21,8 +21,9 @@
 */
 
 #include <arch/arch.h>
-#include <kprint.h>
 #include <memory.h>
+#include <stdio.h>
+#include <string.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +42,7 @@ static void gdt_set_descriptor(
 	uint8_t access, 
 	uint8_t flags
 ) {
-	kdprint(
+	fprintf(
 		COM1, 
 		"Set GDT Descriptor(%d): base=%p limit=%05x access=%02x flags=%02x\n", 
 		n, base, limit, access, flags
@@ -57,7 +58,7 @@ static void gdt_set_descriptor(
 
 void gdt_set_tss_descriptor(uint8_t n, uint32_t ss0, uint32_t esp0)
 {
-	kdprint(COM1, "Set GDT::TSS Descriptor(%d)\n", n);
+	fprintf(COM1, "Set GDT::TSS Descriptor(%d)\n", n);
 	uintptr_t base = (uintptr_t)&_tss;
 	uintptr_t limit = (uintptr_t)base + sizeof(_tss);
 
@@ -78,7 +79,7 @@ void gdt_set_tss_descriptor(uint8_t n, uint32_t ss0, uint32_t esp0)
 
 void gdt_prepare(void)
 {
-	kdprint(COM1, "Preparing kernel Global Descriptor Table\n");
+	fprintf(COM1, "Preparing kernel Global Descriptor Table\n");
 
 	// NULL Segment
 	gdt_set_descriptor(0, 0, 0, 0, 0);

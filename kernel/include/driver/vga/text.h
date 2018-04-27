@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_VGA_TEXT__
 #define __VKERNEL_VGA_TEXT__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Set the position of the hardware cursor in the VGA text mode screen.

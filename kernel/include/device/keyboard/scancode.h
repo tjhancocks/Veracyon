@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_KEYBOARD_SCANCODE__
 #define __VKERNEL_KEYBOARD_SCANCODE__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 enum key_modifiers 
 {

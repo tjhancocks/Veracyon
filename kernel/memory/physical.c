@@ -21,8 +21,9 @@
 */
 
 #include <physical.h>
-#include <kprint.h>
-#include <null.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
 #include <panic.h>
 
 extern uintptr_t *kernel_end;
@@ -31,7 +32,7 @@ static uintptr_t kernel_end_addr = (uintptr_t)&kernel_end;
 
 static uintptr_t working_memory = 0;
 
-static const uint32_t frame_size = 0x1000; // 4 KiB Frames
+static const size_t frame_size = 0x1000; // 4 KiB Frames
 static uint32_t frame_total = 0;
 static uint32_t free_frame_count = 0;
 static uint32_t *free_frame_stack = NULL;
@@ -58,7 +59,7 @@ uintptr_t kernel_end_address(void)
 	return kernel_end_addr;
 }
 
-uintptr_t reserve_kernel_working_memory(uint32_t length)
+uintptr_t reserve_kernel_working_memory(size_t length)
 {
 	if ((working_memory + length) > kernel_end_address()) {
 		struct panic_info info = (struct panic_info) {
@@ -69,13 +70,13 @@ uintptr_t reserve_kernel_working_memory(uint32_t length)
 		panic(&info, NULL);
 	}
 
-	kdprint(COM1, "Reserving %d bytes of kernel working memory at %p\n",
+	fprintf(COM1, "Reserving %d bytes of kernel working memory at %p\n",
 		length, working_memory);
 	
 	uintptr_t address = working_memory;
 	working_memory += length;
 
-	kdprint(COM1, 
+	fprintf(COM1, 
 		"There is now %d bytes of kernel working memory remaining.\n",
 		kernel_end_address() - working_memory);
 
@@ -84,15 +85,15 @@ uintptr_t reserve_kernel_working_memory(uint32_t length)
 
 static void frame_stack_prepare(struct boot_config *config)
 {
-	kdprint(COM1, "Setting up stack for free/available frames (");
-	kdprint(COM1, "%dKiB, ", config->upper_memory);
+	fprintf(COM1, "Setting up stack for free/available frames (");
+	fprintf(COM1, "%dKiB, ", config->upper_memory);
 
 	frame_total = config->upper_memory / 4;
-	kdprint(COM1, "%d)\n", frame_total);
+	fprintf(COM1, "%d)\n", frame_total);
 
 	free_frame_stack = (uint32_t *)reserve_kernel_working_memory(frame_total);
 	free_frame_stack += frame_total;
-	kdprint(COM1, "free_frame_stack stack bottom: %p\n", free_frame_stack);
+	fprintf(COM1, "free_frame_stack stack bottom: %p\n", free_frame_stack);
 }
 
 static void push_free_frame(uint32_t frame __attribute__((unused)))
@@ -103,31 +104,31 @@ static void push_free_frame(uint32_t frame __attribute__((unused)))
 
 static void push_free_frames(uint32_t first, uint32_t last)
 {
-	kdprint(COM1, "\tpush_free_frames(%08x, %08x)\n", first, last);
+	fprintf(COM1, "\tpush_free_frames(%08x, %08x)\n", first, last);
 	for (uint32_t n = first; n < last; n += frame_size)
 		push_free_frame(n);
 
-	kdprint(COM1, "\tfree_frame_stack is now: %p\n", free_frame_stack);
-	kdprint(COM1, "\tfree_frame_count is %d\n", free_frame_count);
+	fprintf(COM1, "\tfree_frame_stack is now: %p\n", free_frame_stack);
+	fprintf(COM1, "\tfree_frame_count is %d\n", free_frame_count);
 }
 
 static void search_physical_frames(struct boot_config *config)
 {
-	kdprint(COM1, "Searching for frames allocated by bootloader...\n");
+	fprintf(COM1, "Searching for frames allocated by bootloader...\n");
 
 	// The bootloader should have passed us information about all the frames
 	// it has allocated. The next_frame field should therefore be the first
 	// available frame to us.
 	unsigned int first_free_frame = config->next_frame;
-	kdprint(COM1, "first unused frame: %08x\n", first_free_frame);
+	fprintf(COM1, "first unused frame: %08x\n", first_free_frame);
 
 	// We need to work through the memory map in order to determine what holes
 	// are present in physical memory. From this we can know how what regions
 	// are available.
 	struct mmap_entry *entry = config->mmap;
-	kdprint(COM1, "mmap_count = %d\n", config->mmap_count);
+	fprintf(COM1, "mmap_count = %d\n", config->mmap_count);
 	for (unsigned short n = 0; n < config->mmap_count; entry++, ++n) {
-		kdprint(COM1, "%p | %p (%08x), present: %d\n", 
+		fprintf(COM1, "%p | %p (%08x), present: %d\n", 
 			(uint32_t)entry->offset, 
 			(uint32_t)(entry->offset + entry->size), 
 			(uint32_t)entry->size,
@@ -154,17 +155,17 @@ static void search_physical_frames(struct boot_config *config)
 		push_free_frames(first_free_frame, last_frame);
 	}
 
-	kdprint(COM1, "Total number of free/available frames: %d\n", 
+	fprintf(COM1, "Total number of free/available frames: %d\n", 
 		free_frame_count);
 }
 
 void physical_memory_prepare(struct boot_config *config)
 {
-	kdprint(COM1, "Preparing Physical Memory Manager...\n");
+	fprintf(COM1, "Preparing Physical Memory Manager...\n");
 
 	working_memory = kernel_end_addr - (4 * 1024 * 1024);
-	kdprint(COM1, "End of kernel is located at: %p\n", kernel_end_addr);
-	kdprint(COM1, "Working memory is located at: %p\n", working_memory);
+	fprintf(COM1, "End of kernel is located at: %p\n", kernel_end_addr);
+	fprintf(COM1, "Working memory is located at: %p\n", working_memory);
 
 	frame_stack_prepare(config);
 	search_physical_frames(config);

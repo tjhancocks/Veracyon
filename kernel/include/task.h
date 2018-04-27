@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_TASK__
 #define __VKERNEL_TASK__
 
-#include <kern_types.h>
+#include <stdint.h>
 #include <thread.h>
 #include <arch/arch.h>
 

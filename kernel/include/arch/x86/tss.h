@@ -23,7 +23,7 @@
 #ifndef __VKERNEL_X86_TSS__
 #define __VKERNEL_X86_TSS__
 
-#include <kern_types.h>
+#include <stdint.h>
 
 /**
  Task State Segment structure. Contains information about a task.

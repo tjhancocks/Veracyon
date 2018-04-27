@@ -23,8 +23,6 @@
 #ifndef __VKERNEL_DEVICE_PS2_KEYBOARD__
 #define __VKERNEL_DEVICE_PS2_KEYBOARD__
 
-#include <kern_types.h>
-
 /**
  Initialises and prepares the PS/2 keyboard driver for use. This will ensure the
  PS/2 keyboard is in a usable state.

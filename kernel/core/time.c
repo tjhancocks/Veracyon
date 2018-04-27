@@ -23,9 +23,9 @@
 #include <time.h>
 #include <arch/arch.h>
 
-uint64_t system_uptime(void)
+time_t system_uptime(void)
 {
 	uint32_t subticks = pit_get_subticks();
-	uint64_t ticks = pit_get_ticks();
+	uint32_t ticks = pit_get_ticks();
 	return (ticks * 1000) + subticks;
 }

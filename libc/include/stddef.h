@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2017 Tom Hancocks
+ Copyright (c) 2017-2018 Tom Hancocks
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,21 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_NULL__
-#define __VKERNEL_NULL__
+#ifndef _STDDEF_H
+#define _STDDEF_H
+
+#include <sys/cdefs.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef NULL
-#	define NULL ((void *)0x00)
+#	define NULL ((void *)0)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

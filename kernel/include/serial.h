@@ -28,19 +28,4 @@
  */
 void serial_prepare(void);
 
-/**
- Write a single character to the COM1 serial output port.
-
- 	- c: The character to write the COM1 serial port
- */
-void kputc_serial(const char c);
-
-/**
- Write a string of characters to the COM1 serial output port.
-
- 	- str: A pointer to a string containing the characters to write to the COM 1
- 		serial port.
- */
-void kputs_serial(const char *restrict str);
-
 #endif
