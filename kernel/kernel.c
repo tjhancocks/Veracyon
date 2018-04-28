@@ -48,17 +48,8 @@ __attribute__((noreturn)) void kwork(void)
 	printf("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
 	printf("\n\n");
 
-	for (uint8_t n = 0; n < 8; ++n) {
-		printf("\033[3%dm Text \033[0m\n", n);
-	}
-	printf("\033[90m Text \033[0m\n");
-	printf("\033[97m Text \033[0m\n\n");
-
 	while (1) {
-		sleep(1000);
-		sysinfo_t info;
-		get_sysinfo(&info);
-		printf("uptime: %ds (%dus)\n", (uint32_t)info.uptime_s, (uint32_t)info.uptime_u);
+		sleep(50);
 	}
 }
 
