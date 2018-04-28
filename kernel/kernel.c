@@ -58,7 +58,7 @@ __attribute__((noreturn)) void kwork(void)
 		sleep(1000);
 		sysinfo_t info;
 		get_sysinfo(&info);
-		printf("uptime: %llds (%llds)\n", info.uptime_s, info.uptime_u);
+		printf("uptime: %llds (%lldus)\n", info.uptime_s, info.uptime_u);
 	}
 }
 

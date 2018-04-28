@@ -64,7 +64,7 @@ static void kbdin_write_scancode(uint8_t code)
 	// Check if the insertion point is over the buffer length from the read 
 	// point. If it is pull the read point forwards.
 	int32_t diff = proc->kbdin.w_idx - proc->kbdin.r_idx;
-	if (diff >= proc->kbdin.size)
+	if (diff >= (ssize_t)proc->kbdin.size)
 		proc->kbdin.r_idx += (diff - proc->kbdin.size);
 
 	// Write the scancode into the insertion point of the buffer.

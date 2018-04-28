@@ -169,7 +169,7 @@ void task_resume_any_for(enum thread_mode_reason reason, uint64_t info)
 		task->thread->state.reason = reason_none;
 		task->thread->state.info = 0;
 	} 
-	while (task = task->next);
+	while ((task = task->next));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

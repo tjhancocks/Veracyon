@@ -67,8 +67,12 @@ static uintptr_t *panic_handler = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void render_register(const char *name, uint32_t value, uint32_t x, uint32_t y)
-{
+void render_register(
+	const char *name, 
+	uint32_t value, 
+	uint32_t x __attribute__((unused)), 
+	uint32_t y __attribute__((unused))
+) {
 	printf("\t\033[94m%8s: ", name);
 	printf("\033[96m%08x\n", value);
 }

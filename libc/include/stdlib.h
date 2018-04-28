@@ -24,6 +24,7 @@
 #define _STDLIB_H
 
 #include <sys/cdefs.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,9 +32,9 @@ extern "C" {
 
 __attribute__((noreturn)) void abort(void);
 
-void *malloc(size_t);
-void *calloc(size_t, size_t);
-void free(void *);
+void *malloc(size_t size);
+void *calloc(size_t count, size_t size);
+void free(void *ptr);
 
 #ifdef __cplusplus
 }

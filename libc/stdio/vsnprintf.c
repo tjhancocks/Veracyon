@@ -25,6 +25,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 #include <stddef.h>
 
 #ifndef __DIGIT_SOURCE

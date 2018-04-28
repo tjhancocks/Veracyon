@@ -26,7 +26,7 @@
 
 #if __i386__
 
-void architecture_prepare(struct boot_config *config)
+void architecture_prepare(struct boot_config *config __attribute__((unused)))
 {
 	fprintf(COM1, "Preparing system architecture: i386\n");
 	gdt_prepare();

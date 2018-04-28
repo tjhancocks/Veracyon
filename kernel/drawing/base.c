@@ -25,6 +25,7 @@
 #include <atomic.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 #include <uptime.h>
 
 #define BLIT_WIDTH	16
