@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 #if __libk__
-#include <arch/arch.h>
+#include <uptime.h>
 #include <panic.h>
 #endif
 
@@ -46,14 +46,8 @@ void get_sysinfo(sysinfo_t *info)
 
 	// Get the time information
 #if __libk__
-	uint64_t ticks = 0;
-	uint64_t subticks = 0;
-	uint64_t phase = 0;
-	
-	arch_get_ticks(&ticks, &subticks, &phase);
-
-	// Get the microseconds, assuming a phase of 1000Hz
-	info->uptime_s = (subticks >= 500) ? ticks + 1 : ticks;
-	info->uptime_u = ((ticks * phase) + subticks) * 1000;
+	info->uptime_s = get_uptime_s();
+	info->uptime_ms = get_uptime_ms();
+	info->uptime_u = get_uptime_u();
 #endif
 }

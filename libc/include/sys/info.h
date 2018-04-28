@@ -28,6 +28,8 @@
 struct __sysinfo {
 	// The current system uptime in seconds
 	time_t uptime_s;
+	// The current system uptime in milliseconds
+	suseconds_t uptime_ms;
 	// The current system uptime in microseconds
 	useconds_t uptime_u;
 };

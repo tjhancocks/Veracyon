@@ -20,13 +20,13 @@
  SOFTWARE.
 */
 
+#include <sys/info.h>
 #include <modules/shell.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <kheap.h>
-#include <time.h>
 #include <process.h>
 #include <macro.h>
 #include <atomic.h>
@@ -48,8 +48,10 @@ static void kernel_about(void)
 
 static void kernel_uptime(void)
 {
-	uint64_t time_ms = system_uptime();
-	uint64_t time_s = time_ms / 1000;
+	sysinfo_t info;
+	get_sysinfo(&info);
+	uint64_t time_ms = info.uptime_ms;
+	uint64_t time_s = info.uptime_s;
 	uint64_t time_m = time_s / 60;
 	uint64_t time_h = time_m / 60;
 	uint64_t time_d = time_h / 24;

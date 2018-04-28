@@ -25,7 +25,7 @@
 #include <atomic.h>
 #include <stdio.h>
 #include <stddef.h>
-#include <time.h>
+#include <uptime.h>
 
 #define BLIT_WIDTH	16
 #define BLIT_HEIGHT	16
@@ -44,7 +44,7 @@ static uint8_t blit_mask[BLIT_WIDTH * BLIT_HEIGHT] = { 1 };
 static uint32_t blit_rect_width;
 static uint32_t blit_rect_height;
 static uint32_t blit_count;
-static uint64_t next_blit_time_ms = 0;
+static suseconds_t next_blit_time_ms = 0;
 
 extern uint8_t bios_font[0x1000];
 
@@ -103,7 +103,7 @@ static inline void _blit_rect(uint32_t x, uint32_t y, uint32_t x2, uint32_t y2)
 
 static inline void _blit(void)
 {
-	uint64_t time = system_uptime();
+	suseconds_t time = get_uptime_ms();
 	if (time < next_blit_time_ms || next_blit_time_ms == 0)
 		return;
 	next_blit_time_ms = time + (1000/60);

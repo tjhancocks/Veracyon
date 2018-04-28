@@ -30,7 +30,7 @@
 #include <panic.h>
 #include <macro.h>
 #include <task.h>
-#include <time.h>
+#include <uptime.h>
 #include <atomic.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,7 @@ void sleep(uint64_t ms)
 
 	struct thread *current = task_get_current()->thread;
 
-	current->state.info = system_uptime() + ms;
+	current->state.info = get_uptime_ms() + ms;
 	current->state.reason = reason_sleep;
 	current->state.mode = thread_paused;
 

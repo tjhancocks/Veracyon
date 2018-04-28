@@ -20,12 +20,25 @@
  SOFTWARE.
 */
 
-#include <time.h>
+#include <uptime.h>
 #include <arch/arch.h>
+#include <stddef.h>
 
-time_t system_uptime(void)
+useconds_t get_uptime_u(void)
 {
-	uint32_t subticks = pit_get_subticks();
-	uint32_t ticks = pit_get_ticks();
+	return get_uptime_ms() * 1000;
+}
+
+suseconds_t get_uptime_ms(void)
+{
+	uint64_t subticks, ticks;
+	arch_get_ticks(&ticks, &subticks, NULL);
 	return (ticks * 1000) + subticks;
+}
+
+time_t get_uptime_s(void)
+{
+	uint64_t ticks;
+	arch_get_ticks(&ticks, NULL, NULL);
+	return ticks;
 }

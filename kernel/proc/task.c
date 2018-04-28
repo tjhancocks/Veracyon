@@ -27,7 +27,7 @@
 #include <string.h>
 #include <memory.h>
 #include <panic.h>
-#include <time.h>
+#include <uptime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,7 +133,7 @@ static int task_can_resume(struct task *task)
 	// I/O tasks.)
 	switch (task->thread->state.reason) {
 		case reason_sleep:
-			return (system_uptime() >= (uint32_t)task->thread->state.info);
+			return (get_uptime_ms() >= (suseconds_t)task->thread->state.info);
 
 		case reason_process:
 		case reason_irq_wait:

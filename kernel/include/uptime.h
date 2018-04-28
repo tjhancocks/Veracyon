@@ -20,15 +20,13 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_TIME__
-#define __VKERNEL_TIME__
+#ifndef __VKERNEL_UPTIME__
+#define __VKERNEL_UPTIME__
 
 #include <stdint.h>
 
-/**
- Reports the current system uptime in seconds (does not include time spent in 
- bootloader)
- */
-time_t system_uptime(void);
+useconds_t get_uptime_u(void);
+suseconds_t get_uptime_ms(void);
+time_t get_uptime_s(void);
 
 #endif
