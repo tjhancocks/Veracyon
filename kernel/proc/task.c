@@ -106,6 +106,7 @@ void yield(struct interrupt_frame *frame)
 	// so that the stack is remembered.
 	current_task->thread->stack.esp = (uint32_t)frame;
 	current_task->thread->stack.ebp = frame->ebp;
+	current_task->thread->owner->switched_out++;
 	current_task = next;
 
 	// Perform the switch. If anything has been misconfigured here, we'll be in

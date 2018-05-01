@@ -33,6 +33,7 @@
 #include <atomic.h>
 #include <drawing/base.h>
 #include <driver/vesa/console.h>
+#include <modules/console.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
 #define MAX_PIPE_COUNT		16
@@ -97,6 +98,22 @@ void process_prepare(void)
 			panic_general,
 			"UNABLE TO INITIALISE DISPLAY PROCESS",
 			"The process header for the display process could not be created."
+			" This is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
+	// Spawn the console process
+	struct process *console_proc = process_launch(
+		"console", 
+		console_main, 
+		P_ROOT | P_UI
+	);
+	if (!console_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE CONSOLE PROCESS",
+			"The process header for the console process could not be created."
 			" This is a serious error."
 		};
 		panic(&info, NULL);
@@ -241,8 +258,8 @@ struct thread *process_spawn_thread(
 
 struct process *process_get_frontmost(void)
 {
-	return process_get(0);
-	return frontmost_process;
+	// Fallback on the kernel if there is no frontmost process.
+	return frontmost_process ?: process_get(0);
 }
 
 struct process *process_get(uint32_t pid)

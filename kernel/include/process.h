@@ -45,6 +45,7 @@ struct process
 	const char *name;
 	uintptr_t page_dir;
 	int allow_frontmost;
+	uint32_t switched_out;
 
 	struct {
 		size_t count;
