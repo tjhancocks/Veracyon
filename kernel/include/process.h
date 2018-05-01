@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <thread.h>
+#include <pipe.h>
 
 enum process_launch_flags
 {
@@ -46,19 +47,13 @@ struct process
 	int allow_frontmost;
 
 	struct {
-		char *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} stdin;
-
-	struct {
-		uint8_t *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} kbdin;
-
+		struct pipe *stdin;
+		struct pipe *stdout;
+		struct pipe *stderr;
+		struct pipe *kbdin;
+		struct pipe *dbgcom1;
+	} pipe;
+	
 	struct {
 		struct thread *main;
 	} threads;

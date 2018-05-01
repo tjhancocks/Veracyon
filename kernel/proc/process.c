@@ -162,18 +162,11 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	proc->pid = next_pid++;
 	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
 
-	// Standard Pipes
-	proc->stdin.size = 1024;
-	proc->stdin.buffer = kalloc(proc->stdin.size);
-	proc->stdin.r_idx = 0;
-	proc->stdin.w_idx = 0;
-	fprintf(COM1, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
-
-	proc->kbdin.size = 64;
-	proc->kbdin.buffer = kalloc(proc->kbdin.size);
-	proc->kbdin.r_idx = 0;
-	proc->kbdin.w_idx = 0;
-	fprintf(COM1, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
+	proc->pipe.stdin = construct_pipe_for_process(proc, p_in);
+	proc->pipe.stdout = construct_pipe_for_process(proc, p_out);
+	proc->pipe.stderr = construct_pipe_for_process(proc, p_err);
+	proc->pipe.kbdin = construct_pipe_for_process(proc, p_kbd);
+	proc->pipe.dbgcom1 = construct_pipe_for_process(proc, p_dbg);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -243,6 +236,7 @@ struct thread *process_spawn_thread(
 
 struct process *process_get_frontmost(void)
 {
+	return process_get(0);
 	return frontmost_process;
 }
 

@@ -203,7 +203,7 @@ void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
 		else if (mask & token_type_string) {
 			string = (const char *)va_arg(args, uintptr_t);
 		}
-		else if (mask & token_type_string) {
+		else if (mask & token_type_char) {
 			char_value = (char)va_arg(args, uint32_t);
 		}
 		else {
