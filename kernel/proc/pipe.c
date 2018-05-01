@@ -43,28 +43,16 @@ struct pipe *construct_pipe_for_process(
 
     struct pipe *pipe = calloc(1, sizeof(*pipe));
     pipe->purpose = purpose;
+            pipe->owner = process;
 
     switch (pipe->purpose) {
-        case p_in:
-            pipe->name = "stdin";
-            pipe->consumer = process;
+        case p_send:
+            pipe->name = "<sender>";
             break;
-        case p_kbd:
-            pipe->name = "kbdin";
-            pipe->consumer = process;
-            break;
-        case p_out:
-            pipe->name = "stdout";
-            pipe->producer = process;
-            break;
-        case p_err:
-            pipe->name = "stderr";
-            pipe->producer = process;
-            break;
-        case p_dbg:
+
         default:
-            pipe->name = "dbgcom1";
-            pipe->producer = process;
+        case p_recv:
+            pipe->name = "<receiver>";
             break;
     }
 

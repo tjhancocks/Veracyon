@@ -32,35 +32,42 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static struct pipe *keyboard_get_frontmost_pipe()
+{
+	// Ask the process API for the Keyboard Receiver pipe for the frontmost
+	// process.
+	return process_get_pipe(
+		process_get_frontmost(), 
+		p_recv | p_keyboard
+	);
+}
+
+static struct pipe *keyboard_get_current_pipe()
+{
+	// Ask the process API for the Keyboard Receiver pipe for the owning process
+	// of the current task.
+	return process_get_pipe(
+		task_get_current()->thread->owner, 
+		p_recv | p_keyboard
+	);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void kbdin_write_scancode(uint8_t code)
 {
-	// Get the frontmost process. We'll need to get the keyboard input for it in
-	// order to write the scancode to it. 
-	struct process *proc = process_get_frontmost();
-
-	// If there is no frontmost process then just discard the scancode.
-	// TODO: At some point an agent should accept all scancodes as well in order
-	// to handle global shortcuts.
-	if (!proc)
+	struct pipe *pipe = keyboard_get_frontmost_pipe();
+	if (!pipe)
 		return;
-
-	// Write the scancode to standard input of the frontmost process.
-	pipe_write(proc->pipe.kbdin, &code, sizeof(code));
+	pipe_write(pipe, &code, sizeof(code));
 }
 
 static uint8_t kbdin_read_scancode(void)
 {
-	// Get the frontmost process. We'll need to get the keyboard input for it in
-	// order to write the scancode to it. 
-	struct process *proc = task_get_current()->thread->owner;
-
-	// If there is no frontmost process then just return NUL char
-	// TODO: Maybe a panic here as it should be impossible?
-	if (!proc)
+	struct pipe *pipe = keyboard_get_current_pipe();
+	if (!pipe)
 		return '\0';
-
-	// The scancode is at the first available in the pipe.
-	return pipe_read_byte(proc->pipe.kbdin);
+	return pipe_read_byte(pipe);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

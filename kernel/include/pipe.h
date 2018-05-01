@@ -27,20 +27,25 @@
 
 struct process;
 
-enum pipe_purpose 
+enum pipe_purpose
 {
-    p_in,
-    p_out,
-    p_err,
-    p_kbd,
-    p_dbg
+    // Pipe where owner receives a byte stream of data
+    p_recv = (1 << 0),
+
+    // Pipe where owner sends a byte stream of data
+    p_send = (1 << 1),
+
+    // Pipe is used to transmit keyboard scancodes.
+    // Should only be used by the keyboard process to send scancodes to the
+    // frontmost process.
+    p_keyboard = (1 << 2),
 };
 
 struct pipe 
 {
     enum pipe_purpose purpose;
-    struct process *producer;
-    struct process *consumer;
+    struct process *owner;
+    struct process *target;
     uintptr_t read_ptr;
     uintptr_t write_ptr;
     size_t size;

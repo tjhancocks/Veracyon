@@ -47,11 +47,8 @@ struct process
 	int allow_frontmost;
 
 	struct {
-		struct pipe *stdin;
-		struct pipe *stdout;
-		struct pipe *stderr;
-		struct pipe *kbdin;
-		struct pipe *dbgcom1;
+		size_t count;
+		struct pipe **pipe;
 	} pipe;
 	
 	struct {
@@ -113,5 +110,13 @@ struct process *process_get_frontmost(void);
  - pid: The process ID to look up.
  */
 struct process *process_get(uint32_t pid);
+
+/**
+ Get a pipe for the specified process that meets the specified requirements.
+ */
+struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask);
+
+void process_add_pipe(struct process *proc, struct pipe *pipe);
+void process_remove_pipe(struct process *proc, struct pipe *pipe);
 
 #endif

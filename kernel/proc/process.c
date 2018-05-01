@@ -24,6 +24,7 @@
 #include <kheap.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <panic.h>
 #include <macro.h>
@@ -34,6 +35,7 @@
 #include <driver/vesa/console.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
+#define MAX_PIPE_COUNT		16
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,11 +164,14 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	proc->pid = next_pid++;
 	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
 
-	proc->pipe.stdin = construct_pipe_for_process(proc, p_in);
-	proc->pipe.stdout = construct_pipe_for_process(proc, p_out);
-	proc->pipe.stderr = construct_pipe_for_process(proc, p_err);
-	proc->pipe.kbdin = construct_pipe_for_process(proc, p_kbd);
-	proc->pipe.dbgcom1 = construct_pipe_for_process(proc, p_dbg);
+	// Setup initial pipes.
+	proc->pipe.count = MAX_PIPE_COUNT;
+	proc->pipe.pipe = calloc(proc->pipe.count, sizeof(*proc->pipe.pipe));
+
+	process_add_pipe(
+		proc, 
+		construct_pipe_for_process(proc, p_recv | p_keyboard)
+	);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -247,4 +252,31 @@ struct process *process_get(uint32_t pid)
 		proc = proc->next;
 	}
 	return proc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask)
+{
+	for (uint32_t i = 0; i < proc->pipe.count; ++i) {
+		if (proc->pipe.pipe[i] && (proc->pipe.pipe[i]->purpose & mask)) {
+			return proc->pipe.pipe[i];
+		}
+	}
+	return NULL;
+}
+
+void process_add_pipe(struct process *proc, struct pipe *pipe)
+{
+	for (uint32_t i = 0; i < proc->pipe.count; ++i) {
+		if (!proc->pipe.pipe[i]) {
+			proc->pipe.pipe[i] = pipe;
+			break;
+		}
+	}
+}
+
+void process_remove_pipe(struct process *proc, struct pipe *pipe)
+{
+
 }
