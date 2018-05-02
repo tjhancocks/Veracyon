@@ -32,40 +32,13 @@
 #   define KERNEL_PIPE_SIZE     1024
 #endif
 
-struct pipe *construct_pipe_for_process(
-    struct process *process, 
-    enum pipe_purpose purpose
-) {
-    if (!process) {
-        fprintf(COM1, "Attempted to construct a pipe with no parent process\n");
-        return NULL;
-    }
-
-    struct pipe *pipe = calloc(1, sizeof(*pipe));
-    pipe->purpose = purpose;
-            pipe->owner = process;
-
-    switch (pipe->purpose) {
-        case p_send:
-            pipe->name = "<sender>";
-            break;
-
-        default:
-        case p_recv:
-            pipe->name = "<receiver>";
-            break;
-    }
-
-    pipe->size = KERNEL_PIPE_SIZE;
-    pipe->data = calloc(KERNEL_PIPE_SIZE, sizeof(*pipe->data));
-    pipe->read_ptr = pipe->write_ptr = 0;
-
-    return pipe;
-}
+#ifndef KERNEL_MAX_PIPE_COUNT
+#   define KERNEL_MAX_PIPE_COUNT     8 * 1024
+#endif
 
 void pipe_write(struct pipe *pipe, uint8_t *data, size_t count)
 {
-    for (int i = 0; i < count; ++i) {
+    for (uint32_t i = 0; i < count; ++i) {
         pipe->data[pipe->write_ptr++ % pipe->size] = data[i];
     }
 }
@@ -100,4 +73,123 @@ uint8_t pipe_read_byte(struct pipe *pipe)
     uint8_t byte = bytes[0];
     free(bytes);
     return byte;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static struct pipe **_pipe_pool = NULL;
+
+struct pipe *pipe(enum pipe_purpose mask)
+{
+    if (!_pipe_pool) {
+        // Allocate a store for all the system pipes.
+        _pipe_pool = calloc(KERNEL_MAX_PIPE_COUNT, sizeof(*_pipe_pool));
+    }
+
+    struct pipe *new_pipe = calloc(1, sizeof(*new_pipe));
+    new_pipe->size = KERNEL_PIPE_SIZE;
+    new_pipe->data = calloc(new_pipe->size, sizeof(*new_pipe->data));
+    new_pipe->purpose = mask;
+
+    for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
+        if (!_pipe_pool[i]) {
+            _pipe_pool[i] = new_pipe;
+            goto PIPE_POOL_FOUND;
+        }
+    }
+
+    // TODO: Handle the failure case for this.
+    free(new_pipe->data);
+    free(new_pipe);
+
+PIPE_POOL_FOUND:
+    return new_pipe;
+}
+
+void pipe_bind(struct pipe *pipe, enum pipe_binding binding, const void *data)
+{
+    if (!pipe) {
+        // TODO: Panic here...
+        return;
+    }
+
+    switch (binding) {
+        case pipe_target_process: {
+            if (pipe->purpose & p_recv) {
+                pipe->owner = (struct process *)data;
+            }
+            else if (pipe->purpose & p_send) {
+                pipe->target = (struct process *)data;
+            }
+            break;
+        }
+        case pipe_source_process: {
+            if (pipe->purpose & p_recv) {
+                pipe->target = (struct process *)data;
+            }
+            else if (pipe->purpose & p_send) {
+                pipe->owner = (struct process *)data;
+            }
+            break;
+        }
+        case pipe_owner_process: {
+            pipe->owner = (struct process *)data;
+            break;
+        }
+    }
+}
+
+size_t pipe_count_for_process(struct process *proc)
+{
+    size_t count = 0;
+    for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
+        if (!_pipe_pool[i]) continue;
+        if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+struct pipe **pipe_get_for_process(
+    struct process *proc, 
+    enum pipe_purpose mask,
+    size_t *count
+) {
+    size_t total_pipes = 0;
+    for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
+        if (!_pipe_pool[i]) continue;
+        if ((_pipe_pool[i]->purpose & mask) != mask) continue;
+        if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
+            ++total_pipes;
+        }
+    }
+
+    struct pipe **pipes = NULL;
+    if (total_pipes) {
+        pipes = calloc(total_pipes, sizeof(*pipes));
+        uint32_t pipe_idx = 0;
+        for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
+            if (!_pipe_pool[i]) continue;
+            if ((_pipe_pool[i]->purpose & mask) != mask) continue;
+            if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
+                pipes[pipe_idx++] = _pipe_pool[i];
+            }
+        }
+    }
+    
+    if (count) {
+        *count = total_pipes;
+    }
+
+    return pipes;
+}
+
+struct pipe *pipe_get_best(struct process *process, enum pipe_purpose mask)
+{
+    struct pipe *pipe = NULL;
+    struct pipe **pipes = pipe_get_for_process(process, mask, NULL);
+    pipe = pipes ? *pipes : NULL;
+    free(pipes);
+    return pipe;
 }

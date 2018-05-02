@@ -119,6 +119,9 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
+	// Route pipes...
+	process_attach_pipe(console_proc, process_get_pipe(kernel_proc, p_send));
+
 	// Enable multitasking
 	task_set_allowed(1);
 }
@@ -182,13 +185,8 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
 
 	// Setup initial pipes.
-	proc->pipe.count = MAX_PIPE_COUNT;
-	proc->pipe.pipe = calloc(proc->pipe.count, sizeof(*proc->pipe.pipe));
-
-	process_add_pipe(
-		proc, 
-		construct_pipe_for_process(proc, p_recv | p_keyboard)
-	);
+	struct pipe *kbd_pipe = pipe(p_recv | p_keyboard);
+	pipe_bind(kbd_pipe, pipe_owner_process, proc);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -275,21 +273,21 @@ struct process *process_get(uint32_t pid)
 
 struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask)
 {
-	for (uint32_t i = 0; i < proc->pipe.count; ++i) {
-		if (proc->pipe.pipe[i] && (proc->pipe.pipe[i]->purpose & mask)) {
-			return proc->pipe.pipe[i];
-		}
-	}
-	return NULL;
+	return pipe_get_best(proc, mask);
 }
 
 void process_add_pipe(struct process *proc, struct pipe *pipe)
 {
-	for (uint32_t i = 0; i < proc->pipe.count; ++i) {
-		if (!proc->pipe.pipe[i]) {
-			proc->pipe.pipe[i] = pipe;
-			break;
-		}
+	pipe_bind(pipe, pipe_owner_process, proc);
+}
+
+void process_attach_pipe(struct process *proc, struct pipe *pipe)
+{
+	if (pipe->purpose & p_recv) {
+		pipe_bind(pipe, pipe_source_process, proc);
+	}
+	else if (pipe->purpose & p_send) {
+		pipe_bind(pipe, pipe_target_process, proc);
 	}
 }
 

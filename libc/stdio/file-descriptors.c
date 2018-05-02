@@ -27,12 +27,20 @@ struct __vFILE {
 };
 
 #if __libk__
+#include <pipe.h>
 #include <device/device.h>
 
+FILE __stdin = { p_recv };
+FILE __stdout = { p_send };
+FILE __stderr = { p_send | p_err };
+FILE __com1 = { __COM1_ID };
+FILE __vt100 = { __VT100_ID };
 
-FILE __stdin = { __KBD_ID };
-FILE __stdout = { __VT100_ID };
-FILE __stderr = { __COM1_ID };
+FILE *stdin = &__stdin;
+FILE *stdout = &__stdout;
+FILE *stderr = &__stderr;
+FILE *COM1 = &__com1;
+FILE *VT100 = &__vt100;
 
 #else
 
@@ -40,11 +48,11 @@ FILE __stdin = { 0 };
 FILE __stdout = { 0 };
 FILE __stderr = { 0 };
 
-#endif
-
-
 FILE *stdin = &__stdin;
 FILE *stdout = &__stdout;
 FILE *stderr = &__stderr;
 FILE *COM1 = &__stderr;
 FILE *VT100 = &__stdout;
+
+#endif
+

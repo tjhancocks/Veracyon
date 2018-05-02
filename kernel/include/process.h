@@ -118,6 +118,7 @@ struct process *process_get(uint32_t pid);
 struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask);
 
 void process_add_pipe(struct process *proc, struct pipe *pipe);
+void process_attach_pipe(struct process *proc, struct pipe *pipe);
 void process_remove_pipe(struct process *proc, struct pipe *pipe);
 
 #endif

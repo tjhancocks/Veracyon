@@ -39,6 +39,9 @@ enum pipe_purpose
     // Should only be used by the keyboard process to send scancodes to the
     // frontmost process.
     p_keyboard = (1 << 2),
+
+    // Pipe is used to transmit error messages.
+    p_err = (1 << 3)
 };
 
 struct pipe 
@@ -53,14 +56,47 @@ struct pipe
     const char *name;
 };
 
-struct pipe *construct_pipe_for_process(
-    struct process *process, 
-    enum pipe_purpose purpose
-);
-
 void pipe_write(struct pipe *pipe, uint8_t *data, size_t count);
 uint8_t *pipe_read(struct pipe *pipe, size_t *count, size_t limit);
 size_t pipe_bytes_available(struct pipe *pipe);
 uint8_t pipe_read_byte(struct pipe *pipe);
+
+enum pipe_binding
+{
+    pipe_target_process = 1,
+    pipe_source_process = 2,
+    pipe_owner_process = 3,
+};
+
+/**
+ Construct a new unbound pipe with the specified purpose.
+ */
+struct pipe *pipe(enum pipe_purpose mask);
+
+/**
+ Bind the specified data/object to the provided pipe. This binding might be
+ the target process or source process.
+ */
+void pipe_bind(struct pipe *pipe, enum pipe_binding binding, const void *data);
+
+/**
+ Get the total number of pipes currently attached to the specified process.
+ */
+size_t pipe_count_for_process(struct process *process);
+
+/**
+ Retrieve an array of pipes matching the specified purpose for a given process.
+ A count of those pipes is also provided.
+ */
+struct pipe **pipe_get_for_process(
+    struct process *process, 
+    enum pipe_purpose mask,
+    size_t *count
+);
+
+/**
+ Retrieve the current _best_ pipe for the specified purpose for a given process.
+ */
+struct pipe *pipe_get_best(struct process *process, enum pipe_purpose mask);
 
 #endif

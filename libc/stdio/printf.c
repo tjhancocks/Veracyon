@@ -30,6 +30,6 @@ void printf(const char *restrict fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	vfprintf(stdout, fmt, args);
+	vfprintf(VT100, fmt, args);
 	va_end(args);
 }

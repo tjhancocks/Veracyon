@@ -49,7 +49,7 @@ __attribute__((noreturn)) void kwork(void)
 	printf("\n\n");
 
 	while (1) {
-		__asm__ __volatile__("hlt");
+		sleep(50);
 	}
 }
 

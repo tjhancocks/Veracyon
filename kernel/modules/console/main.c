@@ -24,17 +24,55 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <process.h>
+#include <pipe.h>
 #include <device/keyboard/keyboard.h>
+#include <device/device.h>
+
+void console_receive_pipes(void)
+{
+	device_t dev = get_device(__VT100_ID);
+	size_t pipe_count = 0;
+	struct pipe **input_pipes = pipe_get_for_process(
+		process_get(3), 
+		p_recv,
+		&pipe_count
+	);
+	for (uint32_t i = 0; i < pipe_count; ++i) {
+		while (input_pipes[i] && pipe_bytes_available(input_pipes[i])) {
+			char c = pipe_read_byte(input_pipes[i]);
+
+			if (input_pipes[i]->purpose & p_keyboard) {
+				struct keyevent *event = keyevent_make(c);
+				c = keycode_to_ascii(event->keycode, event->modifiers);
+				if (event->pressed == 0) {
+					c = 0;
+				}
+				free(event);
+			}
+
+			fprintf(COM1, "%c", c);
+			if (c == '\0') {
+				break;
+			} 
+			else if (c == '\n') {
+				char str[2] = {'\n', 0};
+				dv_write(dev, str);
+			}
+			else {
+				char str[2] = {c, 0};
+				dv_write(dev, str);
+			}
+		}
+
+	}
+}
 
 int console_main(void)
 {
 	while (1) {
-		struct keyevent *event = keyboard_wait_for_keyevent();
-		if (event && event->pressed) {
-			char ascii = keycode_to_ascii(event->keycode, event->modifiers);
-			printf("%c", ascii);
-		}
-		free(event);
+		console_receive_pipes();
+		sleep(10);
 	}
 }
