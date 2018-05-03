@@ -52,7 +52,6 @@ void console_receive_pipes(void)
 				free(event);
 			}
 
-			fprintf(COM1, "%c", c);
 			if (c == '\0') {
 				break;
 			} 

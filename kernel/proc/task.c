@@ -46,7 +46,7 @@ extern void switch_stack(uint32_t esp, uint32_t ebp);
 
 void task_set_allowed(int flag)
 {
-	fprintf(COM1, "%sabling multitasking\n", flag ? "En" : "Dis");
+	fprintf(dbgout, "%sabling multitasking\n", flag ? "En" : "Dis");
 	allowed = flag;
 }
 
@@ -64,7 +64,7 @@ int task_create(struct thread *thread)
 	if (!thread || !thread->owner)
 		return 0;
 
-	fprintf(COM1, "* Creating task for thread %d\n", thread->tid);
+	fprintf(dbgout, "* Creating task for thread %d\n", thread->tid);
 
 	struct task *task = kalloc(sizeof(*task));
 	memset(task, 0, sizeof(*task));

@@ -154,6 +154,6 @@ void prepare_panic_handler(
 ) {
 	panic_handler = config->panic_handler;
 	*panic_handler = (uintptr_t)panic;
-	fprintf(COM1, "Registered panic handler %p at %p\n", 
+	fprintf(dbgout, "Registered panic handler %p at %p\n", 
 		*panic_handler, panic_handler);
 }

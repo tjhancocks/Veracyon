@@ -85,7 +85,7 @@ static void kernel_uptime(void)
 
 void shell_prompt(void)
 {
-	fprintf(VT100, "> ");
+	fprintf(stdout, "> ");
 
 	const char *input = NULL;//read_user_input();
 

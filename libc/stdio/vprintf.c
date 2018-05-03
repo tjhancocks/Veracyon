@@ -28,5 +28,5 @@
 
 void vprintf(const char *restrict fmt, va_list args)
 {
-	vfprintf(VT100, fmt, args);
+	vfprintf(stdout, fmt, args);
 }

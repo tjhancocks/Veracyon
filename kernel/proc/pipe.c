@@ -159,9 +159,14 @@ struct pipe **pipe_get_for_process(
     size_t total_pipes = 0;
     for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
         if (!_pipe_pool[i]) continue;
+        if (mask == 0 && proc == NULL) {
+            ++total_pipes;
+            continue;
+        }
         if ((_pipe_pool[i]->purpose & mask) != mask) continue;
         if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
             ++total_pipes;
+            continue;
         }
     }
 
@@ -171,9 +176,15 @@ struct pipe **pipe_get_for_process(
         uint32_t pipe_idx = 0;
         for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
             if (!_pipe_pool[i]) continue;
+            if (mask == 0 && proc == NULL) {
+                pipes[pipe_idx++] = _pipe_pool[i];
+               continue;
+             }
             if ((_pipe_pool[i]->purpose & mask) != mask) continue;
             if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
                 pipes[pipe_idx++] = _pipe_pool[i];
+                
+                continue;
             }
         }
     }

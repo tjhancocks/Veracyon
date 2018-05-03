@@ -46,9 +46,7 @@ void snprintf(char *, size_t, const char *restrict, ...);
 FILE *stdin;
 FILE *stdout;
 FILE *stderr;
-
-FILE *COM1;
-FILE *VT100;
+FILE *dbgout;
 
 #ifdef __cplusplus
 }

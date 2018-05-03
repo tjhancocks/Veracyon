@@ -32,38 +32,48 @@
 #include <stddef.h>
 #include <device/RS232/RS232.h>
 
+struct __vFILE {
+	uintptr_t descriptor;
+	uint32_t fallback_device;
+};
+
 #ifndef __PRINTF_BUFFER_LEN
 #	define __PRINTF_BUFFER_LEN 1024
 #endif
 
 void vfprintf(FILE *fd, const char *restrict fmt, va_list args)
 {
+	if (!fd) {
+		// TODO: Panic here. This is serious. Warn if we're in LIBC.
+		return;
+	}
+
 	char buffer[__PRINTF_BUFFER_LEN] = { 0 };
 	vsnprintf((void *)&buffer, __PRINTF_BUFFER_LEN, fmt, args);
 	buffer[__PRINTF_BUFFER_LEN - 1] = '\0';
-	
-#if __libk__
-	// After multitasking is enabled we want to use process pipes for output.
-	// Certain FILEs such as COM1 and VT100 will not work at this point.
-	struct process *current = NULL;
-	struct pipe *pipe = NULL; 
-	if (fd != COM1 && fd != VT100 &&
-		task_allowed() && 
-		task_get_current() &&
-		task_get_current()->thread &&
-		(current = task_get_current()->thread->owner) &&
-		(pipe = process_get_pipe(current, *((uint32_t *)fd)))
-	) {
-		size_t buffer_len = strlen(buffer);
-		pipe_write(pipe, buffer, buffer_len);
-	}
-	else {
-		// Make sure we are COM1 or VT100 at this point.
-		if (fd != COM1 || fd != VT100) {
-			fd = COM1;
-		}
 
-		device_t dev = get_device(*((uint32_t *)fd));
+#if __libk__
+	device_t dev = NULL;
+	
+	// Pipes only become reliably available once multitasking is enabled.
+	if (!task_allowed()) goto PIPE_UNAVAILABLE;
+
+	struct task *task = task_get_current();
+	if (!task) goto PIPE_UNAVAILABLE;
+	if (!task->thread) goto PIPE_UNAVAILABLE;
+	if (!task->thread->owner) goto PIPE_UNAVAILABLE;
+
+	struct process *proc = task->thread->owner;
+	struct pipe *pipe = pipe_get_best(proc, fd->descriptor);
+	if (!pipe) goto PIPE_UNAVAILABLE;
+
+	size_t buffer_len = strlen(buffer);
+	pipe_write(pipe, (uint8_t *)buffer, buffer_len);
+
+PIPE_UNAVAILABLE:
+	// Check for a direct device to fallback to.
+	dev = get_device(fd->fallback_device);
+	if (dev) {
 		dv_write(dev, buffer);
 	}
 #endif

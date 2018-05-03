@@ -120,7 +120,15 @@ void process_prepare(void)
 	}
 
 	// Route pipes...
-	process_attach_pipe(console_proc, process_get_pipe(kernel_proc, p_send));
+	size_t pipe_count = 0;
+	struct pipe **pipes = pipe_get_for_process(NULL, 0, &pipe_count);
+	for (uint32_t i = 0; i < pipe_count; ++i) {
+		if (pipes[i]->purpose & p_send) {
+			fprintf(dbgout, "Binding pipe %d from %s to 'console'\n",
+				i, pipes[i]->owner->name);
+			pipe_bind(pipes[i], pipe_target_process, console_proc);
+		}
+	}
 
 	// Enable multitasking
 	task_set_allowed(1);
@@ -160,7 +168,7 @@ struct process *process_launch(
 	}
 
 
-	fprintf(COM1, "Process %d (%s) established with page directory: %p\n",
+	fprintf(dbgout, "Process %d (%s) established with page directory: %p\n",
 		proc->pid, proc->name, proc->page_dir);
 
 	atomic_end(atom);
@@ -172,7 +180,7 @@ struct process *process_launch(
 
 struct process *process_spawn(const char *name, int(*_entry)(void))
 {
-	fprintf(COM1, "Spawning new process: %s\n", name);
+	fprintf(dbgout, "Spawning new process: %s\n", name);
 
 	// Create a new blank process and prepare to populate it with the 
 	// appropriate information.
@@ -182,11 +190,14 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	// Basic metadata
 	proc->name = name;	// TODO: Copy the name string into the process.
 	proc->pid = next_pid++;
-	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
+	fprintf(dbgout, "   * assigning pid: %d\n", proc->pid);
 
 	// Setup initial pipes.
 	struct pipe *kbd_pipe = pipe(p_recv | p_keyboard);
 	pipe_bind(kbd_pipe, pipe_owner_process, proc);
+
+	struct pipe *out_pipe = pipe(p_send);
+	pipe_bind(out_pipe, pipe_owner_process, proc);
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -218,11 +229,11 @@ struct thread *process_spawn_thread(
 	// owning process is the kernel. Even then the kernel, must not yet have a 
 	// thread.
 	if (!owner) {
-		fprintf(COM1, "WARNING: Attempting to create an orphaned thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an orphaned thread.\n");
 		return NULL;
 	}
 	else if (owner->threads.main && start == NULL) {
-		fprintf(COM1, "WARNING: Attempting to create an invalid thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an invalid thread.\n");
 		return NULL;
 	}
 
@@ -245,7 +256,7 @@ struct thread *process_spawn_thread(
 
 	// Create a task for the thread.
 	if (task_create(thread) == 0) {
-		fprintf(COM1, "Failed to create task for thread %d.\n", thread->tid);
+		fprintf(dbgout, "Failed to create task for thread %d.\n", thread->tid);
 	}
 
 	// Return the new thread to the caller.

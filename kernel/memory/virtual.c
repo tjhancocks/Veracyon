@@ -268,7 +268,7 @@ int kpage_alloc(uintptr_t address)
 
 void kpage_free(uintptr_t address)
 {
-	fprintf(COM1, "Freeing page for linear address %p\n", address);
+	fprintf(dbgout, "Freeing page for linear address %p\n", address);
 }
 
 
@@ -294,7 +294,7 @@ void prepare_kernel_address_space(void)
 	// required information populated.
 	// All of this information _should_ be identity mapped, and should be 
 	// assumed to be so.
-	fprintf(COM1, "Preparing kernel address space\n");
+	fprintf(dbgout, "Preparing kernel address space\n");
 
 	kernel_address_space = (void *)reserve_kernel_working_memory(
 		sizeof(*kernel_address_space)
@@ -312,7 +312,7 @@ void prepare_kernel_address_space(void)
 			continue;
 
 		kernel_address_space->page_table_address[n] = directory[n].frame << 12;
-		fprintf(COM1, "  Page table %d has an address of %p\n", 
+		fprintf(dbgout, "  Page table %d has an address of %p\n", 
 			n, kernel_address_space->page_table_address[n]);
 	}
 
@@ -321,7 +321,7 @@ void prepare_kernel_address_space(void)
 	first_available_kernel_address = first_kernel_address = (
 		(kernel_end_address() + page_size) & ~(page_size - 1)
 	);
-	fprintf(COM1, "First available kernel space address is %p\n", 
+	fprintf(dbgout, "First available kernel space address is %p\n", 
 		first_available_kernel_address);
 
 	// The next job is to reserve enough space for the page tables to be 
@@ -332,8 +332,8 @@ void prepare_kernel_address_space(void)
 	kernel_address_space->next_page_table = first_page_table_address;
 	first_available_kernel_address += page_size * total_page_tables;
 	last_page_table_address = first_available_kernel_address - page_size;
-	fprintf(COM1, "Reserved 4MiB for virtual address space page tables\n");
-	fprintf(COM1, "Revised first available kernel space address is %p\n", 
+	fprintf(dbgout, "Reserved 4MiB for virtual address space page tables\n");
+	fprintf(dbgout, "Revised first available kernel space address is %p\n", 
 		first_available_kernel_address);
 
 	// Check to see if we need to allocate any page tables for reserved memory.
@@ -346,7 +346,7 @@ void prepare_kernel_address_space(void)
 		}
 	}
 
-	fprintf(COM1, "Kernel virtual address space is now ready for use.\n");
+	fprintf(dbgout, "Kernel virtual address space is now ready for use.\n");
 }
 
 

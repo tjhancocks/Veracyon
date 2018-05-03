@@ -41,7 +41,10 @@ enum pipe_purpose
     p_keyboard = (1 << 2),
 
     // Pipe is used to transmit error messages.
-    p_err = (1 << 3)
+    p_err = (1 << 3),
+
+    // Debugging messages should be sent via debug output.
+    p_dbg = (1 << 4)
 };
 
 struct pipe 
