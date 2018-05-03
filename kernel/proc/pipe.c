@@ -156,7 +156,6 @@ struct pipe **pipe_get_for_process(
             if ((_pipe_pool[i]->purpose & mask) != mask) continue;
             if (_pipe_pool[i]->owner == proc || _pipe_pool[i]->target == proc) {
                 pipes[pipe_idx++] = _pipe_pool[i];
-                
                 continue;
             }
         }

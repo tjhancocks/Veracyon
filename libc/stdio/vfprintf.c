@@ -69,6 +69,7 @@ void vfprintf(FILE *fd, const char *restrict fmt, va_list args)
 
 	size_t buffer_len = strlen(buffer);
 	pipe_write(pipe, (uint8_t *)buffer, buffer_len);
+	return;
 
 PIPE_UNAVAILABLE:
 	// Check for a direct device to fallback to.

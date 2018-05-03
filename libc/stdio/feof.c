@@ -20,42 +20,32 @@
  SOFTWARE.
 */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
+#include <stdbool.h>
 #include <stdio.h>
-#include <process.h>
+#include <stddef.h>
+
+#if __libk__
 #include <pipe.h>
-#include <device/keyboard/keyboard.h>
-#include <device/device.h>
+extern struct pipe *pipe_for_file(FILE *file);
+#endif
 
-extern FILE *file_for_pipe(struct pipe *pipe);
-
-void console_receive_pipes(void)
+int feof(FILE *fd)
 {
-	device_t dev = get_device(__VT100_ID);
-	size_t pipe_count = 0;
-	struct pipe **input_pipes = pipe_get_for_process(
-		process_get(3), 
-		p_send,
-		&pipe_count
-	);
-	for (uint32_t i = 0; i < pipe_count; ++i) {
-		FILE *stream = file_for_pipe(input_pipes[i]);
-		fprintf(dbgout, "FILE <%p> for pipe %p\n", stream, input_pipes[i]);
-		if (!feof(stream)) {
-			char line[81] = { 0 };
-			fgets(line, 80, stream);
-			dv_write(dev, line);
-		}
+	if (!fd) {
+		return true;
 	}
-}
 
-int console_main(void)
-{
-	while (1) {
-		console_receive_pipes();
-		sleep(10);
-	}
+	fprintf(dbgout, "feof(%p) -- checking... ", fd);
+
+#if __libk__
+	struct pipe *pipe = pipe_for_file(fd);
+	fprintf(dbgout, "pipe=%p ", pipe);
+	bool result = (!pipe || !pipe_has_unread(pipe, NULL)) ? true : false;
+	fprintf(dbgout, "%s\n", result ? "true" : "false");
+	return result;
+#endif
+
+	fprintf(dbgout, "true\n", fd);
+
+	return true;
 }

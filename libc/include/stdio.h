@@ -43,6 +43,10 @@ void vsnprintf(char *, size_t, const char *restrict, va_list);
 void sprintf(char *, const char *restrict, ...);
 void snprintf(char *, size_t, const char *restrict, ...);
 
+int feof(FILE *);
+
+char *fgets(char *, size_t, FILE *);
+
 FILE *stdin;
 FILE *stdout;
 FILE *stderr;

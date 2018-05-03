@@ -20,42 +20,42 @@
  SOFTWARE.
 */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <process.h>
+#if __libk__
+
 #include <pipe.h>
-#include <device/keyboard/keyboard.h>
-#include <device/device.h>
+#include <stdio.h>
+#include <task.h>
+#include <thread.h>
+#include <process.h>
 
-extern FILE *file_for_pipe(struct pipe *pipe);
+struct __vFILE {
+	uintptr_t descriptor;
+	uint32_t fallback_device;
+};
 
-void console_receive_pipes(void)
+FILE *file_for_pipe(struct pipe *pipe) 
 {
-	device_t dev = get_device(__VT100_ID);
-	size_t pipe_count = 0;
-	struct pipe **input_pipes = pipe_get_for_process(
-		process_get(3), 
-		p_send,
-		&pipe_count
-	);
-	for (uint32_t i = 0; i < pipe_count; ++i) {
-		FILE *stream = file_for_pipe(input_pipes[i]);
-		fprintf(dbgout, "FILE <%p> for pipe %p\n", stream, input_pipes[i]);
-		if (!feof(stream)) {
-			char line[81] = { 0 };
-			fgets(line, 80, stream);
-			dv_write(dev, line);
-		}
+	if (pipe->purpose == p_recv) {
+		return stdin;
+	}
+	else if (pipe->purpose == p_send) {
+		return stdout;
+	}
+	else if (pipe->purpose == p_send | p_dbg) {
+		return dbgout;
+	}
+	else if (pipe->purpose == p_send | p_err) {
+		return stderr;
+	}
+	else {
+		// TODO: Warn about unknown file for pipe. Default to stderr
+		return stderr;
 	}
 }
 
-int console_main(void)
+struct pipe *pipe_for_file(FILE *file)
 {
-	while (1) {
-		console_receive_pipes();
-		sleep(10);
-	}
+	return pipe_get_best(task_get_current()->thread->owner, file->descriptor);
 }
+
+#endif
