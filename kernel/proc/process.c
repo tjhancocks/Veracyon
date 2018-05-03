@@ -121,6 +121,7 @@ void process_prepare(void)
 
 	// Establish internal kernel pipes
 	process_make_pipe(kernel_proc, console_proc, p_send);
+	process_make_pipe(console_proc, NULL, p_recv | p_keyboard);
 
 	// Enable multitasking
 	task_set_allowed(1);
@@ -277,10 +278,12 @@ void process_make_pipe(
 	struct pipe *new_pipe = pipe(mask);
 	pipe_bind(new_pipe, pipe_owner_process, owner);
 
-	if (mask & p_send) {
-		pipe_bind(new_pipe, pipe_target_process, target);
-	}
-	else if (mask & p_recv) {
-		pipe_bind(new_pipe, pipe_source_process, target);
-	}
+	if (target) {
+		if (mask & p_send) {
+			pipe_bind(new_pipe, pipe_target_process, target);
+		}
+		else if (mask & p_recv) {
+			pipe_bind(new_pipe, pipe_source_process, target);
+		}
+	}	
 }

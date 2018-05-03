@@ -143,9 +143,10 @@ void pipe_bind(struct pipe *pipe, enum pipe_binding binding, const void *data)
         }
     }
 
-    fprintf(dbgout, "Pipe <%p | %02x> %s --> %s\n",
-        pipe, pipe->purpose, (pipe->owner ? pipe->owner->name : "Unowned"),
-        (pipe->target ? pipe->target->name : "No-Target"));
+    fprintf(dbgout, "Pipe <%p | %02x> %s %s %s\n",
+        pipe, pipe->purpose, (pipe->owner ? pipe->owner->name : "???"),
+        ((pipe->purpose & p_recv) ? "<--" : "-->"),
+        (pipe->target ? pipe->target->name : "???"));
 }
 
 size_t pipe_count_for_process(struct process *proc)
