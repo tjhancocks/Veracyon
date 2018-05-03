@@ -34,7 +34,7 @@ struct __vFILE {
 FILE __stdin = { p_recv, 0 };
 FILE __stdout = { p_send, __VT100_ID };
 FILE __stderr = { p_send | p_err, __COM1_ID };
-FILE __dbgout = { p_dbg, __COM1_ID };
+FILE __dbgout = { p_send | p_dbg, __COM1_ID };
 
 FILE *stdin = &__stdin;
 FILE *stdout = &__stdout;

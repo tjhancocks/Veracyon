@@ -36,7 +36,7 @@ static struct pipe *keyboard_get_frontmost_pipe()
 {
 	// Ask the process API for the Keyboard Receiver pipe for the frontmost
 	// process.
-	return process_get_pipe(
+	return pipe_get_best(
 		process_get_frontmost(), 
 		p_recv | p_keyboard
 	);
@@ -46,7 +46,7 @@ static struct pipe *keyboard_get_current_pipe()
 {
 	// Ask the process API for the Keyboard Receiver pipe for the owning process
 	// of the current task.
-	return process_get_pipe(
+	return pipe_get_best(
 		task_get_current()->thread->owner, 
 		p_recv | p_keyboard
 	);

@@ -119,16 +119,8 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
-	// Route pipes...
-	size_t pipe_count = 0;
-	struct pipe **pipes = pipe_get_for_process(NULL, 0, &pipe_count);
-	for (uint32_t i = 0; i < pipe_count; ++i) {
-		if (pipes[i]->purpose & p_send) {
-			fprintf(dbgout, "Binding pipe %d from %s to 'console'\n",
-				i, pipes[i]->owner->name);
-			pipe_bind(pipes[i], pipe_target_process, console_proc);
-		}
-	}
+	// Establish internal kernel pipes
+	process_make_pipe(kernel_proc, console_proc, p_send);
 
 	// Enable multitasking
 	task_set_allowed(1);
@@ -192,12 +184,7 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	proc->pid = next_pid++;
 	fprintf(dbgout, "   * assigning pid: %d\n", proc->pid);
 
-	// Setup initial pipes.
-	struct pipe *kbd_pipe = pipe(p_recv | p_keyboard);
-	pipe_bind(kbd_pipe, pipe_owner_process, proc);
-
-	struct pipe *out_pipe = pipe(p_send);
-	pipe_bind(out_pipe, pipe_owner_process, proc);
+	// TODO: Setup standard pipes here...
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -282,27 +269,18 @@ struct process *process_get(uint32_t pid)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask)
-{
-	return pipe_get_best(proc, mask);
-}
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+) {
+	struct pipe *new_pipe = pipe(mask);
+	pipe_bind(new_pipe, pipe_owner_process, owner);
 
-void process_add_pipe(struct process *proc, struct pipe *pipe)
-{
-	pipe_bind(pipe, pipe_owner_process, proc);
-}
-
-void process_attach_pipe(struct process *proc, struct pipe *pipe)
-{
-	if (pipe->purpose & p_recv) {
-		pipe_bind(pipe, pipe_source_process, proc);
+	if (mask & p_send) {
+		pipe_bind(new_pipe, pipe_target_process, target);
 	}
-	else if (pipe->purpose & p_send) {
-		pipe_bind(pipe, pipe_target_process, proc);
+	else if (mask & p_recv) {
+		pipe_bind(new_pipe, pipe_source_process, target);
 	}
-}
-
-void process_remove_pipe(struct process *proc, struct pipe *pipe)
-{
-
 }

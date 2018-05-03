@@ -113,12 +113,12 @@ struct process *process_get_frontmost(void);
 struct process *process_get(uint32_t pid);
 
 /**
- Get a pipe for the specified process that meets the specified requirements.
+ Establish a pipe between the two specified processes
  */
-struct pipe *process_get_pipe(struct process *proc, enum pipe_purpose mask);
-
-void process_add_pipe(struct process *proc, struct pipe *pipe);
-void process_attach_pipe(struct process *proc, struct pipe *pipe);
-void process_remove_pipe(struct process *proc, struct pipe *pipe);
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+);
 
 #endif
