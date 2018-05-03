@@ -1,4 +1,4 @@
-/*
+ /*
   Copyright (c) 2017-2018 Tom Hancocks
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -84,6 +84,8 @@ struct pipe *pipe(enum pipe_purpose mask)
     if (!_pipe_pool) {
         // Allocate a store for all the system pipes.
         _pipe_pool = calloc(KERNEL_MAX_PIPE_COUNT, sizeof(*_pipe_pool));
+        fprintf(dbgout, "Allocation pipe storage pool for %d pipes (%p)\n",
+            KERNEL_MAX_PIPE_COUNT, _pipe_pool);
     }
 
     struct pipe *new_pipe = calloc(1, sizeof(*new_pipe));
@@ -91,14 +93,17 @@ struct pipe *pipe(enum pipe_purpose mask)
     new_pipe->data = calloc(new_pipe->size, sizeof(*new_pipe->data));
     new_pipe->purpose = mask;
 
+
     for (uint32_t i = 0; i < KERNEL_MAX_PIPE_COUNT; ++i) {
         if (!_pipe_pool[i]) {
+            fprintf(dbgout, "Creating pipe #%d -- pipe(%02x)\n", i, mask);
             _pipe_pool[i] = new_pipe;
             goto PIPE_POOL_FOUND;
         }
     }
 
     // TODO: Handle the failure case for this.
+    fprintf(dbgout, "Failed to create pipe -- pipe(%02x)\n", mask);
     free(new_pipe->data);
     free(new_pipe);
 
@@ -137,6 +142,10 @@ void pipe_bind(struct pipe *pipe, enum pipe_binding binding, const void *data)
             break;
         }
     }
+
+    fprintf(dbgout, "Pipe <%p | %02x> %s --> %s\n",
+        pipe, pipe->purpose, (pipe->owner ? pipe->owner->name : "Unowned"),
+        (pipe->target ? pipe->target->name : "No-Target"));
 }
 
 size_t pipe_count_for_process(struct process *proc)
