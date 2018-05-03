@@ -28,6 +28,8 @@
 #include <pipe.h>
 #include <process.h>
 
+////////////////////////////////////////////////////////////////////////////////
+
 #ifndef KERNEL_PIPE_SIZE
 #   define KERNEL_PIPE_SIZE     1024
 #endif
@@ -35,45 +37,6 @@
 #ifndef KERNEL_MAX_PIPE_COUNT
 #   define KERNEL_MAX_PIPE_COUNT     8 * 1024
 #endif
-
-void pipe_write(struct pipe *pipe, uint8_t *data, size_t count)
-{
-    for (uint32_t i = 0; i < count; ++i) {
-        pipe->data[pipe->write_ptr++ % pipe->size] = data[i];
-    }
-}
-
-uint8_t *pipe_read(struct pipe *pipe, size_t *count, size_t limit)
-{
-    *count = pipe_bytes_available(pipe);
-    size_t bytes_to_read = (limit < *count) ? limit : *count;
-
-    if (*count == 0) {
-        return NULL;
-    }
-    
-    uint8_t *data = calloc(bytes_to_read, sizeof(*data));
-    memcpy(data, pipe->data + (pipe->read_ptr % pipe->size), bytes_to_read);
-    pipe->read_ptr += bytes_to_read;
-    return data;
-}
-
-size_t pipe_bytes_available(struct pipe *pipe)
-{
-    return pipe->write_ptr - pipe->read_ptr;
-}
-
-uint8_t pipe_read_byte(struct pipe *pipe)
-{
-    if (pipe_bytes_available(pipe) <= 0) {
-        return '\0';
-    }
-    size_t count = 0;
-    uint8_t *bytes = pipe_read(pipe, &count, 1);
-    uint8_t byte = bytes[0];
-    free(bytes);
-    return byte;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -213,4 +176,53 @@ struct pipe *pipe_get_best(struct process *process, enum pipe_purpose mask)
     pipe = pipes ? *pipes : NULL;
     free(pipes);
     return pipe;
+}
+
+bool pipe_has_unread(struct pipe *pipe, ssize_t *count)
+{
+    if (!pipe) return false;
+    ssize_t diff = pipe->write_ptr - pipe->read_ptr;
+    if (count) *count = diff;
+    return (diff > 0) ? true : false;
+}
+
+uint8_t pipe_read_byte(struct pipe *pipe, bool *empty)
+{
+    if (!pipe_has_unread(pipe, NULL)) {
+        if (empty) *empty = true;
+        return '\0';
+    }
+    if (empty) *empty = false;
+    return pipe->data[pipe->read_ptr++ % pipe->size];
+}
+
+uint8_t pipe_peek_byte(struct pipe *pipe, int32_t offset)
+{
+    return pipe->data[(pipe->read_ptr + offset) % pipe->size];
+}
+
+bool pipe_can_accept_write(struct pipe *pipe)
+{
+    ssize_t diff = 0;
+    (void)pipe_has_unread(pipe, &diff);
+    return (diff < pipe->size) ? true : false;
+}
+
+void pipe_write_byte(struct pipe *pipe, uint8_t byte)
+{
+    if (!pipe_can_accept_write(pipe)) {
+        fprintf(dbgout, "Writing beyond pipe <%p> buffer!\n", pipe);
+        pipe->read_ptr++;
+    }
+    pipe->data[pipe->write_ptr++ % pipe->size] = byte;
+}
+
+void pipe_write(struct pipe *pipe, uint8_t *bytes, size_t len)
+{
+    for (uint32_t i = 0; i < len; ++i) {
+        while (!pipe_can_accept_write(pipe)) {
+            __asm__ __volatile__("hlt");
+        }
+        pipe_write_byte(pipe, bytes[i]);
+    }
 }

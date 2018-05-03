@@ -40,8 +40,8 @@ void console_receive_pipes(void)
 		&pipe_count
 	);
 	for (uint32_t i = 0; i < pipe_count; ++i) {
-		while (input_pipes[i] && pipe_bytes_available(input_pipes[i])) {
-			char c = pipe_read_byte(input_pipes[i]);
+		while (input_pipes[i] && pipe_has_unread(input_pipes[i], NULL)) {
+			char c = pipe_read_byte(input_pipes[i], NULL);
 
 			if (input_pipes[i]->purpose & p_keyboard) {
 				struct keyevent *event = keyevent_make(c);
@@ -54,10 +54,6 @@ void console_receive_pipes(void)
 
 			if (c == '\0') {
 				break;
-			} 
-			else if (c == '\n') {
-				char str[2] = {'\n', 0};
-				dv_write(dev, str);
 			}
 			else {
 				char str[2] = {c, 0};

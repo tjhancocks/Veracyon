@@ -67,7 +67,12 @@ static uint8_t kbdin_read_scancode(void)
 	struct pipe *pipe = keyboard_get_current_pipe();
 	if (!pipe)
 		return '\0';
-	return pipe_read_byte(pipe);
+	
+	while (!pipe_has_unread(pipe, NULL)) {
+		__asm__ __volatile__("hlt");
+	}
+
+	return pipe_read_byte(pipe, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

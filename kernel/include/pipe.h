@@ -24,6 +24,7 @@
 #define __VKERNEL_PIPE__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct process;
 
@@ -58,11 +59,6 @@ struct pipe
     uint8_t *data;
     const char *name;
 };
-
-void pipe_write(struct pipe *pipe, uint8_t *data, size_t count);
-uint8_t *pipe_read(struct pipe *pipe, size_t *count, size_t limit);
-size_t pipe_bytes_available(struct pipe *pipe);
-uint8_t pipe_read_byte(struct pipe *pipe);
 
 enum pipe_binding
 {
@@ -101,5 +97,41 @@ struct pipe **pipe_get_for_process(
  Retrieve the current _best_ pipe for the specified purpose for a given process.
  */
 struct pipe *pipe_get_best(struct process *process, enum pipe_purpose mask);
+
+/**
+ Is there unread bytes available in the pipe? Returns the number of bytes that
+ are unread.
+ */
+bool pipe_has_unread(struct pipe *pipe, ssize_t *count);
+
+/**
+ Read a single byte from the pipe. If no bytes are available then a NUL byte
+ will be returned and an empty flag set.
+ */
+uint8_t pipe_read_byte(struct pipe *pipe, bool *empty);
+
+/**
+ Check the value of a byte at the specified offset from the current read 
+ position.
+ */
+uint8_t pipe_peek_byte(struct pipe *pipe, int32_t offset);
+
+/**
+ Can the pipe currently accept any more input?
+ NOTE: If the result is `false`, then the caller should yield CPU time until the
+ pipe is able to accept further input.
+ */
+bool pipe_can_accept_write(struct pipe *pipe);
+
+/**
+ Write a single byte to the pipe. If this attempts to write beyond the end of
+ the buffer, then the next byte in the read buffer will be destroyed.
+ */
+void pipe_write_byte(struct pipe *pipe, uint8_t byte);
+
+/**
+ Write a stream of bytes to the pipe, managing pipe choke limits as it does so.
+ */
+void pipe_write(struct pipe *pipe, uint8_t *bytes, size_t len);
 
 #endif
