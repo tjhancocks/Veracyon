@@ -20,40 +20,9 @@
  SOFTWARE.
 */
 
-#include <arch/arch.h>
-#include <device/PS2/keyboard.h>
-#include <device/keyboard/keyboard.h>
-#include <stdio.h>
-#include <kheap.h>
-#include <panic.h>
+#ifndef __VKERNEL_MODULE_CONSOLE__
+#define __VKERNEL_MODULE_CONSOLE__
 
-////////////////////////////////////////////////////////////////////////////////
+int console_main(void);
 
-void ps2_keybaord_wait(void)
-{
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
-}
-
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
-}
-
-void ps2_keyboard_reset(void)
-{
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
-}
-
-void ps2_keyboard_initialise(void)
-{
-	fprintf(dbgout, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
-}
+#endif

@@ -24,6 +24,7 @@
 #include <kheap.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <panic.h>
 #include <macro.h>
@@ -32,8 +33,10 @@
 #include <atomic.h>
 #include <drawing/base.h>
 #include <driver/vesa/console.h>
+#include <modules/console.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
+#define MAX_PIPE_COUNT		16
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,6 +103,26 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
+	// Spawn the console process
+	struct process *console_proc = process_launch(
+		"console", 
+		console_main, 
+		P_ROOT | P_UI
+	);
+	if (!console_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE CONSOLE PROCESS",
+			"The process header for the console process could not be created."
+			" This is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
+	// Establish internal kernel pipes
+	process_make_pipe(kernel_proc, console_proc, p_send);
+	process_make_pipe(console_proc, NULL, p_recv | p_keyboard);
+
 	// Enable multitasking
 	task_set_allowed(1);
 }
@@ -138,7 +161,7 @@ struct process *process_launch(
 	}
 
 
-	fprintf(COM1, "Process %d (%s) established with page directory: %p\n",
+	fprintf(dbgout, "Process %d (%s) established with page directory: %p\n",
 		proc->pid, proc->name, proc->page_dir);
 
 	atomic_end(atom);
@@ -150,7 +173,7 @@ struct process *process_launch(
 
 struct process *process_spawn(const char *name, int(*_entry)(void))
 {
-	fprintf(COM1, "Spawning new process: %s\n", name);
+	fprintf(dbgout, "Spawning new process: %s\n", name);
 
 	// Create a new blank process and prepare to populate it with the 
 	// appropriate information.
@@ -160,20 +183,9 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	// Basic metadata
 	proc->name = name;	// TODO: Copy the name string into the process.
 	proc->pid = next_pid++;
-	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
+	fprintf(dbgout, "   * assigning pid: %d\n", proc->pid);
 
-	// Standard Pipes
-	proc->stdin.size = 1024;
-	proc->stdin.buffer = kalloc(proc->stdin.size);
-	proc->stdin.r_idx = 0;
-	proc->stdin.w_idx = 0;
-	fprintf(COM1, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
-
-	proc->kbdin.size = 64;
-	proc->kbdin.buffer = kalloc(proc->kbdin.size);
-	proc->kbdin.r_idx = 0;
-	proc->kbdin.w_idx = 0;
-	fprintf(COM1, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
+	// TODO: Setup standard pipes here...
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -205,11 +217,11 @@ struct thread *process_spawn_thread(
 	// owning process is the kernel. Even then the kernel, must not yet have a 
 	// thread.
 	if (!owner) {
-		fprintf(COM1, "WARNING: Attempting to create an orphaned thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an orphaned thread.\n");
 		return NULL;
 	}
 	else if (owner->threads.main && start == NULL) {
-		fprintf(COM1, "WARNING: Attempting to create an invalid thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an invalid thread.\n");
 		return NULL;
 	}
 
@@ -232,7 +244,7 @@ struct thread *process_spawn_thread(
 
 	// Create a task for the thread.
 	if (task_create(thread) == 0) {
-		fprintf(COM1, "Failed to create task for thread %d.\n", thread->tid);
+		fprintf(dbgout, "Failed to create task for thread %d.\n", thread->tid);
 	}
 
 	// Return the new thread to the caller.
@@ -243,7 +255,8 @@ struct thread *process_spawn_thread(
 
 struct process *process_get_frontmost(void)
 {
-	return frontmost_process;
+	// Fallback on the kernel if there is no frontmost process.
+	return frontmost_process ?: process_get(0);
 }
 
 struct process *process_get(uint32_t pid)
@@ -253,4 +266,24 @@ struct process *process_get(uint32_t pid)
 		proc = proc->next;
 	}
 	return proc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+) {
+	struct pipe *new_pipe = pipe(mask);
+	pipe_bind(new_pipe, pipe_owner_process, owner);
+
+	if (target) {
+		if (mask & p_send) {
+			pipe_bind(new_pipe, pipe_target_process, target);
+		}
+		else if (mask & p_recv) {
+			pipe_bind(new_pipe, pipe_source_process, target);
+		}
+	}	
 }

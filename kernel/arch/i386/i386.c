@@ -28,7 +28,7 @@
 
 void architecture_prepare(struct boot_config *config __attribute__((unused)))
 {
-	fprintf(COM1, "Preparing system architecture: i386\n");
+	fprintf(dbgout, "Preparing system architecture: i386\n");
 	gdt_prepare();
 }
 

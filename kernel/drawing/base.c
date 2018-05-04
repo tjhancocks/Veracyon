@@ -63,7 +63,7 @@ void drawing_prepare(struct boot_config *config)
 	screen_size = config->screen_size;
 	screen_bpp = config->bytes_per_pixel;
 
-	fprintf(COM1, "Screen is %dx%d %d-bpp\n", 
+	fprintf(dbgout, "Screen is %dx%d %d-bpp\n", 
 		screen_width, screen_height, screen_bpp);
 
 	vesa_buffer = config->front_buffer;

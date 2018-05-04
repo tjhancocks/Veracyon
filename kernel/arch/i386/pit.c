@@ -41,7 +41,7 @@ static void pit_set_frequency(uint32_t freq)
 {
 	int32_t divisor = 1193180 / freq;
 
-	fprintf(COM1, 
+	fprintf(dbgout, 
 		"Setting frequency of Programmable Interrupt Timer to %dHz\n",
 		freq);
 
@@ -69,7 +69,7 @@ static void pit_interrupt_event(
 
 void pit_prepare(void)
 {
-	fprintf(COM1, "Installing the Programmable Interrupt Timer.\n");
+	fprintf(dbgout, "Installing the Programmable Interrupt Timer.\n");
 	pit_info.phase = 1000;
 
 	pit_set_frequency(pit_info.phase);

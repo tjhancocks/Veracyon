@@ -86,14 +86,14 @@ void *kalloc(size_t size)
 
 	// Calculate the absolute start of the allocated memory.
 	uintptr_t address = (uintptr_t)block + sizeof(*block);
-	// fprintf(COM1, "Allocated memory (%d bytes) at %p\n", size, address);
+	// fprintf(dbgout, "Allocated memory (%d bytes) at %p\n", size, address);
 
 	return (void *)address;
 }
 
 void kfree(void *ptr)
 {
-	// fprintf(COM1, "Attempting to free memory at pointer: %p\n", ptr);
+	// fprintf(dbgout, "Attempting to free memory at pointer: %p\n", ptr);
 
 	// Make sure we're attempting to free a valid memory pointer. Warn if we're
 	// not.
@@ -101,7 +101,7 @@ void kfree(void *ptr)
 	struct kheap_block *block = (void *)address;
 
 	if (block->magic != kHEAP_ALLOC_MAGIC) {
-		fprintf(COM1, "WARNING: Attempting to free an invalid pointer.\n");
+		fprintf(dbgout, "WARNING: Attempting to free an invalid pointer.\n");
 		return;
 	}
 
@@ -125,15 +125,15 @@ static struct kheap_block *kheap_expand(size_t size)
 
 static struct kheap_block *kheap_expand_pages(uint32_t pages)
 {
-	// fprintf(COM1, "Expanding kernel heap by %d page(s).\n", pages);
+	// fprintf(dbgout, "Expanding kernel heap by %d page(s).\n", pages);
 
 	uintptr_t first_page = find_available_contiguous_kernel_pages(pages);
-	// fprintf(COM1, "	* Starting at page address %p\n", first_page);
+	// fprintf(dbgout, "	* Starting at page address %p\n", first_page);
 
 	// Prepare to allocate each of the pages.
 	for (uint32_t n = 0; n < pages; ++n) {
 		uintptr_t address = first_page + (kPAGE_SIZE * n);
-		// fprintf(COM1, "      * allocating %p\n", address);
+		// fprintf(dbgout, "      * allocating %p\n", address);
 
 		if (kpage_alloc(address) == kPAGE_ALLOC_ERROR) {
 			struct panic_info info = (struct panic_info) {
@@ -146,11 +146,11 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 
 	// Configure the newly allocated pages correctly.
-	// fprintf(COM1, "   * Configuring newly allocated pages for heap use.\n");
+	// fprintf(dbgout, "   * Configuring newly allocated pages for heap use.\n");
 
 	uintptr_t raw_address = first_page;
 	size_t raw_size = pages * kPAGE_SIZE;
-	// fprintf(COM1, "      Raw address: %p, Raw size: %d bytes\n",
+	// fprintf(dbgout, "      Raw address: %p, Raw size: %d bytes\n",
 	// 	raw_address, raw_size);
 
 	struct kheap_block *block = kheap_make_block(raw_address, raw_size);
@@ -158,14 +158,14 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	// Add the newly constructed block into the heap chain. If this is the first
 	// block, then mark it as such.
 	if (!heap_first) {
-		// fprintf(COM1, "   * No first block in kernel heap. Setting it.\n");
+		// fprintf(dbgout, "   * No first block in kernel heap. Setting it.\n");
 		heap_first = heap_last = block;
 	}
 
 	// Attempt to collect the block into the current last block. If the 
 	// operation is successful, the report it and finish.
 	else if (kheap_collect_block(heap_last, block) == kHEAP_COLLECT_OK) {
-		// fprintf(COM1, "   * Collecting block into previous last block.\n");
+		// fprintf(dbgout, "   * Collecting block into previous last block.\n");
 		block = heap_last;
 	}
 
@@ -187,7 +187,7 @@ static struct kheap_block *kheap_expand_pages(uint32_t pages)
 	}
 	
 	// Return the block to the caller.
-	// fprintf(COM1, "***\n");
+	// fprintf(dbgout, "***\n");
 	return block;
 }
 
@@ -201,13 +201,13 @@ static void kheap_describe_block(struct kheap_block *block)
 
 static void kheap_describe_structure(void)
 {
-	fprintf(COM1, "===============\n");
+	fprintf(dbgout, "===============\n");
 	struct kheap_block *block = heap_first;
 	while (block) {
 		kheap_describe_block(block);
 		block = block->next;
 	}
-	fprintf(COM1, "===============\n");
+	fprintf(dbgout, "===============\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,9 +220,9 @@ static struct kheap_block *kheap_make_block(
 	size_t block_header_size = sizeof(*block);
 	size_t block_real_size = raw_size - block_header_size;
 
-	// fprintf(COM1, "Making kernel heap block [header-size: %d bytes]\n",
+	// fprintf(dbgout, "Making kernel heap block [header-size: %d bytes]\n",
 	// 	block_header_size);
-	// fprintf(COM1, "   * Raw size: %d bytes, Real size: %d\n",
+	// fprintf(dbgout, "   * Raw size: %d bytes, Real size: %d\n",
 	// 	raw_size, block_real_size);
 
 	block->magic = kHEAP_AVAIL_MAGIC;
@@ -230,7 +230,7 @@ static struct kheap_block *kheap_make_block(
 	block->next = NULL;
 	block->size = block_real_size;
 
-	// fprintf(COM1, "   * Block constructed\n");
+	// fprintf(dbgout, "   * Block constructed\n");
 
 	return block;
 }
@@ -334,7 +334,7 @@ static int kheap_split_block(
 static struct kheap_block *kheap_allocate_block(size_t size)
 {
 	size_t required_split_size = size + (sizeof(struct kheap_block) * 2);
-	// fprintf(COM1, "Finding heap block for allocation of %d bytes.\n", size);
+	// fprintf(dbgout, "Finding heap block for allocation of %d bytes.\n", size);
 
 	// The first step is to search all current blocks for the first available
 	// block that is large enough to accomodate the requested allocation, and
@@ -348,12 +348,12 @@ static struct kheap_block *kheap_allocate_block(size_t size)
 
 	// Failed to find a suitable block in the heap. Attempt to expand the heap
 	// in order to get one.
-	// fprintf(COM1, "Failed to find suitable heap block. Expanding heap.\n");
+	// fprintf(dbgout, "Failed to find suitable heap block. Expanding heap.\n");
 	block = kheap_expand(size + sizeof(*block));
 
 	// Perform a sanity check to ensure the reported block is actually suitable.
 	if (block->magic != kHEAP_AVAIL_MAGIC || block->size < size) {
-		// fprintf(COM1, "   * Serious error. Failed to make suitable block!\n");
+		// fprintf(dbgout, "   * Serious error. Failed to make suitable block!\n");
 		return NULL;
 	}
 
@@ -361,17 +361,17 @@ BLOCK_FOUND:
 	// If the block is far larger than needed then we need to split it, so that
 	// we do not waste too much space.
 	if (block->size > required_split_size) {
-		// fprintf(COM1, "   * Block too large (%d>%d). Attempting to split.\n",
+		// fprintf(dbgout, "   * Block too large (%d>%d). Attempting to split.\n",
 		// 	block->size, required_split_size);
 		if (kheap_split_block(block, size) != kHEAP_SPLIT_OK) {
-			// fprintf(COM1, "   * Failed to split heap block. Leaving.\n");
+			// fprintf(dbgout, "   * Failed to split heap block. Leaving.\n");
 		}
 	}
 
 	// The block reference is now of the requested size and needs to be marked
 	// as allocated and returned the caller.
 	block->magic = kHEAP_ALLOC_MAGIC;
-	// fprintf(COM1, "***\n");
+	// fprintf(dbgout, "***\n");
 
 	return block;
 }

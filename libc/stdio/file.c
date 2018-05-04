@@ -20,40 +20,42 @@
  SOFTWARE.
 */
 
-#include <arch/arch.h>
-#include <device/PS2/keyboard.h>
-#include <device/keyboard/keyboard.h>
+#if __libk__
+
+#include <pipe.h>
 #include <stdio.h>
-#include <kheap.h>
-#include <panic.h>
+#include <task.h>
+#include <thread.h>
+#include <process.h>
 
-////////////////////////////////////////////////////////////////////////////////
+struct __vFILE {
+	uintptr_t descriptor;
+	uint32_t fallback_device;
+};
 
-void ps2_keybaord_wait(void)
+FILE *file_for_pipe(struct pipe *pipe) 
 {
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
+	if (pipe->purpose == p_recv) {
+		return stdin;
+	}
+	else if (pipe->purpose == p_send) {
+		return stdout;
+	}
+	else if (pipe->purpose == p_send | p_dbg) {
+		return dbgout;
+	}
+	else if (pipe->purpose == p_send | p_err) {
+		return stderr;
+	}
+	else {
+		// TODO: Warn about unknown file for pipe. Default to stderr
+		return stderr;
+	}
 }
 
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
-}
-
-void ps2_keyboard_reset(void)
+struct pipe *pipe_for_file(FILE *file)
 {
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
+	return pipe_get_best(task_get_current()->thread->owner, file->descriptor);
 }
 
-void ps2_keyboard_initialise(void)
-{
-	fprintf(dbgout, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
-}
+#endif

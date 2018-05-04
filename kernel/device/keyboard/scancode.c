@@ -25,6 +25,7 @@
 #include <kheap.h>
 #include <memory.h>
 #include <string.h>
+#include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -125,6 +126,10 @@ static enum key_state _current_keystate = 0;
 
 struct keyevent *keyevent_make(uint8_t scancode)
 {
+	if (scancode == '\0') {
+		return NULL;
+	}
+
 	// Prepare a new keyevent
 	struct keyevent *event = kalloc(sizeof(*event));
 	memset(event, 0, sizeof(*event));

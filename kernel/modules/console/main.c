@@ -20,40 +20,41 @@
  SOFTWARE.
 */
 
-#include <arch/arch.h>
-#include <device/PS2/keyboard.h>
-#include <device/keyboard/keyboard.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
 #include <stdio.h>
-#include <kheap.h>
-#include <panic.h>
+#include <process.h>
+#include <pipe.h>
+#include <device/keyboard/keyboard.h>
+#include <device/device.h>
 
-////////////////////////////////////////////////////////////////////////////////
+extern FILE *file_for_pipe(struct pipe *pipe);
 
-void ps2_keybaord_wait(void)
+void console_receive_pipes(void)
 {
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
+	device_t dev = get_device(__VT100_ID);
+	size_t pipe_count = 0;
+	struct pipe **input_pipes = pipe_get_for_process(
+		process_get(3), 
+		p_send,
+		&pipe_count
+	);
+	for (uint32_t i = 0; i < pipe_count; ++i) {
+		FILE *stream = file_for_pipe(input_pipes[i]);
+		if (!feof(stream)) {
+			char line[81] = { 0 };
+			fgets(line, 80, stream);
+			dv_write(dev, line);
+		}
+	}
 }
 
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
-}
-
-void ps2_keyboard_reset(void)
+int console_main(void)
 {
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
-}
-
-void ps2_keyboard_initialise(void)
-{
-	fprintf(dbgout, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
+	while (1) {
+		console_receive_pipes();
+		sleep(10);
+	}
 }

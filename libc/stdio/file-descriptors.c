@@ -24,27 +24,34 @@
 
 struct __vFILE {
 	uintptr_t descriptor;
+	uint32_t fallback_device;
 };
 
 #if __libk__
+#include <pipe.h>
 #include <device/device.h>
 
-
-FILE __stdin = { __KBD_ID };
-FILE __stdout = { __VT100_ID };
-FILE __stderr = { __COM1_ID };
-
-#else
-
-FILE __stdin = { 0 };
-FILE __stdout = { 0 };
-FILE __stderr = { 0 };
-
-#endif
-
+FILE __stdin = { p_recv, 0 };
+FILE __stdout = { p_send, __VT100_ID };
+FILE __stderr = { p_send | p_err, __COM1_ID };
+FILE __dbgout = { p_send | p_dbg, __COM1_ID };
 
 FILE *stdin = &__stdin;
 FILE *stdout = &__stdout;
 FILE *stderr = &__stderr;
-FILE *COM1 = &__stderr;
-FILE *VT100 = &__stdout;
+FILE *dbgout = &__dbgout;
+
+#else
+
+FILE __stdin = { 0, 0 };
+FILE __stdout = { 0, 0 };
+FILE __stderr = { 0, 0 };
+FILE __dbgout = { 0, 0 };
+
+FILE *stdin = &__stdin;
+FILE *stdout = &__stdout;
+FILE *stderr = &__stderr;
+FILE *dbgout = &__dbgout;
+
+#endif
+

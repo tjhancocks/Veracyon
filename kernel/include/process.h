@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <thread.h>
+#include <pipe.h>
 
 enum process_launch_flags
 {
@@ -44,21 +45,13 @@ struct process
 	const char *name;
 	uintptr_t page_dir;
 	int allow_frontmost;
+	uint32_t switched_out;
 
 	struct {
-		char *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} stdin;
-
-	struct {
-		uint8_t *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} kbdin;
-
+		size_t count;
+		struct pipe **pipe;
+	} pipe;
+	
 	struct {
 		struct thread *main;
 	} threads;
@@ -118,5 +111,14 @@ struct process *process_get_frontmost(void);
  - pid: The process ID to look up.
  */
 struct process *process_get(uint32_t pid);
+
+/**
+ Establish a pipe between the two specified processes
+ */
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+);
 
 #endif

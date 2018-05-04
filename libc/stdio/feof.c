@@ -20,40 +20,32 @@
  SOFTWARE.
 */
 
-#include <arch/arch.h>
-#include <device/PS2/keyboard.h>
-#include <device/keyboard/keyboard.h>
+#include <stdbool.h>
 #include <stdio.h>
-#include <kheap.h>
-#include <panic.h>
+#include <stddef.h>
 
-////////////////////////////////////////////////////////////////////////////////
+#if __libk__
+#include <pipe.h>
+extern struct pipe *pipe_for_file(FILE *file);
+#endif
 
-void ps2_keybaord_wait(void)
+int feof(FILE *fd)
 {
-	while ((inb(0x64) & 0x2) == 1)
-		__asm__("nop");
-}
+	if (!fd) {
+		return true;
+	}
 
-void ps2_keyboard_interrupt_handler(
-	struct interrupt_frame *frame __attribute__((unused))
-) {
-	ps2_keybaord_wait();
-	uint8_t raw_code = inb(0x60);
-	keyboard_received_scancode(raw_code);
-}
+	// fprintf(dbgout, "feof(%p) -- checking... ", fd);
 
-void ps2_keyboard_reset(void)
-{
-	uint8_t tmp = inb(0x61);
-	outb(0x61, tmp | 0x80);
-	outb(0x61, tmp & 0x7F);
-	(void)inb(0x60);
-}
+#if __libk__
+	struct pipe *pipe = pipe_for_file(fd);
+	// fprintf(dbgout, "pipe=%p ", pipe);
+	bool result = (!pipe || !pipe_has_unread(pipe, NULL)) ? true : false;
+	// fprintf(dbgout, "%s\n", result ? "true" : "false");
+	return result;
+#endif
 
-void ps2_keyboard_initialise(void)
-{
-	fprintf(dbgout, "Initialising PS/2 keyboard\n");
-	interrupt_handler_add(0x21, ps2_keyboard_interrupt_handler);
-	ps2_keyboard_reset();
+	// fprintf(dbgout, "true\n", fd);
+
+	return true;
 }
