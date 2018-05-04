@@ -26,6 +26,7 @@
 
 #if __libk__
 #include <pipe.h>
+#include <process.h>
 extern struct pipe *pipe_for_file(FILE *file);
 #endif
 
@@ -37,10 +38,10 @@ char *fgets(char *str, size_t count, FILE *fd)
 
 #if __libk__
 	uint32_t i = 0;
-	fprintf(dbgout, "From fgets(%p, %zu, %p)\n", str, count, fd);
 	struct pipe *pipe = pipe_for_file(fd);
 	while (pipe && i < count) {
 		while (feof(fd)) {
+			fprintf(dbgout, "<blocking fgets() on %s>\n", pipe->owner->name);
 			__asm__ __volatile__("hlt");
 		}
 		char c = pipe_read_byte(pipe, NULL);

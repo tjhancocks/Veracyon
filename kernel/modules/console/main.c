@@ -43,7 +43,6 @@ void console_receive_pipes(void)
 	);
 	for (uint32_t i = 0; i < pipe_count; ++i) {
 		FILE *stream = file_for_pipe(input_pipes[i]);
-		fprintf(dbgout, "FILE <%p> for pipe %p\n", stream, input_pipes[i]);
 		if (!feof(stream)) {
 			char line[81] = { 0 };
 			fgets(line, 80, stream);

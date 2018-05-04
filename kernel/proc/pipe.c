@@ -180,6 +180,7 @@ struct pipe *pipe_get_best(struct process *process, enum pipe_purpose mask)
 bool pipe_has_unread(struct pipe *pipe, ssize_t *count)
 {
     if (!pipe) return false;
+    if (pipe->read_lock) return false;
     ssize_t diff = pipe->write_ptr - pipe->read_ptr;
     if (count) *count = diff;
     return (diff > 0) ? true : false;
@@ -218,10 +219,12 @@ void pipe_write_byte(struct pipe *pipe, uint8_t byte)
 
 void pipe_write(struct pipe *pipe, uint8_t *bytes, size_t len)
 {
+    pipe->read_lock = true;
     for (uint32_t i = 0; i < len; ++i) {
         while (!pipe_can_accept_write(pipe)) {
             __asm__ __volatile__("hlt");
         }
         pipe_write_byte(pipe, bytes[i]);
     }
+    pipe->read_lock = false;
 }

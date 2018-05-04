@@ -58,6 +58,7 @@ struct pipe
     size_t size;
     uint8_t *data;
     const char *name;
+    bool read_lock;
 };
 
 enum pipe_binding

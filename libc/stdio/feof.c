@@ -35,17 +35,17 @@ int feof(FILE *fd)
 		return true;
 	}
 
-	fprintf(dbgout, "feof(%p) -- checking... ", fd);
+	// fprintf(dbgout, "feof(%p) -- checking... ", fd);
 
 #if __libk__
 	struct pipe *pipe = pipe_for_file(fd);
-	fprintf(dbgout, "pipe=%p ", pipe);
+	// fprintf(dbgout, "pipe=%p ", pipe);
 	bool result = (!pipe || !pipe_has_unread(pipe, NULL)) ? true : false;
-	fprintf(dbgout, "%s\n", result ? "true" : "false");
+	// fprintf(dbgout, "%s\n", result ? "true" : "false");
 	return result;
 #endif
 
-	fprintf(dbgout, "true\n", fd);
+	// fprintf(dbgout, "true\n", fd);
 
 	return true;
 }
