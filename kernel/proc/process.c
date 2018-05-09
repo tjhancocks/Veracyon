@@ -34,6 +34,7 @@
 #include <drawing/base.h>
 #include <driver/vesa/console.h>
 #include <modules/console.h>
+#include <modules/keyboard.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
 #define MAX_PIPE_COUNT		16
@@ -43,6 +44,7 @@
 static struct process *first_process = NULL;
 static struct process *last_process = NULL;
 static struct process *frontmost_process = NULL;
+static struct process *key_process = NULL;
 static uint32_t process_count = 0;
 static uint32_t next_pid = 0;
 
@@ -119,9 +121,27 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
+	// Spawn the keyboard process
+	struct process *keyboard_proc = process_launch(
+		"keyboard", 
+		keyboard_main, 
+		P_ROOT
+	);
+	if (!keyboard_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE KEYBOARD PROCESS",
+			"The process header for the keyboard process could not be created."
+			" This is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
 	// Establish internal kernel pipes
 	process_make_pipe(kernel_proc, console_proc, p_send);
-	process_make_pipe(console_proc, NULL, p_recv | p_keyboard);
+	process_make_pipe(keyboard_proc, NULL, p_recv | p_keyboard);
+	process_make_pipe(console_proc, NULL, p_recv);
+	process_make_pipe(kernel_proc, NULL, p_recv);
 
 	// Enable multitasking
 	task_set_allowed(1);
@@ -257,6 +277,11 @@ struct process *process_get_frontmost(void)
 {
 	// Fallback on the kernel if there is no frontmost process.
 	return frontmost_process ?: process_get(0);
+}
+
+struct process *process_get_key(void)
+{
+	return key_process ?: process_get(0);
 }
 
 struct process *process_get(uint32_t pid)

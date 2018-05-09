@@ -100,10 +100,16 @@ struct thread *process_spawn_thread(
 );
 
 /**
- Get a pointer to the frontmost process. This may be NULL if there is no front
- most process currently.
+ Get a pointer to the frontmost process. This will be the kernel if there is no
+ front most process currently.
  */
 struct process *process_get_frontmost(void);
+
+/**
+ Get a pointer to the key process. This will be the kernel if there is no key
+ process currently.
+ */
+struct process *process_get_key(void);
 
 /**
  Get a pointer to the process with the specified pid.

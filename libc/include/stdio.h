@@ -47,6 +47,8 @@ int feof(FILE *);
 
 char *fgets(char *, size_t, FILE *);
 
+int getc(FILE *);
+
 FILE *stdin;
 FILE *stdout;
 FILE *stderr;

@@ -33,61 +33,65 @@
 
 extern FILE *file_for_pipe(struct pipe *pipe);
 
-void console_receive_pipes(void)
+int keyboard_main(void)
 {
-	device_t dev = get_device(__VT100_ID);
+	// Identify the keyboard output pipe.
 	size_t pipe_count = 0;
 	struct pipe **input_pipes = pipe_get_for_process(
-		process_get(3), 
-		p_send,
+		process_get(4), 
+		p_recv | p_keyboard,
 		&pipe_count
 	);
 
-	for (uint32_t i = 0; i < pipe_count; ++i) {
-		struct pipe *pipe = input_pipes[i];
-		ssize_t unread_len = 0;
-		
-		atom_t pipe_read;
-		atomic_start(pipe_read);
+	if (pipe_count != 1) {
+		// TODO: Handle this error case
+		return;
+	}
 
-		if (pipe_has_unread(pipe, &unread_len) && unread_len > 0) {
-			while (unread_len) {
-				// Try and locate where the end of the "string" is.
-				ssize_t sublen = 0;
-				bool complete = false;
-				for (; sublen < unread_len; ++sublen) {
-					char c = pipe_peek_byte(pipe, sublen);
-					if (c == '\0' || c == '\n') {
-						complete = true;
-						sublen++;
-						break;
-					}
-				}
+	// Get the actual pipe.
+	atom_t key_event_atom;
+	struct pipe *pipe = input_pipes[0];
 
-				// If the "string" is not complete then abort.
-				if (!complete) {
-					break;
-				}
-
-				// We have the length of the string. We can extract it.
-				unread_len -= sublen;
-				char *str = calloc(sublen + 1, 1);
-				for (int32_t i = 0; i < sublen; ++i) {
-					str[i] = pipe_read_byte(pipe, NULL);
-				}
-				dv_write(dev, str);
-				free(str);
-			}
+	// Enter an infinite loop and keep checking for input.
+	while (1) {
+		// Wait for input, and then process it.
+		while (!pipe_has_unread(pipe, NULL)) {
+			key_wait();
 		}
 
-		atomic_end(pipe_read);
-	}
-}
+		bool is_empty = false;
+		uint8_t scancode = 0;
+		if (!(scancode = pipe_read_byte(pipe, &is_empty)) || is_empty) {
+			continue;
+		}
 
-int console_main(void)
-{
-	while (1) {
-		console_receive_pipes();
-		sleep(10);
+		atomic_start(key_event_atom);
+		fprintf(dbgout, "[KBD] Received scancode: %02x\n", scancode);
+
+		struct keyevent *event = keyevent_make(scancode);
+		if (event->pressed) {
+			free(event);
+			fprintf(dbgout, "[KBD] Ignoring\n");
+			atomic_end(key_event_atom);
+			continue;
+		}
+
+		fprintf(dbgout, "[KBD] => keycode=%02x modifiers=%02x\n", 
+			event->keycode, event->modifiers);
+
+		char c = keycode_to_ascii(event->keycode, event->modifiers);
+		free(event);
+
+
+		fprintf(dbgout, "[KBD] => char '%c'\n", c);
+		
+		// Acquire a reference to the key process.
+		struct process *key = process_get_key();
+		fprintf(dbgout, "[KBD] Sending to '%s'\n", key->name);
+		struct pipe *stdin = pipe_get_best(key, p_recv);
+		fprintf(dbgout, "[KBD] Using pipe <%p>\n", stdin);
+		pipe_write_byte(stdin, c);
+
+		atomic_end(key_event_atom);
 	}
 }

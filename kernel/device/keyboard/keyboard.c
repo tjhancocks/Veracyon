@@ -37,7 +37,7 @@ static struct pipe *keyboard_get_frontmost_pipe()
 	// Ask the process API for the Keyboard Receiver pipe for the frontmost
 	// process.
 	return pipe_get_best(
-		process_get_frontmost(), 
+		process_get(4),	// PID 4 - Keyboard 
 		p_recv | p_keyboard
 	);
 }
@@ -57,6 +57,8 @@ static struct pipe *keyboard_get_current_pipe()
 static void kbdin_write_scancode(uint8_t code)
 {
 	struct pipe *pipe = keyboard_get_frontmost_pipe();
+	fprintf(dbgout, "kbdin_write_scancode(%02x) --> %s <%p>\n",
+		code, pipe ? pipe->owner->name : "<!dead-pipe>", pipe);
 	if (!pipe)
 		return;
 	pipe_write(pipe, &code, sizeof(code));

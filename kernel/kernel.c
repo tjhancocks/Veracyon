@@ -49,7 +49,7 @@ __attribute__((noreturn)) void kwork(void)
 	printf("\n\n");
 
 	while (1) {
-		sleep(50);
+		printf("%c", getc(stdin));
 	}
 }
 

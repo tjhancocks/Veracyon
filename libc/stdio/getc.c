@@ -20,42 +20,33 @@
  SOFTWARE.
 */
 
-#if __libk__
-
-#include <pipe.h>
+#include <stdbool.h>
 #include <stdio.h>
-#include <task.h>
-#include <thread.h>
-#include <process.h>
+#include <stddef.h>
 
-struct __vFILE {
-	uintptr_t descriptor;
-	uint32_t fallback_device;
-};
-
-FILE *file_for_pipe(struct pipe *pipe) 
-{
-	if (pipe->purpose == p_recv) {
-		return stdin;
-	}
-	else if (pipe->purpose == p_send) {
-		return stdout;
-	}
-	else if (pipe->purpose == (p_send | p_dbg)) {
-		return dbgout;
-	}
-	else if (pipe->purpose == (p_send | p_err)) {
-		return stderr;
-	}
-	else {
-		// TODO: Warn about unknown file for pipe. Default to stderr
-		return stderr;
-	}
-}
-
-struct pipe *pipe_for_file(FILE *file)
-{
-	return pipe_get_best(task_get_current()->thread->owner, file->descriptor);
-}
-
+#if __libk__
+#include <pipe.h>
+#include <device/keyboard/scancode.h>
+#include <device/keyboard/keycode.h>
+extern struct pipe *pipe_for_file(FILE *file);
 #endif
+
+int getc(FILE *fd)
+{
+
+#if __libk__
+	struct pipe *pipe = pipe_for_file(fd);
+	if (!pipe) {
+		fprintf(dbgout, "[libk] Failed to acquire pipe for file.\n");
+		return 0;
+	}
+
+	while (!pipe_has_unread(pipe, NULL)) 
+		sleep(5);
+
+	// We have keyboard input. Now read the character from the pipe.
+	return (char)pipe_read_byte(pipe, NULL);;
+#endif
+
+	return 0;
+}
