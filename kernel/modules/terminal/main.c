@@ -33,12 +33,12 @@
 
 extern FILE *file_for_pipe(struct pipe *pipe);
 
-void console_receive_pipes(void)
+void terminal_receive_pipes(void)
 {
 	device_t dev = get_device(__VT100_ID);
 	size_t pipe_count = 0;
 	struct pipe **input_pipes = pipe_get_for_process(
-		process_get(3), 
+		process_get(TERMINAL_PID), 
 		p_send,
 		&pipe_count
 	);
@@ -84,10 +84,10 @@ void console_receive_pipes(void)
 	}
 }
 
-int console_main(void)
+int terminal_main(void)
 {
 	while (1) {
-		console_receive_pipes();
+		terminal_receive_pipes();
 		sleep(10);
 	}
 }

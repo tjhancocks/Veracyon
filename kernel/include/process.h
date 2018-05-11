@@ -27,6 +27,17 @@
 #include <thread.h>
 #include <pipe.h>
 
+// The first group of defined process PID's are the internal kernel agents.
+#define KERNEL_PID		0
+#define IDLE_PID		1
+#define DISPLAY_PID		2
+#define KEYBOARD_PID	3
+
+// The second group of defined process PID's are the internal kernel services.
+#define TERMINAL_PID	20
+
+#define STARTING_PID	128
+
 enum process_launch_flags
 {
 	// The process is a root/kernel level agent and doesn't accept user input.

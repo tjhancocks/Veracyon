@@ -38,7 +38,7 @@ int keyboard_main(void)
 	// Identify the keyboard output pipe.
 	size_t pipe_count = 0;
 	struct pipe **input_pipes = pipe_get_for_process(
-		process_get(4), 
+		process_get(KEYBOARD_PID), 
 		p_recv | p_keyboard,
 		&pipe_count
 	);

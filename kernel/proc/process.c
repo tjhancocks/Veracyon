@@ -33,7 +33,7 @@
 #include <atomic.h>
 #include <drawing/base.h>
 #include <driver/vesa/console.h>
-#include <modules/console.h>
+#include <modules/terminal.h>
 #include <modules/keyboard.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
@@ -71,6 +71,7 @@ void process_prepare(void)
 	// Create a reference for the kernel and discard the result. We need to 
 	// adopt the appropriate information for the process.
 	struct process *kernel_proc = process_launch("kernel", NULL, P_ROOT);
+	kernel_proc->pid = KERNEL_PID;
 	if (!kernel_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -83,6 +84,7 @@ void process_prepare(void)
 
 	// Spawn the idle process
 	struct process *idle_proc = process_launch("idle", idle, P_ROOT);
+	idle_proc->pid = IDLE_PID;
 	if (!idle_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -95,6 +97,7 @@ void process_prepare(void)
 
 	// Spawn the display process
 	struct process *display_proc = process_launch("display", display, P_ROOT);
+	display_proc->pid = DISPLAY_PID;
 	if (!display_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -105,17 +108,18 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
-	// Spawn the console process
-	struct process *console_proc = process_launch(
-		"console", 
-		console_main, 
+	// Spawn the terminal process
+	struct process *terminal_proc = process_launch(
+		"system-terminal", 
+		terminal_main, 
 		P_ROOT | P_UI
 	);
-	if (!console_proc) {
+	terminal_proc->pid = TERMINAL_PID;
+	if (!terminal_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
-			"UNABLE TO INITIALISE CONSOLE PROCESS",
-			"The process header for the console process could not be created."
+			"UNABLE TO INITIALISE SYSTEM TERMINAL PROCESS",
+			"The process header for the terminal process could not be created."
 			" This is a serious error."
 		};
 		panic(&info, NULL);
@@ -127,6 +131,7 @@ void process_prepare(void)
 		keyboard_main, 
 		P_ROOT
 	);
+	keyboard_proc->pid = KEYBOARD_PID;
 	if (!keyboard_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -137,10 +142,13 @@ void process_prepare(void)
 		panic(&info, NULL);
 	}
 
+	// MAke sure the next available PID is the starting PID.
+	next_pid = STARTING_PID;
+
 	// Establish internal kernel pipes
-	process_make_pipe(kernel_proc, console_proc, p_send);
+	process_make_pipe(kernel_proc, terminal_proc, p_send);
 	process_make_pipe(keyboard_proc, NULL, p_recv | p_keyboard);
-	process_make_pipe(console_proc, NULL, p_recv);
+	process_make_pipe(terminal_proc, NULL, p_recv);
 	process_make_pipe(kernel_proc, NULL, p_recv);
 
 	// Enable multitasking
@@ -276,12 +284,12 @@ struct thread *process_spawn_thread(
 struct process *process_get_frontmost(void)
 {
 	// Fallback on the kernel if there is no frontmost process.
-	return frontmost_process ?: process_get(0);
+	return frontmost_process ?: process_get(KERNEL_PID);
 }
 
 struct process *process_get_key(void)
 {
-	return key_process ?: process_get(0);
+	return key_process ?: process_get(KERNEL_PID);
 }
 
 struct process *process_get(uint32_t pid)

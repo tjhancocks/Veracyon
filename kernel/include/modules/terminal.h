@@ -20,9 +20,9 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_MODULE_CONSOLE__
-#define __VKERNEL_MODULE_CONSOLE__
+#ifndef __VKERNEL_MODULE_TERMINAL__
+#define __VKERNEL_MODULE_TERMINAL__
 
-int console_main(void);
+int terminal_main(void);
 
 #endif

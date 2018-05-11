@@ -37,7 +37,7 @@ static struct pipe *keyboard_get_frontmost_pipe()
 	// Ask the process API for the Keyboard Receiver pipe for the frontmost
 	// process.
 	return pipe_get_best(
-		process_get(4),	// PID 4 - Keyboard 
+		process_get(KEYBOARD_PID),
 		p_recv | p_keyboard
 	);
 }
