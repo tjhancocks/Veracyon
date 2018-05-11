@@ -23,6 +23,8 @@
 #include <kheap.h>
 #include <drawing/base.h>
 #include <stddef.h>
+#include <string.h>
+#include <memory.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -20,12 +20,32 @@
  SOFTWARE.
 */
 
-#include <time.h>
-#include <arch/arch.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stddef.h>
 
-time_t system_uptime(void)
+#if __libk__
+#include <pipe.h>
+extern struct pipe *pipe_for_file(FILE *file);
+#endif
+
+int feof(FILE *fd)
 {
-	uint32_t subticks = pit_get_subticks();
-	uint32_t ticks = pit_get_ticks();
-	return (ticks * 1000) + subticks;
+	if (!fd) {
+		return true;
+	}
+
+	// fprintf(dbgout, "feof(%p) -- checking... ", fd);
+
+#if __libk__
+	struct pipe *pipe = pipe_for_file(fd);
+	// fprintf(dbgout, "pipe=%p ", pipe);
+	bool result = (!pipe || !pipe_has_unread(pipe, NULL)) ? true : false;
+	// fprintf(dbgout, "%s\n", result ? "true" : "false");
+	return result;
+#endif
+
+	// fprintf(dbgout, "true\n", fd);
+
+	return true;
 }

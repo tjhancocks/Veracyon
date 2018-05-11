@@ -25,6 +25,8 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
+#include <stddef.h>
 
 #ifndef __DIGIT_SOURCE
 #	define __DIGIT_SOURCE "0123456789ABCDEF"
@@ -34,8 +36,8 @@
 #	define __PRINTF_BUFFER_LEN 1024
 #endif
 
-static uint32_t __kd_usn_to_str(char *restrict, uint32_t, uint8_t);
-static uint32_t __kd_sn_to_str(char *restrict, int32_t, uint8_t);
+static uint32_t __kd_usn_to_str(char *restrict, uint64_t, uint8_t);
+static uint32_t __kd_sn_to_str(char *restrict, int64_t, uint8_t);
 
 enum token 
 {
@@ -48,7 +50,12 @@ enum token
 	token_type_unsigned = 1 << 7,
 	token_type_hex = 1 << 8,
 	token_type_string = 1 << 9,
-	token_upper = 1 << 10
+	token_upper = 1 << 10,
+	token_length_promote_char = 1 << 11,
+	token_length_promote_short = 1 << 12,
+	token_length_long = 1 << 13,
+	token_length_long_long = 1 << 14,
+	token_length_size = 1 << 15,
 };
 
 void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
@@ -103,6 +110,38 @@ void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
 			width = (width == 0) ? digit : (width * 10) + digit;
 		}
 
+		switch (*in) {
+			case 'h': {
+				in++;
+				if (*in == 'h') {
+					in++;
+					mask |= token_length_promote_char;
+				}
+				else {
+					mask |= token_length_promote_short;
+				}
+				break;
+			}
+			case 'l': {
+				in++;
+				if (*in == 'l') {
+					in++;
+					mask |= token_length_long_long;
+				}
+				else {
+					mask |= token_length_long;
+				}
+				break;
+			}
+			case 'z': {
+				in++;
+				mask |= token_length_size;
+				break;
+			}
+			default:
+				break;
+		}
+
 		switch (*in++) {
 			case 'd':
 			case 'i':
@@ -148,27 +187,46 @@ void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
 			sub_buffer[sub_len++] = 'x';
 		}
 
-		if (mask & token_type_signed) {
-			int32_t number = (int32_t)va_arg(args, int32_t);
-			positive = 1;
-			tmp_len = __kd_sn_to_str(tmp, number, 10);
+		uint64_t value = 0;
+		const char *string = NULL;
+		char char_value = 0;
+
+		if (mask & token_length_long_long) {
+			value = (uint64_t)va_arg(args, uint64_t);
 		}
-		else if (mask & token_type_unsigned) {
-			uint32_t number = (int32_t)va_arg(args, uint32_t);
-			positive = 1;
-			tmp_len = __kd_usn_to_str(tmp, number, 10);
+		else if (mask & token_length_long) {
+			value = (uint64_t)va_arg(args, uint32_t);
 		}
-		else if (mask & token_type_hex) {
-			uint32_t number = (int32_t)va_arg(args, uint32_t);
-			tmp_len = __kd_usn_to_str(tmp, number, 16);
+		else if (mask & token_length_size) {
+			value = (uint64_t)va_arg(args, size_t);
 		}
 		else if (mask & token_type_string) {
-			const char *str = (const char *)va_arg(args, uintptr_t);
-			while (*str && tmp_len < buffer_len)
-				tmp[tmp_len++] = *str++;
+			string = (const char *)va_arg(args, uintptr_t);
 		}
 		else if (mask & token_type_char) {
-			tmp[tmp_len++] = (char)va_arg(args, uint32_t);
+			char_value = (char)va_arg(args, uint32_t);
+		}
+		else {
+			value = (uint64_t)va_arg(args, uint32_t);
+		}
+
+		if (mask & token_type_signed) {
+			positive = 1;
+			tmp_len = __kd_sn_to_str(tmp, (int64_t)value, 10);
+		}
+		else if (mask & token_type_unsigned) {
+			positive = 1;
+			tmp_len = __kd_usn_to_str(tmp, value, 10);
+		}
+		else if (mask & token_type_hex) {
+			tmp_len = __kd_usn_to_str(tmp, value, 16);
+		}
+		else if (mask & token_type_string) {
+			while (*string && tmp_len < buffer_len)
+				tmp[tmp_len++] = *string++;
+		}
+		else if (mask & token_type_char) {
+			tmp[tmp_len++] = char_value;
 		}
 
 		// Calculate the padding. If there is padding, then apply it.
@@ -198,7 +256,7 @@ void vsnprintf(char *buffer, size_t n, const char *restrict fmt, va_list args)
 	}
 }
 
-static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)
+static uint32_t __kd_usn_to_str(char *restrict str, uint64_t num, uint8_t base)
 {
 	const char *digits = __DIGIT_SOURCE;
 
@@ -207,13 +265,13 @@ static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)
 		return 1;
 	}
 
-	register uint32_t v = num;
-	register uint32_t dV = 0;
-	char buffer[32] = { 0 };
-	register char *ptr = buffer + 30;
+	register uint64_t v = num;
+	register uint64_t dV = 0;
+	char buffer[64] = { 0 };
+	register char *ptr = buffer + 62;
 	register uint32_t len = 1;
 
-	while (v >= (uint32_t)base) {
+	while (v >= (uint64_t)base) {
 		dV = v % base;
 		v /= base;
 		*ptr-- = *(digits + dV);
@@ -231,7 +289,7 @@ static uint32_t __kd_usn_to_str(char *restrict str, uint32_t num, uint8_t base)
 }
 
 
-static uint32_t __kd_sn_to_str(char *restrict str, int32_t num, uint8_t base)
+static uint32_t __kd_sn_to_str(char *restrict str, int64_t num, uint8_t base)
 {
 	const char *digits = __DIGIT_SOURCE;
 
@@ -241,13 +299,13 @@ static uint32_t __kd_sn_to_str(char *restrict str, int32_t num, uint8_t base)
 	}
 
 	uint8_t neg = (num < 0);
-	register uint32_t v = num * (neg ? -1 : 1);
-	register uint32_t dV = 0;
-	char buffer[32] = { 0 };
-	register char *ptr = buffer + 30;
+	register uint64_t v = num * (neg ? -1 : 1);
+	register uint64_t dV = 0;
+	char buffer[64] = { 0 };
+	register char *ptr = buffer + 62;
 	register uint32_t len = 1;
 
-	while (v >= (uint32_t)base) {
+	while (v >= (uint64_t)base) {
 		dV = v % base;
 		v /= base;
 		*ptr-- = *(digits + dV);

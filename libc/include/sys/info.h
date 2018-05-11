@@ -20,29 +20,24 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef _SYS_INFO_H
+#define _SYS_INFO_H
 
-#if __i386__
-#	include <arch/i386/features.h>
-#	include <arch/i386/util.h>
-#	include <arch/i386/interrupt_frame.h>
-#	include <arch/i386/tss.h>
-#	include <arch/i386/port.h>
-#	include <arch/i386/gdt.h>
-#	include <arch/i386/interrupt.h>
-#	include <arch/i386/pit.h>
-#else
-#	error Architecture is not supported by Veracyon
-#endif
+#include <stdint.h>
 
-struct boot_config;
-
-void architecture_prepare(struct boot_config *config);
+struct __sysinfo {
+	// The current system uptime in seconds
+	time_t uptime_s;
+	// The current system uptime in milliseconds
+	suseconds_t uptime_ms;
+	// The current system uptime in microseconds
+	useconds_t uptime_u;
+};
+typedef struct __sysinfo sysinfo_t;
 
 /**
- Provides information about the architecture's internal tick count.
+ Retrieve information about the system.
  */
-void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase);
+void get_sysinfo(sysinfo_t *info);
 
 #endif

@@ -30,7 +30,7 @@
 #include <panic.h>
 #include <macro.h>
 #include <task.h>
-#include <time.h>
+#include <uptime.h>
 #include <atomic.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ static uint32_t next_tid = 0;
 
 struct thread *thread_create(const char *label, int(*start)(void))
 {
-	fprintf(COM1, "Creating new thread: %s\n", label ?: "(unnamed)");
+	fprintf(dbgout, "Creating new thread: %s\n", label ?: "(unnamed)");
 
 	// Construct the basic thread.
 	struct thread *thread = kalloc(sizeof(*thread));
@@ -59,7 +59,7 @@ struct thread *thread_create(const char *label, int(*start)(void))
 
 	thread->start = start;
 
-	fprintf(COM1, "   * assigning tid: %d\n", thread->tid);
+	fprintf(dbgout, "   * assigning tid: %d\n", thread->tid);
 	return thread;
 }
 
@@ -82,7 +82,7 @@ static void _thread_start(void)
 		panic(&info, NULL);
 	}
 
-	fprintf(COM1, "Starting thread execution: %d (%p)\n",
+	fprintf(dbgout, "Starting thread execution: %d (%p)\n",
 		this->tid, this);
 
 	// Call the main function of the thread. We should remain inside this
@@ -113,7 +113,7 @@ int thread_stack_init(struct thread *thread, uint32_t size)
 	uint32_t off = 1;
 	memset(stack, 0, size * sizeof(*stack));
 
-	fprintf(COM1, "Initialising stack for thread: %d (%p)\n",
+	fprintf(dbgout, "Initialising stack for thread: %d (%p)\n",
 		thread->tid, thread);
 
 	// The _thread_start function needs parameters to exist on the stack.
@@ -165,7 +165,7 @@ void sleep(uint64_t ms)
 
 	struct thread *current = task_get_current()->thread;
 
-	current->state.info = system_uptime() + ms;
+	current->state.info = get_uptime_ms() + ms;
 	current->state.reason = reason_sleep;
 	current->state.mode = thread_paused;
 

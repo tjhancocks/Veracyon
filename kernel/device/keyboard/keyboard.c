@@ -28,62 +28,53 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <task.h>
+#include <pipe.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int32_t kbdin_buffer_count(void)
+static struct pipe *keyboard_get_frontmost_pipe()
 {
-	// Get the frontmost process. We'll need to get the KBDIN for it in order
-	// to write the scancode to it. 
-	struct process *proc = task_get_current()->thread->owner;
-
-	// If there is no process then report 0.
-	// TODO: Maybe a panic here as it should be impossible?
-	if (!proc)
-		return 0;
-
-	return proc->kbdin.w_idx - proc->kbdin.r_idx;
+	// Ask the process API for the Keyboard Receiver pipe for the frontmost
+	// process.
+	return pipe_get_best(
+		process_get(KEYBOARD_PID),
+		p_recv | p_keyboard
+	);
 }
+
+static struct pipe *keyboard_get_current_pipe()
+{
+	// Ask the process API for the Keyboard Receiver pipe for the owning process
+	// of the current task.
+	return pipe_get_best(
+		task_get_current()->thread->owner, 
+		p_recv | p_keyboard
+	);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void kbdin_write_scancode(uint8_t code)
 {
-	// Get the frontmost process. We'll need to get the KBDIN for it in order
-	// to write the scancode to it. 
-	struct process *proc = process_get_frontmost();
-
-	// If there is no frontmost process then just discard the scancode.
-	// TODO: At some point an agent should accept all scancodes as well in order
-	// to handle global shortcuts.
-	if (!proc)
+	struct pipe *pipe = keyboard_get_frontmost_pipe();
+	fprintf(dbgout, "kbdin_write_scancode(%02x) --> %s <%p>\n",
+		code, pipe ? pipe->owner->name : "<!dead-pipe>", pipe);
+	if (!pipe)
 		return;
-
-	// Get the insertion index into the buffer and get the mod of it. 
-	uint32_t idx = proc->kbdin.w_idx % proc->kbdin.size;
-	++proc->kbdin.w_idx;
-
-	// Check if the insertion point is over the buffer length from the read 
-	// point. If it is pull the read point forwards.
-	int32_t diff = proc->kbdin.w_idx - proc->kbdin.r_idx;
-	if (diff >= proc->kbdin.size)
-		proc->kbdin.r_idx += (diff - proc->kbdin.size);
-
-	// Write the scancode into the insertion point of the buffer.
-	proc->kbdin.buffer[idx] = code;	
+	pipe_write(pipe, &code, sizeof(code));
 }
 
 static uint8_t kbdin_read_scancode(void)
 {
-	// Get the frontmost process. We'll need to get the KBDIN for it in order
-	// to write the scancode to it. 
-	struct process *proc = task_get_current()->thread->owner;
-
-	// If there is no frontmost process then just return NUL char
-	// TODO: Maybe a panic here as it should be impossible?
-	if (!proc)
+	struct pipe *pipe = keyboard_get_current_pipe();
+	if (!pipe)
 		return '\0';
+	
+	while (!pipe_has_unread(pipe, NULL)) {
+		__asm__ __volatile__("hlt");
+	}
 
-	uint32_t idx = proc->kbdin.r_idx++ % proc->kbdin.size;
-	return proc->kbdin.buffer[idx];
+	return pipe_read_byte(pipe, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,14 +93,7 @@ void keyboard_received_scancode(uint8_t scancode)
 
 struct keyevent *keyboard_consume_key_event(void)
 {
-	struct keyevent *event = NULL;
-
-	// Check if there are any items in the keyboard buffer. If there are not
-	// then return a dummy keyevent.
-	if (kbdin_buffer_count() > 0)
-		event = keyevent_make(kbdin_read_scancode());
-
-	return event;
+	return keyevent_make(kbdin_read_scancode());
 }
 
 struct keyevent *keyboard_wait_for_keyevent(void)
@@ -121,9 +105,4 @@ struct keyevent *keyboard_wait_for_keyevent(void)
 		event = keyboard_consume_key_event();
 	}
 	return event;
-}
-
-uint32_t keyboard_buffer_has_items(void)
-{
-	return kbdin_buffer_count() > 0 ? 1 : 0;
 }

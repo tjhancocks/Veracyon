@@ -25,6 +25,18 @@
 
 #include <stdint.h>
 #include <thread.h>
+#include <pipe.h>
+
+// The first group of defined process PID's are the internal kernel agents.
+#define KERNEL_PID		0
+#define IDLE_PID		1
+#define DISPLAY_PID		2
+#define KEYBOARD_PID	3
+
+// The second group of defined process PID's are the internal kernel services.
+#define TERMINAL_PID	20
+
+#define STARTING_PID	128
 
 enum process_launch_flags
 {
@@ -44,21 +56,13 @@ struct process
 	const char *name;
 	uintptr_t page_dir;
 	int allow_frontmost;
+	uint32_t switched_out;
 
 	struct {
-		char *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} stdin;
-
-	struct {
-		uint8_t *buffer;
-		uint32_t r_idx;
-		uint32_t w_idx;
-		size_t size;
-	} kbdin;
-
+		size_t count;
+		struct pipe **pipe;
+	} pipe;
+	
 	struct {
 		struct thread *main;
 	} threads;
@@ -107,10 +111,16 @@ struct thread *process_spawn_thread(
 );
 
 /**
- Get a pointer to the frontmost process. This may be NULL if there is no front
- most process currently.
+ Get a pointer to the frontmost process. This will be the kernel if there is no
+ front most process currently.
  */
 struct process *process_get_frontmost(void);
+
+/**
+ Get a pointer to the key process. This will be the kernel if there is no key
+ process currently.
+ */
+struct process *process_get_key(void);
 
 /**
  Get a pointer to the process with the specified pid.
@@ -118,5 +128,14 @@ struct process *process_get_frontmost(void);
  - pid: The process ID to look up.
  */
 struct process *process_get(uint32_t pid);
+
+/**
+ Establish a pipe between the two specified processes
+ */
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+);
 
 #endif

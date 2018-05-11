@@ -27,7 +27,7 @@
 #include <string.h>
 #include <memory.h>
 #include <panic.h>
-#include <time.h>
+#include <uptime.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ extern void switch_stack(uint32_t esp, uint32_t ebp);
 
 void task_set_allowed(int flag)
 {
-	fprintf(COM1, "%sabling multitasking\n", flag ? "En" : "Dis");
+	fprintf(dbgout, "%sabling multitasking\n", flag ? "En" : "Dis");
 	allowed = flag;
 }
 
@@ -64,7 +64,7 @@ int task_create(struct thread *thread)
 	if (!thread || !thread->owner)
 		return 0;
 
-	fprintf(COM1, "* Creating task for thread %d\n", thread->tid);
+	fprintf(dbgout, "* Creating task for thread %d\n", thread->tid);
 
 	struct task *task = kalloc(sizeof(*task));
 	memset(task, 0, sizeof(*task));
@@ -106,6 +106,7 @@ void yield(struct interrupt_frame *frame)
 	// so that the stack is remembered.
 	current_task->thread->stack.esp = (uint32_t)frame;
 	current_task->thread->stack.ebp = frame->ebp;
+	current_task->thread->owner->switched_out++;
 	current_task = next;
 
 	// Perform the switch. If anything has been misconfigured here, we'll be in
@@ -133,7 +134,7 @@ static int task_can_resume(struct task *task)
 	// I/O tasks.)
 	switch (task->thread->state.reason) {
 		case reason_sleep:
-			return (system_uptime() >= (uint32_t)task->thread->state.info);
+			return (get_uptime_ms() >= (suseconds_t)task->thread->state.info);
 
 		case reason_process:
 		case reason_irq_wait:
@@ -169,7 +170,7 @@ void task_resume_any_for(enum thread_mode_reason reason, uint64_t info)
 		task->thread->state.reason = reason_none;
 		task->thread->state.info = 0;
 	} 
-	while (task = task->next);
+	while ((task = task->next));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

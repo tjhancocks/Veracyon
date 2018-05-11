@@ -53,7 +53,7 @@ uint32_t __kregister_read(const char *restrict name)
 	else if (strcmp(name, "cr3") == 0) 
 		__asm__ __volatile("movl %%cr3, %0" : "=r"(value));
 	else {
-		fprintf(COM1, "Attempted to read unrecognised register: %s\n", name);
+		fprintf(dbgout, "Attempted to read unrecognised register: %s\n", name);
 	}
 
 	return value;

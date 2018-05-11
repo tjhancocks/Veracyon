@@ -20,29 +20,33 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#include <stdbool.h>
+#include <stdio.h>
+#include <stddef.h>
 
-#if __i386__
-#	include <arch/i386/features.h>
-#	include <arch/i386/util.h>
-#	include <arch/i386/interrupt_frame.h>
-#	include <arch/i386/tss.h>
-#	include <arch/i386/port.h>
-#	include <arch/i386/gdt.h>
-#	include <arch/i386/interrupt.h>
-#	include <arch/i386/pit.h>
-#else
-#	error Architecture is not supported by Veracyon
+#if __libk__
+#include <pipe.h>
+#include <device/keyboard/scancode.h>
+#include <device/keyboard/keycode.h>
+extern struct pipe *pipe_for_file(FILE *file);
 #endif
 
-struct boot_config;
+int getc(FILE *fd)
+{
 
-void architecture_prepare(struct boot_config *config);
+#if __libk__
+	struct pipe *pipe = pipe_for_file(fd);
+	if (!pipe) {
+		fprintf(dbgout, "[libk] Failed to acquire pipe for file.\n");
+		return 0;
+	}
 
-/**
- Provides information about the architecture's internal tick count.
- */
-void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase);
+	while (!pipe_has_unread(pipe, NULL)) 
+		sleep(5);
 
+	// We have keyboard input. Now read the character from the pipe.
+	return (char)pipe_read_byte(pipe, NULL);;
 #endif
+
+	return 0;
+}

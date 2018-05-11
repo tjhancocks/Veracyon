@@ -27,13 +27,13 @@
 #include <arch/arch.h>
 #include <device/keyboard/keyboard.h>
 #include <panic.h>
-#include <modules/shell.h>
 #include <thread.h>
 #include <process.h>
 #include <drawing/base.h>
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/info.h>
 
 #include <device/device.h>
 #include <device/RS232/RS232.h>
@@ -47,14 +47,8 @@ __attribute__((noreturn)) void kwork(void)
 	printf("\033[90mCopyright (c) 2017-2018 Tom Hancocks. MIT License.\033[0m");
 	printf("\n\n");
 
-	for (uint8_t n = 0; n < 8; ++n) {
-		printf("\033[3%dm Text \033[0m\n", n);
-	}
-	printf("\033[90m Text \033[0m\n");
-	printf("\033[97m Text \033[0m\n\n");
-
 	while (1) {
-		sleep(50);
+		printf("%c", getc(stdin));
 	}
 }
 
@@ -97,6 +91,5 @@ __attribute__((noreturn)) void kmain(
 	// Establish multitasking and processes
 	process_prepare();
 	
-	// init_shell();
 	kwork();
 }

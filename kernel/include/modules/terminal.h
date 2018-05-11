@@ -20,29 +20,9 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_ARCH__
-#define __VKERNEL_ARCH__
+#ifndef __VKERNEL_MODULE_TERMINAL__
+#define __VKERNEL_MODULE_TERMINAL__
 
-#if __i386__
-#	include <arch/i386/features.h>
-#	include <arch/i386/util.h>
-#	include <arch/i386/interrupt_frame.h>
-#	include <arch/i386/tss.h>
-#	include <arch/i386/port.h>
-#	include <arch/i386/gdt.h>
-#	include <arch/i386/interrupt.h>
-#	include <arch/i386/pit.h>
-#else
-#	error Architecture is not supported by Veracyon
-#endif
-
-struct boot_config;
-
-void architecture_prepare(struct boot_config *config);
-
-/**
- Provides information about the architecture's internal tick count.
- */
-void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase);
+int terminal_main(void);
 
 #endif

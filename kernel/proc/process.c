@@ -24,6 +24,7 @@
 #include <kheap.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <panic.h>
 #include <macro.h>
@@ -32,14 +33,18 @@
 #include <atomic.h>
 #include <drawing/base.h>
 #include <driver/vesa/console.h>
+#include <modules/terminal.h>
+#include <modules/keyboard.h>
 
 #define DEFAULT_STACK_SIZE	16 * 1024	// 16KiB
+#define MAX_PIPE_COUNT		16
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static struct process *first_process = NULL;
 static struct process *last_process = NULL;
 static struct process *frontmost_process = NULL;
+static struct process *key_process = NULL;
 static uint32_t process_count = 0;
 static uint32_t next_pid = 0;
 
@@ -66,6 +71,7 @@ void process_prepare(void)
 	// Create a reference for the kernel and discard the result. We need to 
 	// adopt the appropriate information for the process.
 	struct process *kernel_proc = process_launch("kernel", NULL, P_ROOT);
+	kernel_proc->pid = KERNEL_PID;
 	if (!kernel_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -78,6 +84,7 @@ void process_prepare(void)
 
 	// Spawn the idle process
 	struct process *idle_proc = process_launch("idle", idle, P_ROOT);
+	idle_proc->pid = IDLE_PID;
 	if (!idle_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -90,6 +97,7 @@ void process_prepare(void)
 
 	// Spawn the display process
 	struct process *display_proc = process_launch("display", display, P_ROOT);
+	display_proc->pid = DISPLAY_PID;
 	if (!display_proc) {
 		struct panic_info info = (struct panic_info) {
 			panic_general,
@@ -99,6 +107,49 @@ void process_prepare(void)
 		};
 		panic(&info, NULL);
 	}
+
+	// Spawn the terminal process
+	struct process *terminal_proc = process_launch(
+		"system-terminal", 
+		terminal_main, 
+		P_ROOT | P_UI
+	);
+	terminal_proc->pid = TERMINAL_PID;
+	if (!terminal_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE SYSTEM TERMINAL PROCESS",
+			"The process header for the terminal process could not be created."
+			" This is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
+	// Spawn the keyboard process
+	struct process *keyboard_proc = process_launch(
+		"keyboard", 
+		keyboard_main, 
+		P_ROOT
+	);
+	keyboard_proc->pid = KEYBOARD_PID;
+	if (!keyboard_proc) {
+		struct panic_info info = (struct panic_info) {
+			panic_general,
+			"UNABLE TO INITIALISE KEYBOARD PROCESS",
+			"The process header for the keyboard process could not be created."
+			" This is a serious error."
+		};
+		panic(&info, NULL);
+	}
+
+	// MAke sure the next available PID is the starting PID.
+	next_pid = STARTING_PID;
+
+	// Establish internal kernel pipes
+	process_make_pipe(kernel_proc, terminal_proc, p_send);
+	process_make_pipe(keyboard_proc, NULL, p_recv | p_keyboard);
+	process_make_pipe(terminal_proc, NULL, p_recv);
+	process_make_pipe(kernel_proc, NULL, p_recv);
 
 	// Enable multitasking
 	task_set_allowed(1);
@@ -138,7 +189,7 @@ struct process *process_launch(
 	}
 
 
-	fprintf(COM1, "Process %d (%s) established with page directory: %p\n",
+	fprintf(dbgout, "Process %d (%s) established with page directory: %p\n",
 		proc->pid, proc->name, proc->page_dir);
 
 	atomic_end(atom);
@@ -150,7 +201,7 @@ struct process *process_launch(
 
 struct process *process_spawn(const char *name, int(*_entry)(void))
 {
-	fprintf(COM1, "Spawning new process: %s\n", name);
+	fprintf(dbgout, "Spawning new process: %s\n", name);
 
 	// Create a new blank process and prepare to populate it with the 
 	// appropriate information.
@@ -160,20 +211,9 @@ struct process *process_spawn(const char *name, int(*_entry)(void))
 	// Basic metadata
 	proc->name = name;	// TODO: Copy the name string into the process.
 	proc->pid = next_pid++;
-	fprintf(COM1, "   * assigning pid: %d\n", proc->pid);
+	fprintf(dbgout, "   * assigning pid: %d\n", proc->pid);
 
-	// Standard Pipes
-	proc->stdin.size = 1024;
-	proc->stdin.buffer = kalloc(proc->stdin.size);
-	proc->stdin.r_idx = 0;
-	proc->stdin.w_idx = 0;
-	fprintf(COM1, "   * stdin pipe created: %d bytes\n", proc->stdin.size);
-
-	proc->kbdin.size = 64;
-	proc->kbdin.buffer = kalloc(proc->kbdin.size);
-	proc->kbdin.r_idx = 0;
-	proc->kbdin.w_idx = 0;
-	fprintf(COM1, "   * kbdin pipe created: %d bytes\n", proc->kbdin.size);
+	// TODO: Setup standard pipes here...
 
 	// Main thread
 	proc->threads.main = process_spawn_thread(proc, "Main Thread", _entry);
@@ -205,11 +245,11 @@ struct thread *process_spawn_thread(
 	// owning process is the kernel. Even then the kernel, must not yet have a 
 	// thread.
 	if (!owner) {
-		fprintf(COM1, "WARNING: Attempting to create an orphaned thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an orphaned thread.\n");
 		return NULL;
 	}
 	else if (owner->threads.main && start == NULL) {
-		fprintf(COM1, "WARNING: Attempting to create an invalid thread.\n");
+		fprintf(dbgout, "WARNING: Attempting to create an invalid thread.\n");
 		return NULL;
 	}
 
@@ -232,7 +272,7 @@ struct thread *process_spawn_thread(
 
 	// Create a task for the thread.
 	if (task_create(thread) == 0) {
-		fprintf(COM1, "Failed to create task for thread %d.\n", thread->tid);
+		fprintf(dbgout, "Failed to create task for thread %d.\n", thread->tid);
 	}
 
 	// Return the new thread to the caller.
@@ -243,7 +283,13 @@ struct thread *process_spawn_thread(
 
 struct process *process_get_frontmost(void)
 {
-	return frontmost_process;
+	// Fallback on the kernel if there is no frontmost process.
+	return frontmost_process ?: process_get(KERNEL_PID);
+}
+
+struct process *process_get_key(void)
+{
+	return key_process ?: process_get(KERNEL_PID);
 }
 
 struct process *process_get(uint32_t pid)
@@ -253,4 +299,24 @@ struct process *process_get(uint32_t pid)
 		proc = proc->next;
 	}
 	return proc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void process_make_pipe(
+	struct process *owner, 
+	struct process *target, 
+	enum pipe_purpose mask
+) {
+	struct pipe *new_pipe = pipe(mask);
+	pipe_bind(new_pipe, pipe_owner_process, owner);
+
+	if (target) {
+		if (mask & p_send) {
+			pipe_bind(new_pipe, pipe_target_process, target);
+		}
+		else if (mask & p_recv) {
+			pipe_bind(new_pipe, pipe_source_process, target);
+		}
+	}	
 }

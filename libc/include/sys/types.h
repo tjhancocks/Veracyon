@@ -38,7 +38,9 @@ typedef signed long long 		__int64_t;
 typedef __SIZE_TYPE__ 			__veracyon_size_t;
 
 typedef __int32_t 				__veracyon_ssize_t;
-typedef __int32_t 				__veracyon_time_t;
+typedef __int64_t 				__veracyon_time_t;
+typedef __int64_t 				__veracyon_useconds_t;
+typedef __int64_t 				__veracyon_suseconds_t;
 
 typedef __int32_t 				__veracyon_native_t;
 typedef __uint32_t 				__veracyon_unative_t;

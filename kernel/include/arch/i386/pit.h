@@ -33,11 +33,11 @@ void pit_prepare(void);
 /**
  Reports the current tick count.
  */
-uint32_t pit_get_ticks(void);
+uint32_t pit_get_ticks(void) __attribute__((deprecated));
 
 /**
  Reports the current subtick count.
  */
-uint32_t pit_get_subticks(void);
+uint32_t pit_get_subticks(void) __attribute__((deprecated));
 
 #endif

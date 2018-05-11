@@ -30,8 +30,8 @@
 
 static struct {
 	uint32_t phase;
-	uint32_t subticks;
-	uint32_t ticks;
+	uint64_t subticks;
+	uint64_t ticks;
 } pit_info;
 
 
@@ -41,7 +41,7 @@ static void pit_set_frequency(uint32_t freq)
 {
 	int32_t divisor = 1193180 / freq;
 
-	fprintf(COM1, 
+	fprintf(dbgout, 
 		"Setting frequency of Programmable Interrupt Timer to %dHz\n",
 		freq);
 
@@ -69,7 +69,7 @@ static void pit_interrupt_event(
 
 void pit_prepare(void)
 {
-	fprintf(COM1, "Installing the Programmable Interrupt Timer.\n");
+	fprintf(dbgout, "Installing the Programmable Interrupt Timer.\n");
 	pit_info.phase = 1000;
 
 	pit_set_frequency(pit_info.phase);
@@ -78,10 +78,17 @@ void pit_prepare(void)
 
 uint32_t pit_get_ticks(void)
 {
-	return pit_info.ticks;
+	return (uint32_t)pit_info.ticks;
 }
 
 uint32_t pit_get_subticks(void)
 {
-	return pit_info.subticks;
+	return (uint32_t)pit_info.subticks;
+}
+
+void arch_get_ticks(uint64_t *ticks, uint64_t *subticks, uint32_t *phase)
+{
+	if (ticks) *ticks = pit_info.ticks;
+	if (subticks) *subticks = pit_info.subticks;
+	if (phase) *phase = pit_info.phase;
 }

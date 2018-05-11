@@ -20,14 +20,42 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_MODULE_SHELL__
-#define __VKERNEL_MODULE_SHELL__
+#if __libk__
 
-/**
- Initialise the Kernel Shell module. This will provide a basic shell
- functionality to the kernel. This is only intended for debugging purposes
- and whilst no user space is present.
- */
-void init_shell(void);
+#include <pipe.h>
+#include <stdio.h>
+#include <task.h>
+#include <thread.h>
+#include <process.h>
+
+struct __vFILE {
+	uintptr_t descriptor;
+	uint32_t fallback_device;
+};
+
+FILE *file_for_pipe(struct pipe *pipe) 
+{
+	if (pipe->purpose == p_recv) {
+		return stdin;
+	}
+	else if (pipe->purpose == p_send) {
+		return stdout;
+	}
+	else if (pipe->purpose == (p_send | p_dbg)) {
+		return dbgout;
+	}
+	else if (pipe->purpose == (p_send | p_err)) {
+		return stderr;
+	}
+	else {
+		// TODO: Warn about unknown file for pipe. Default to stderr
+		return stderr;
+	}
+}
+
+struct pipe *pipe_for_file(FILE *file)
+{
+	return pipe_get_best(task_get_current()->thread->owner, file->descriptor);
+}
 
 #endif

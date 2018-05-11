@@ -20,15 +20,43 @@
  SOFTWARE.
 */
 
-#ifndef __VKERNEL_TIME__
-#define __VKERNEL_TIME__
+#include <stdbool.h>
+#include <stdio.h>
+#include <stddef.h>
 
-#include <stdint.h>
-
-/**
- Reports the current system uptime in seconds (does not include time spent in 
- bootloader)
- */
-time_t system_uptime(void);
-
+#if __libk__
+#include <pipe.h>
+#include <process.h>
+extern struct pipe *pipe_for_file(FILE *file);
 #endif
+
+char *fgets(char *str, size_t count, FILE *fd)
+{
+	if (!fd) {
+		return NULL;
+	}
+
+#if __libk__
+	uint32_t i = 0;
+	struct pipe *pipe = pipe_for_file(fd);
+	while (pipe && i < count) {
+		while (feof(fd)) {
+			fprintf(dbgout, "<blocking fgets() on %s>\n", pipe->owner->name);
+			__asm__ __volatile__("hlt");
+		}
+		char c = pipe_read_byte(pipe, NULL);
+		if (c == '\0') {
+			break;
+		}
+		else if (c == '\n' || c == '\r') {
+			str[i++] = c;
+			break;
+		}
+		else {
+			str[i++] = c;
+		}
+	}
+#endif
+
+	return str;
+}
