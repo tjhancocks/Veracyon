@@ -110,8 +110,7 @@ config.parse_file:
 		srmov gs, word[cs:$cfg.orig_gs]	; Restore original GS
 		mov bx, word[cs:$cfg.orig_bx]
 	.epilogue:
-		mov sp, bp
-		pop bp
+		leave
 		ret
 
 ; Parse a configuration comment that has been encountered in the current file.
@@ -223,8 +222,7 @@ config.parse_kv_pair:
 		srmov ds, word[cs:$cfg.kv_orig_ds]; Restore the original value of DS
 	.epilogue:
 		add sp, 10
-		mov sp, bp
-		pop bp
+		leave
 		ret
 	.key_not_found_str:
 		db "Unexpected config key found.", 0x0

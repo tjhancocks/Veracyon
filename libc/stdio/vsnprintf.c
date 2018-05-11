@@ -299,13 +299,13 @@ static uint32_t __kd_sn_to_str(char *restrict str, int64_t num, uint8_t base)
 	}
 
 	uint8_t neg = (num < 0);
-	register uint64_t v = num * (neg ? -1 : 1);
-	register uint64_t dV = 0;
+	register int64_t v = num * (neg ? -1 : 1);
+	register int64_t dV = 0;
 	char buffer[64] = { 0 };
 	register char *ptr = buffer + 62;
 	register uint32_t len = 1;
 
-	while (v >= (uint64_t)base) {
+	while (v >= base) {
 		dV = v % base;
 		v /= base;
 		*ptr-- = *(digits + dV);

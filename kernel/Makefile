@@ -45,14 +45,14 @@ CCFLAGS := -I./include -I../boot/includes -I../libc/include\
             -D__BUILD_VERSION__="\"$(BUILD_VERSION)\"" \
             -D__BUILD_COMMIT__="\"$(BUILD_COMMIT) ($(BUILD_BRANCH))\""
 
-LDFLAGS := -ffreestanding -O0 -nostdlib -lgcc -lk -L../build
+LDFLAGS := -ffreestanding -O0 -nostdlib -lk -lgcc -L../build
 
-LIBGCC := $(shell i686-elf-gcc -print-file-name=libgcc.a)
+LIBGCC := $(shell $(CC) -print-file-name=libgcc.a)
 LIBK := ../build/libk.a
 
 # vkernel-elf
 .PHONY: vkernel-elf
-vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBGCC) $(LIBK)
+vkernel-elf: $(C-KERNEL-OBJS) $(S-KERNEL-OBJS) $(LIBK) $(LIBGCC) 
 	$(LD) -T./kernel.ld $(LDFLAGS) -o ../build/vkernel $^
 
 # Helpers

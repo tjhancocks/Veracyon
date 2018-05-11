@@ -92,8 +92,7 @@ fat12.read_file:
 		mov si, [bp - 2]
 		call rs232.send_bytes
 		stc 								; Set carry flag to indicate failure
-		mov sp, bp
-		pop bp
+		leave
 		ret
 	.load_fat:
 		add sp, 2							; Remove top element of stack
@@ -143,8 +142,7 @@ fat12.read_file:
 		pop es
 		xor bx, bx
 	.epilogue:
-		mov sp, bp
-		pop bp
+		leave
 		ret
 	.missing_str:
 		db "File not found on disk: ", 0x0
@@ -170,7 +168,6 @@ fat12.cluster_to_lba:
 		add ax, word[$DISK.base]
 	.epilogue:
 		pop gs
-		mov sp, bp
-		pop bp
+		leave
 		ret
 

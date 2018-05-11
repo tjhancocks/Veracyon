@@ -80,8 +80,7 @@ memory.detect:
 		stc
 	.finish:
 		pop bp
-		mov sp, bp
-		pop bp
+		leave
 		call memory.map.display
 	.epilogue:
 		popa

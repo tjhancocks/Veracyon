@@ -45,8 +45,7 @@ _idt.init:
 		mov eax, IDTPTR_ADDR			; Install the IDT. Must still not enable
 		lidt [eax]						; interrupts yet!
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Install all CPU Exceptions into the Interrupt Descriptor Table.
@@ -74,8 +73,7 @@ _idt.isrs.init:
 		add edx, _idt.isr1 - _idt.isr0	; ...and the next handler pointer.
 		loop .@@
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Install all CPU Interrupt Request handlers into the Interrupt Descriptor 
@@ -104,8 +102,7 @@ _idt.irq.init:
 		add edx, _idt.irq1 - _idt.irq0	; ...and the next handler pointer.
 		loop .@@
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; The following block contains all subroutines required for handling ISRs,

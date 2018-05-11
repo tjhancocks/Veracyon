@@ -80,8 +80,7 @@ disk.read_sectors:
 		loop .next_sector
 	.epilogue:
 		pop gs
-		mov sp, bp
-		pop bp
+		leave
 		ret
 
 ; Convert a logical block address (LBA) to a Cylinder Head Sector (CHS)
@@ -109,6 +108,5 @@ disk.lba_to_chs:
 		mov byte[$DISK.abs_track], al
 	.epilogue:
 		pop gs
-		mov sp, bp
-		pop bp
+		leave
 		ret

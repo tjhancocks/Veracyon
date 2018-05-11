@@ -62,8 +62,7 @@ _screen.init:
 	.finalize:
 		call _screen.clear
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Clear the screen.
@@ -127,8 +126,7 @@ _screen.text.clear:
 		mov eax, 0x07200720				; Two empty cells in the screen.
 		rep stosd
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Write out a single character to the current text buffer location. This will
@@ -173,8 +171,7 @@ _screen.text.putch:
 		mov dword[$SCREEN.crsr_x], 0	; Update cursor x value 
 		mov dword[$SCREEN.crsr_y], eax	; Update cursor y value 
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Write out a series character to the current text buffer location. This will
@@ -198,6 +195,5 @@ _screen.text.puts:
 		add esp, 4
 		jmp .@@
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret

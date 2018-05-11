@@ -61,8 +61,7 @@ gdt.init:
 		mov word[cs:di], 0x0017			; Size of the GDT in bytes, minus 1
 		mov dword[cs:di + 2], GDT_ADDR
 	.epilogue:
-		mov sp, bp
-		pop bp
+		leave
 		ret
 
 ;
@@ -100,6 +99,5 @@ gdt.set_gate:
 		mov byte[es:di + 5], al			; Save the access byte of the segment. 
 	.epilogue:
 		pop es
-		mov sp, bp
-		pop bp
+		leave
 		ret

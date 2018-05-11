@@ -47,8 +47,7 @@ _rs232.send_byte:
 		mov edx, _COM1_PORT
 		out dx, al
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Write a stream of bytes to the COM1 RS232 serial port.
@@ -69,8 +68,7 @@ _rs232.send_bytes:
 		add esp, 4
 		jmp .@@							; Next byte 
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Write a stream n bytes to the COM1 RS232 serial port, or until a NUL byte is
@@ -95,8 +93,7 @@ _rs232.send_counted_bytes:
 		pop ecx							; Restore the current 'n' value
 		loop .@@						; Loop to the next byte if any remaining
 	.epilogue:
-		mov esp, ebp
-		pop ebp
+		leave
 		ret
 
 ; Write the specified value to the COM1 RS232 serial port in a textual
