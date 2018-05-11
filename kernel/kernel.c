@@ -27,7 +27,6 @@
 #include <arch/arch.h>
 #include <device/keyboard/keyboard.h>
 #include <panic.h>
-#include <modules/shell.h>
 #include <thread.h>
 #include <process.h>
 #include <drawing/base.h>
@@ -92,6 +91,5 @@ __attribute__((noreturn)) void kmain(
 	// Establish multitasking and processes
 	process_prepare();
 	
-	// init_shell();
 	kwork();
 }
