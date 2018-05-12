@@ -37,6 +37,9 @@ $SCREEN:
 		dd 0x00000000					; Sub-routine pointer for the putch func
 	.puts:
 		dd 0x00000000					; Sub-routine pointer for the puts func
+	.setpen:
+		dd 0x00000000					; Sub-routine pointer for the setpen 
+										; func.
 
 ; Initialise the screen driver for CoreLoader. This will preconfigure the
 ; function lookup table.
@@ -59,6 +62,7 @@ _screen.init:
 		mov dword[$SCREEN.clear], _screen.text.clear
 		mov dword[$SCREEN.putch], _screen.text.putch
 		mov dword[$SCREEN.puts], _screen.text.puts
+		mov dword[$SCREEN.setpen], _screen.text.setpen
 	.finalize:
 		call _screen.clear
 	.epilogue:
@@ -100,6 +104,22 @@ _screen.putch:
 _screen.puts:
 	.lookup:
 		mov eax, [$SCREEN.puts]			; Look up the internal function
+		test eax, eax					; Is it NULL?
+		jz .missing						; If so skip calling it. It would error
+		jmp eax							; Call it, and do not return.
+	.missing:
+		xor eax, eax					; We failed to call it. Return 0.
+		ret
+
+; Set the current position on the screen. If the computer is in a either text or
+; native mode, then the units should be columns and rows. If the computer is in
+; graphical mode, then the units should be in pixels.
+;
+;	void _screen.setpen(int x, int y)
+;
+_screen.setpen
+	.lookup:
+		mov eax, [$SCREEN.setpen]		; Look up the internal function
 		test eax, eax					; Is it NULL?
 		jz .missing						; If so skip calling it. It would error
 		jmp eax							; Call it, and do not return.
@@ -194,6 +214,23 @@ _screen.text.puts:
 		call _screen.text.putch
 		add esp, 4
 		jmp .@@
+	.epilogue:
+		leave
+		ret
+
+; Set the current position on the screen. The units should be columns and rows.
+;
+;	void _screen.text.setpen(int cols, int rows)
+;
+_screen.text.setpen:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.prepare:
+		mov eax, [ebp + 8]				; Fetch "cols" argument
+		mov ebx, [ebp + 12]				; Fetch "rows" argument
+		mov [$SCREEN.crsr_x], eax		; Update the cursor x value
+		mov [$SCREEN.crsr_y], ebx		; Update the cursor y value
 	.epilogue:
 		leave
 		ret
