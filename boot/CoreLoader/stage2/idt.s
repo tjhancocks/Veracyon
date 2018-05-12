@@ -101,6 +101,35 @@ _idt.irq.init:
 		add edi, 8						; Move to the next gate...
 		add edx, _idt.irq1 - _idt.irq0	; ...and the next handler pointer.
 		loop .@@
+		call _idt.irq.remap				; Make sure the PIC is mapped correctly
+	.epilogue:
+		leave
+		ret
+
+; Remap the higher half of IRQs in the Programmable Interrupt Controller so that
+; collisions do not occur.
+_idt.irq.remap:
+	.prologue:
+		push ebp
+		mov ebp, esp
+	.main:
+		mov al, 0x11
+		out 0x20, al
+		out 0xA0, al
+		mov al, 0x20
+		out 0x21, al
+		mov al, 0x28
+		out 0xA1, al
+		mov al, 0x04
+		out 0x21, al
+		mov al, 0x08
+		out 0xA1, al
+		mov al, 0x01
+		out 0x21, al
+		out 0xA1, al
+		xor eax, eax
+		out 0x21, al
+		out 0xA1, al
 	.epilogue:
 		leave
 		ret
