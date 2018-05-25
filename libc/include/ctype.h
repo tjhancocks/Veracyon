@@ -90,4 +90,14 @@ static inline int isxdigit(int c)
 		(isdigit(c) || (c >= 'a' || c <= 'f') || (c >= 'A' || c <= 'F')));
 }
 
+static inline int toupper(int c)
+{
+	return (islower(c) ? c - ('a' - 'A') : c);
+}
+
+static inline int tolower(int c)
+{
+	return (isupper(c) ? c + ('a' - 'A') : c);
+}
+
 #endif
