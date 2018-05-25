@@ -20,26 +20,13 @@
  SOFTWARE.
 */
 
-#ifndef _STDLIB_H
-#define _STDLIB_H
+#include <stdlib.h>
 
-#include <sys/cdefs.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
+int atexit(void(*function)(void))
+{
+#if __libk
+    // This is not supported in the context of the kernel.
+    abort();
 #endif
-
-
-void *malloc(size_t size);
-void *calloc(size_t count, size_t size);
-__attribute__((noreturn)) void abort(void);
-__attribute__((const)) int abs(int n);
-int atexit(void(*function)(void));
-void free(void *ptr);
-
-#ifdef __cplusplus
+    return -1;
 }
-#endif
-
-#endif
