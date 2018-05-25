@@ -20,25 +20,9 @@
  SOFTWARE.
 */
 
-#ifndef _STDLIB_H
-#define _STDLIB_H
+#include <stdlib.h>
 
-#include <sys/cdefs.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-__attribute__((noreturn)) void abort(void);
-
-void *malloc(size_t size);
-void *calloc(size_t count, size_t size);
-__attribute__((const)) int abs(int n);
-void free(void *ptr);
-
-#ifdef __cplusplus
+__attribute__((const)) int abs(int n)
+{
+    return (n < 0 ? -n : n);
 }
-#endif
-
-#endif
