@@ -1,4 +1,7 @@
 # Veracyon
+
+**IMPORTANT** This version of Veracyon is now archived and will be removed at somepoint. Please go to https://github.com/tjhancocks/VeracyonOS.git and https://github.com/tjhancocks/vkernel.git for the current project.
+
 The Veracyon project is a hobby operating system project, intended as a learning and research platform for myself. The project will ultimately include both a custom boot loader & kernel, and be developed in a mixture of Assembly and C. It will be specific
 to the Intel 32-bit architecure and BIOS.
 
